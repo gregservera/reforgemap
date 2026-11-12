@@ -1,0 +1,51 @@
+/* forgemap.css -- ForgeMap's colours over Munin Map's page (munin/css/app.css, MIT): its tokens set
+ * again from site.css's palette, and the few things ForgeMap adds to the bar (the flame, the
+ * pages, the language). Munin's own rules stay as they are; only what differs is here. */
+
+:root {
+  --bg: #141110;            /* site.css --bg */
+  --bg-2: #1b1715;          /* --bg-2: bars and sidebars */
+  --bg-3: #221d1a;          /* --card */
+  --line: #3a2f28;
+  --text: #f3ede4;          /* --ink */
+  --muted: #a89c92;
+  --accent: #f97316;        /* --gold: the ember */
+  --accent-2: #f0cf7a;      /* --trader */
+  --ok: #6faf68;
+  --danger: #a85757;        /* --off */
+  --panel: rgba(27,23,21,.96);
+  --glass: rgba(27,23,21,.92);
+  --bar-a: rgba(20,17,16,.94); --bar-b: rgba(20,17,16,.8);
+  --rule: rgba(58,47,40,.55);
+  --hover: rgba(249,115,22,.06);
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+/* the light menus keep Munin's, with the ember for an accent */
+:root[data-theme=light] { --accent: #c2410c; }
+
+@font-face { font-family: "JetBrains Mono"; src: url("../../fonts/JetBrainsMono.woff2") format("woff2"); font-display: swap; }
+
+/* the brand: the flame and the name, as on the other pages */
+.topbar .title #title { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); letter-spacing: .06em; text-transform: uppercase; }
+.topbar .title .flame { width: 16px; height: 16px; fill: var(--accent); flex: none; }
+
+/* the other pages */
+.fm-pages { display: flex; gap: 2px; margin-left: 6px; }
+.fm-pages a { padding: 6px 9px; border-radius: 6px; color: var(--muted); text-decoration: none; font-size: 13px; white-space: nowrap; }
+.fm-pages a:hover { color: var(--text); background: var(--hover); }
+.fm-pages a.here { color: var(--text); box-shadow: inset 0 -2px 0 var(--accent); border-radius: 6px 6px 0 0; }
+
+/* FR / EN */
+.fm-lang { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.fm-lang button { background: var(--bg-2); color: var(--muted); border: 0; padding: 0 8px; height: 32px; font: 600 12px var(--font); cursor: pointer; }
+.fm-lang button.on { background: var(--accent); color: #141110; }
+
+@media (max-width: 1100px) { .fm-pages a { padding: 6px 6px; } }
+/* on a narrow screen the pages leave the bar for the foot of the menu */
+.fm-pages-side { display: none; }
+@media (max-width: 900px) {
+  .fm-pages { display: none; }
+  .fm-pages-side { display: flex; flex-wrap: wrap; gap: 4px; padding: 10px 12px; border-top: 1px solid var(--line); }
+  .fm-pages-side a { padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg-2); color: var(--text); text-decoration: none; font-size: 14px; }
+}

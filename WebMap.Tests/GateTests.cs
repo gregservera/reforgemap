@@ -93,6 +93,21 @@ namespace WebMap.Tests
             Assert.Equal(200, Get("/api/status"));
         }
 
+        // Munin's page reads its map data at these paths: a chunk nobody built on is an empty chunk,
+        // and anything else it may ask for that is not served yet is a 404 it shrugs off.
+        [Fact]
+        public void MuninsDataPathsAnswerAndAPathThatIsNoDataIsNotFound()
+        {
+            var r = http.Send(new HttpRequestMessage(HttpMethod.Get, "/data/structures/10_10.json"));
+            Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+            Assert.Contains("\"pieces\":[]", r.Content.ReadAsStringAsync().Result);
+            Assert.Equal(404, Get("/data/ruins/10_10.json"));          // no ruin there: nothing to draw
+            Assert.Equal(404, Get("/data/structures/99_10.json"));     // off the grid
+            Assert.Equal(404, Get("/data/markers.json"));
+            Assert.Equal(404, Get("/data/veg/1_2_3.bin"));
+            Assert.Equal(503, Get("/data/fog.png"));                    // no fog yet: never an empty 200
+        }
+
         [Fact]
         public void TheProxysTokenWritesAsTheUserItNames()
         {

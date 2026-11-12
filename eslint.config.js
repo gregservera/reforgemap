@@ -7,6 +7,8 @@ import html from "eslint-plugin-html";
 const MODULES = {MapCore: "map-core.js", PlayerCard: "js/card.js", Layers: "js/layers.js", Spot: "js/spot.js", Street: "js/street.js", Tour: "js/tour.js"};
 // The 3D view's ES modules, loaded on first use through the pages' import map.
 const ES_MODULES = ["WebMap/web/js/rig.js", "WebMap/web/js/sky.js", "WebMap/web/js/view3d.js"];
+// Munin Map's page (MIT), ES modules and workers under munin/, with Leaflet's global L.
+const MUNIN = ["WebMap/web/munin/**/*.js"];
 
 // Window properties a missing local would read without a word: the browser declares them,
 // so no-undef cannot see the slip. The ones the pages mean (location, history, ...) stay.
@@ -59,11 +61,15 @@ export default [
   // held to it: their top-level functions are the page's names, shared across its inline scripts.
   {
     files: ["WebMap/web/**/*.js"],
-    ignores: ES_MODULES,
+    ignores: [...ES_MODULES, ...MUNIN],
     rules: {"no-implicit-globals": ["error", {lexicalBindings: true}], "no-redeclare": ["error", {builtinGlobals: false}],
       "no-unused-vars": ["error", {...UNUSED, vars: "local"}]},
   },
   ...Object.entries(MODULES).map(([g, file]) => ({files: [`WebMap/web/${file}`], languageOptions: {globals: {[g]: "writable"}}})),
   {files: ES_MODULES, languageOptions: {sourceType: "module"}},
+  // kept as Munin wrote them: the mistake rules hold, its own style (an unread name, a let never
+  // reassigned, a worker's self) is let be, so a port stays close to the original
+  {files: MUNIN, languageOptions: {sourceType: "module", globals: {...globals.browser, ...globals.worker, L: "readonly"}},
+    rules: {"no-unused-vars": "off", "prefer-const": "off", "no-restricted-globals": "off"}},
   {files: ["WebMap.Tests/web/*.mjs", "tools/*.mjs"], languageOptions: {sourceType: "module", globals: globals.node}, rules},
 ];

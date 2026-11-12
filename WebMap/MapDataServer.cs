@@ -75,7 +75,8 @@ namespace WebMap
             {"jpg", "image/jpeg"},
             {"webp", "image/webp"},
             {"woff2", "font/woff2"},
-            {"txt", "text/plain"}
+            {"txt", "text/plain"},
+            {"svg", "image/svg+xml"}      // Munin's page: its icon
         };
 
         private System.Threading.Timer broadcastTimer;
@@ -169,6 +170,9 @@ namespace WebMap
         // only ever reads these strings.
         private volatile string playersWs = "players";
         private volatile string playersJson = "{\"count\":0,\"players\":[]}";
+        // the same players for Munin's map over the websocket, every tick: no look (a few KB a player,
+        // the 3D view's, fetched with /state), but an id and the game's pvp flag (BuildPlayersJson)
+        private volatile string playersLive = "[]";
         public string PlayersWs => playersWs;
         private bool forceReload = false;
         // /config carries the world name, which lives on ZNet: main-thread state.
@@ -268,6 +272,7 @@ namespace WebMap
         private string BuildPlayersJson(float now)
         {
             var entries = new List<string>();
+            var live = new List<string>();
             players.ForEach(player =>
             {
                 ZDO zdoData = null;
@@ -288,6 +293,7 @@ namespace WebMap
 
                 var sb = new StringBuilder();
                 sb.Append("{\"name\":\"").Append(JsonEscape(player.m_playerName)).Append("\"");
+                int mark = sb.Length;
                 sb.Append(",\"health\":").Append(health);
                 sb.Append(",\"maxHealth\":").Append(maxHealth);
                 sb.Append(",\"dead\":").Append(zdoData.GetBool(ZDOVars.s_dead) ? "true" : "false");
@@ -301,11 +307,15 @@ namespace WebMap
                     sb.Append(FormattableString.Invariant($",\"x\":{pos.x:0.##},\"z\":{pos.z:0.##}"));
                     // the 3D view draws them as the game does: facing their way, in what they wear
                     sb.Append(",\"yaw\":").Append(yaw);
-                    if (look != null) sb.Append(",\"look\":").Append(look);
                 }
+                string common = sb.ToString(mark, sb.Length - mark);
+                live.Add("{\"id\":" + player.m_uid.ToString(CultureInfo.InvariantCulture) + ",\"name\":\"" + JsonEscape(player.m_playerName) + "\""
+                         + common + ",\"pvp\":" + (zdoData.GetBool(ZDOVars.s_pvp) ? "true" : "false") + "}");
+                if (showPos && look != null) sb.Append(",\"look\":").Append(look);
                 sb.Append("}");
                 entries.Add(sb.ToString());
             });
+            playersLive = "[" + string.Join(",", live) + "]";
             return "{\"count\":" + entries.Count + ",\"players\":[" + string.Join(",", entries) + "]}";
         }
 
@@ -423,10 +433,10 @@ namespace WebMap
                 ServeTile(req, res, rawRequestPath);
                 return true;
             }
-            if (rawRequestPath.StartsWith("/data/veg/", StringComparison.Ordinal) && req.HttpMethod == "GET")
+            if (rawRequestPath.StartsWith("/data/", StringComparison.Ordinal) && req.HttpMethod == "GET")
             {
                 StructureMap.LastRead = Environment.TickCount;
-                ServeVegetation(req, res, rawRequestPath.Substring("/data/veg/".Length));
+                ServeData(req, res, rawRequestPath.Substring("/data/".Length));
                 return true;
             }
 
@@ -1025,6 +1035,71 @@ namespace WebMap
             res.Close(data, true);
         }
 
+        // /data/..., Munin's map data, the paths its page asks for. Everything is over walked ground
+        // only: the fog filters it where it is built (Structures, Ruins, Vegetation, BiomeMap).
+        // What ForgeMap does not serve yet (markers, stats, events...) is a 404 the page shrugs off.
+        private void ServeData(HttpListenerRequest req, HttpListenerResponse res, string rest)
+        {
+            if (rest.StartsWith("veg/", StringComparison.Ordinal)) { ServeVegetation(req, res, rest.Substring(4)); return; }
+            string json = null; byte[] bin = null; string type = "application/octet-stream";
+            switch (rest)
+            {
+                case "fog.png":                       // the same mask as /fog: 2048 cells of 12 m, north up
+                {
+                    byte[] fog = GetFogPng();
+                    if (fog.Length == 0) { Answer(res, 503, "{\"error\":\"not ready\"}"); return; }   // never a cacheable empty 200
+                    res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                    SendBytes(req, res, fog, "image/png", compressible: false);
+                    return;
+                }
+                case "structures/index.json": json = Tiles.Structures.IndexJson; break;
+                case "ruins/index.json": json = Tiles.Ruins.IndexJson; break;
+                case "biomes.json": json = Tiles.BiomeMap.LabelsJson(); break;
+                case "biomes.grid": bin = Tiles.BiomeMap.GridFor(); break;
+                case "biomes.png": bin = Tiles.BiomeMap.PngFor(); type = "image/png"; break;
+                case "mist.png": bin = Tiles.BiomeMap.MistPngFor(); type = "image/png"; break;
+            }
+            if (json == null && bin == null && rest.EndsWith(".json", StringComparison.Ordinal))
+            {
+                // structures/{cx}_{cz}.json, structures/r/{rx}_{rz}.json, and the same for ruins
+                bool st = rest.StartsWith("structures/", StringComparison.Ordinal), ru = rest.StartsWith("ruins/", StringComparison.Ordinal);
+                string id = st || ru ? rest.Substring(st ? 11 : 6, rest.Length - (st ? 11 : 6) - 5) : null;
+                int rev = 0;
+                if (id != null && id.StartsWith("r/", StringComparison.Ordinal))
+                {
+                    if (Tiles.Regions.Parse(id.Substring(2), out int rx, out int rz))
+                        json = st ? Tiles.Structures.RegionJson(rx, rz, out rev) : Tiles.Ruins.RegionJson(rx, rz, out rev);
+                }
+                else if (id != null && ParseChunk(id, out int cx, out int cz))
+                {
+                    json = st ? Tiles.Structures.ChunkJson(cx, cz, out rev) : Tiles.Ruins.ChunkJson(cx, cz, out rev);
+                    if (json == null && st) json = "{\"cx\":" + cx + ",\"cz\":" + cz + ",\"rev\":0,\"count\":0,\"pieces\":[],\"prefabs\":[]}";
+                }
+                if (json != null)
+                {
+                    // a region or chunk at its revision (?h=) is the same bytes for good
+                    bool exact = req.QueryString["h"] == rev.ToString(CultureInfo.InvariantCulture);
+                    res.Headers.Add(HttpResponseHeader.CacheControl, exact ? "public, max-age=31536000, immutable" : "no-cache");
+                    SendBytes(req, res, Encoding.UTF8.GetBytes(json), "application/json");
+                    return;
+                }
+            }
+            if (json == null && bin == null) { Answer(res, 404, "{\"error\":\"no such data\"}"); return; }
+            res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+            if (json != null) SendBytes(req, res, Encoding.UTF8.GetBytes(json), "application/json");
+            else SendBytes(req, res, bin, type, compressible: type != "image/png");
+        }
+
+        // "cx_cz", two chunk numbers inside the grid
+        internal static bool ParseChunk(string s, out int cx, out int cz)
+        {
+            cx = cz = 0;
+            int us = s.IndexOf('_');
+            return us > 0 && int.TryParse(s.Substring(0, us), NumberStyles.None, CultureInfo.InvariantCulture, out cx)
+                && int.TryParse(s.Substring(us + 1), NumberStyles.None, CultureInfo.InvariantCulture, out cz)
+                && cx < Tiles.TileMath.ChunksPerSide && cz < Tiles.TileMath.ChunksPerSide;
+        }
+
         // /data/veg/index.json, /data/veg/r3/{rx}_{rz}.bin (a 4x4-chunk region, cached for good at
         // its ?h=), /data/veg/{cx}_{cz}.bin (one chunk): trees and rocks over walked ground only
         private static void ServeVegetation(HttpListenerRequest req, HttpListenerResponse res, string rest)
@@ -1047,12 +1122,7 @@ namespace WebMap
                 SendBytes(req, res, bin, "application/octet-stream");
                 return;
             }
-            string chunk = rest.Substring(0, rest.Length - 4);
-            int us = chunk.IndexOf('_');
-            if (us <= 0 || !int.TryParse(chunk.Substring(0, us), NumberStyles.None, CultureInfo.InvariantCulture, out int cx)
-                || !int.TryParse(chunk.Substring(us + 1), NumberStyles.None, CultureInfo.InvariantCulture, out int cz)
-                || cx >= Tiles.TileMath.ChunksPerSide || cz >= Tiles.TileMath.ChunksPerSide)
-            { Answer(res, 404, "{\"error\":\"no such chunk\"}"); return; }
+            if (!ParseChunk(rest.Substring(0, rest.Length - 4), out int cx, out int cz)) { Answer(res, 404, "{\"error\":\"no such chunk\"}"); return; }
             float minX = Tiles.TileMath.ChunkMin(cx), minZ = Tiles.TileMath.ChunkMin(cz);
             if (!MapFog.AnyExplored(minX, minZ, minX + Tiles.TileMath.CHUNK_SIZE, minZ + Tiles.TileMath.CHUNK_SIZE))
             { Answer(res, 404, "{\"error\":\"nothing walked there\"}"); return; }
@@ -1337,10 +1407,17 @@ namespace WebMap
                 if (tosend != null && tosend.Count > 0)
                     webSocketHandler.Sessions.Broadcast("messages\n[" + string.Join(",", tosend) + "]");
             }
+            // the players for Munin's map, every tick, stamped with the server's time: the page plays
+            // them back smoothly from one to the next (munin/js/layers/players.js)
+            webSocketHandler.Sessions.Broadcast(LiveFrame(playersLive, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
             // the tiles drawn again since the last tick, "z/x/y" each, for open maps to fetch anew
             string tiles = TilesFrame(Tiles.TileStore.DrainNotifications(), Tiles.TileStore.OnDisk, Tiles.TileStore.QueueLength);
             if (tiles != null) webSocketHandler.Sessions.Broadcast(tiles);
         }
+
+        // live\n{"ts":<unix ms>,"players":[...]}: the players as Munin's map reads them
+        internal static string LiveFrame(string players, long ts) =>
+            "live\n{\"ts\":" + ts.ToString(CultureInfo.InvariantCulture) + ",\"players\":" + players + "}";
 
         // tiles\n{"keys":["z/x/y",...],"status":"<on disk>/<queued>"}; null with nothing drawn
         internal static string TilesFrame(List<string> keys, int onDisk, int queued)

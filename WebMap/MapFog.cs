@@ -59,6 +59,11 @@ namespace WebMap
                     if (fog[(y * size + x) * 4] > 127) at((x - half) * ps, (y - half) * ps);
         }
 
+        // Whether a world point is walked, false before the fog loads (Explored above says true then,
+        // for the markers' sake; Munin's biome map wants the strict answer)
+        public static bool IsExplored(float x, float z) =>
+            WebMap.mapDataServer != null && WebMap.mapDataServer.fogRgba != null && Explored(x, z);
+
         // moves each time the fog lifts somewhere: a cache key for what is built from it
         public static int Revision => WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRev : 0;
 

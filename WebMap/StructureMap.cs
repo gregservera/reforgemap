@@ -157,6 +157,8 @@ namespace WebMap
             WorldObjects.Begin();
             TerrainPatches.Begin();
             Vegetation.Begin();                               // the map tiles' trees and rocks
+            Structures.Begin();                               // Munin's 2D map: player-built pieces per chunk
+            Ruins.Begin();                                    // and the world's own ruins
             LocationTerrain.Begin();                          // and the ground the game shapes round its locations
             Stats.BeginSweep();
             try { Stats.ObserveKeys(ZoneSystem.instance != null ? ZoneSystem.instance.GetGlobalKeys() : null); } catch { }
@@ -208,6 +210,7 @@ namespace WebMap
                                 bool portal = Portals.IsPortal(pref);
                                 if (portal) Portals.Observe(zdo, p);
                                 Pieces.Observe(pref, zdo, p, creator);   // the same piece, as a footprint, and whose
+                                Structures.Observe(zdo, pref, p, creator);  // and again for Munin's buildings layer
                                 Kitchen.Found(zdo, pref, p);       // a station, for the kitchen's poll
                                 Stats.ObservePiece(creator, portal, false);
                                 var mat = MaterialOf(pref);
@@ -222,7 +225,9 @@ namespace WebMap
                         else
                         {
                             ForestMap.Observe(pref, idx);     // trees and stumps aren't placed by anyone
-                            Vegetation.Observe(pref, p, zdo);  // and the same again, each where it stands, for the tiles
+                            // and the same again, each where it stands, for the tiles; what is not a plant
+                            // and has no builder is the world's own: a ruin
+                            if (!Vegetation.Observe(pref, p, zdo)) Ruins.Observe(zdo, pref, p);
                         }
                     }
                 }
@@ -235,11 +240,11 @@ namespace WebMap
             }
             walk.Stop();
 
-            // Two steps of the map tiles still need the game thread: the locations' ground loads
-            // their prefabs, and the trees are published in slices (Tiles.WorldSweep.Due). Each is
+            // Munin's steps still need the game thread: the locations' ground loads their prefabs,
+            // the trees, buildings and ruins are published in slices (Tiles.WorldSweep.Due). Each is
             // stepped by hand, so a throw ends that step and not the sweep.
             var changedZones = new HashSet<long>();
-            foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones) })
+            foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones), Structures.Finish(), Ruins.Finish() })
                 while (true)
                 {
                     try { if (!step.MoveNext()) break; }

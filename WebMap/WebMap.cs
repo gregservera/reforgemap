@@ -92,6 +92,7 @@ namespace WebMap
             // close-zoom tiles over everything already walked (only what is missing is queued)
             StaticCoroutine.Start(Tiles.TileStore.MainThreadPump());
             Tiles.TileStore.Start();
+            Tiles.BiomeMap.Start(worldDataPath);          // the biomes map and grid, once per world, on a worker
             int stride = Math.Max(1, (int)(Tiles.TileMath.TileSpanMeters(WebMapConfig.PRERENDER_ZOOM + 1) / WebMapConfig.PIXEL_SIZE / 2));
             MapFog.ForEachExplored(Tiles.TileStore.OnExplored, stride);
             NotifyOnline();
@@ -154,6 +155,8 @@ namespace WebMap
             Locations.Load(worldDataPath);
             // Munin's map tiles: the trees the last sweep saw, then what is drawn already
             Tiles.Vegetation.LoadCache(worldDataPath);
+            Tiles.Structures.LoadCache(worldDataPath);
+            Tiles.Ruins.LoadCache(worldDataPath);
             Tiles.TileStore.Init(worldDataPath);
             // prefabs are the same in every world, so the model library sits beside the worlds
             if (Models.ModelStore.Root == null) Models.ModelStore.Init(mapDataPath);

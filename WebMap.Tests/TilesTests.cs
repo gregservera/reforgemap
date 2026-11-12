@@ -69,6 +69,13 @@ namespace WebMap.Tests
                          MapDataServer.TilesFrame(new List<string> { "5/12/34", "6/24/68" }, 40, 3));
         }
 
+        // Munin's map hears the players in this frame, stamped with the server's time for its playback.
+        [Fact]
+        public void TheLiveFrameCarriesTheServersTimeAndThePlayers()
+        {
+            Assert.Equal("live\n{\"ts\":1700000000000,\"players\":[]}", MapDataServer.LiveFrame("[]", 1700000000000));
+        }
+
         // A painted road or field with no digging is still changed ground: the map shows it.
         [Fact]
         public void ATerraformBlobWithPaintAloneIsAPatchAndOneWithNothingIsNone()

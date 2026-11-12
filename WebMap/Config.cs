@@ -72,6 +72,8 @@ namespace WebMap
         public static int MAIN_THREAD_ROWS_PER_FRAME = 24;
         public static bool TILE_WEBP = true;
         public static int HeightMaxZoom => HEIGHT_MAX_ZOOM;
+        // Munin's switch to show the whole world through the fog: never on in ForgeMap (no spoilers)
+        public static readonly bool REVEAL_ALL = false;
 
         // One switch for small servers (2-4 GB): ApplyLightMode says what it turns down.
         public static bool LIGHT_MODE = false;
@@ -340,6 +342,16 @@ namespace WebMap
             config["prerender_zoom"] = PRERENDER_ZOOM;
             config["max_render_zoom"] = MAX_RENDER_ZOOM;
             config["height_max_zoom"] = HEIGHT_MAX_ZOOM;
+            // Munin's map page: the fog's grid, the sea, and what it may offer. 3D comes with its own
+            // step; pins, pings and base names need a signed-in member (to come), so none for now
+            config["fog_size"] = TEXTURE_SIZE;
+            config["fog_pixel"] = PIXEL_SIZE;
+            config["water_level"] = 30;
+            config["enable_3d"] = false;
+            config["web_pins"] = false;
+            config["web_pings"] = false;
+            config["web_edit_bases"] = false;
+            config["github_link"] = false;            // Munin's link to its own repository
 
             string json = DictionaryToJson(config);
             return json;
