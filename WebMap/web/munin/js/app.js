@@ -25,6 +25,7 @@ import { NamesLayer } from './layers/names.js';
 import { PlanLayer } from './layers/plan.js';
 import { ForgeCard } from './fmcard.js';
 import { PathsLayer } from './layers/paths.js';
+import { Pegman } from './pegman.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -182,6 +183,7 @@ class App {
     this.layers.markers = new MarkerLayers(this.map, { gl: this.gl });
     this.layers.names = new NamesLayer().addTo(this.map);   // ForgeMap: the land named (layers/names.js)
     // ForgeMap: the floor plan up close and the lights (layers/plan.js)
+    this.pegman = new Pegman(this);   // ForgeMap: Street View, the figure dropped on the map (pegman.js)
     this.layers.paths = new PathsLayer().addTo(this.map);   // ForgeMap: the frequented paths (layers/paths.js)
     this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names }).addTo(this.map);
     this.layers.activity = new ActivityLayers(this.map, this.gl);
@@ -323,7 +325,7 @@ class App {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
       const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
       if (k === '/') { e.preventDefault(); search.focus(); return; }
-      if (k === 'Escape') { this.layers.players.follow(null); this.playerCard?.hide(); return; }
+      if (k === 'Escape') { if (this.view3d?.street && this.mode === '3d') { this.setMode('2d'); return; } this.layers.players.follow(null); this.playerCard?.hide(); return; }
       if (k === 'Home') { e.preventDefault(); this.goToSpawn(true); return; }
       if (k === 'm') { this.setMode(this.mode === '3d' ? '2d' : '3d'); return; }
       if (k === 'l') { this.toggleSidebar(); return; }
@@ -414,7 +416,10 @@ class App {
   updateHash() {
     if (this.hashLock) return;
     let h;
-    if (this.mode === '3d' && this.view3d) {
+    if (this.mode === '3d' && this.view3d?.street) {
+      const st = this.view3d.street;   // ForgeMap: Street View, as 1.x wrote it
+      h = `#3d=${st.x.toFixed(0)},${st.z.toFixed(0)}&look=${st.heading.toFixed(0)}`;
+    } else if (this.mode === '3d' && this.view3d) {
       const p = this.view3d.pose();
       const zoom = Math.min(7, Math.max(0, 3 + Math.log2(3200 / p.dist)));
       h = `#${p.x.toFixed(0)},${p.z.toFixed(0)},${zoom.toFixed(2)},3d,${p.dist.toFixed(0)},${p.yaw.toFixed(0)},${p.pitch.toFixed(0)}`;
@@ -426,6 +431,13 @@ class App {
   }
 
   applyHash() {
+    // ForgeMap 1.x's Street View links: #3d=x,z[&look=degrees]
+    const sv = /^#3d=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:&look=(-?\d+(?:\.\d+)?))?/.exec(location.hash);
+    if (sv) {
+      this.map.setView(toLatLng(+sv[1], +sv[2]), 6, { animate: false });
+      setTimeout(() => this.enterStreet(+sv[1], +sv[2], +(sv[3] || 0)), 0);
+      return true;
+    }
     // ForgeMap 1.x links (#at=x,z[,scale]): the scale, screen pixels per 12 m, is zoom 7 + log2(scale / 12)
     const fm = /^#at=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)(?:,(\d+(?:\.\d+)?))?/.exec(location.hash);
     if (fm) {
@@ -585,6 +597,21 @@ class App {
     return this.view3d;
   }
 
+  // ForgeMap: stood in at eye height at (x, z), facing heading (degrees from north)
+  async enterStreet(x, z, heading = 0) {
+    if (this.config?.enable_3d === false) return;
+    this.pendingPose = { x, z, dist: 140, yaw: 180, pitch: 40 };
+    await this.setMode('3d');
+    if (this.view3d && this.mode === '3d') { this.view3d.stand(x, z, heading); this.help3d(true); }
+  }
+  // the help line under the 3D view: Street View's, or the overview's as the page wrote it
+  help3d(street) {
+    const el = document.querySelector('#view3d .v3d-help');
+    if (!el) return;
+    this.helpOrbit ??= el.textContent;
+    el.textContent = street ? window.I18N.t('Drag to look around · wheel zooms the eye · W A S D walk · Q E turn · Shift runs · click the ground to walk there · Esc: back to the map') : this.helpOrbit;
+  }
+
   async setMode(mode) {
     if (mode === this.mode) return;
     if (mode === '3d' && this.config?.enable_3d === false) return;   // 3D switched off on the server (button, card, key M, links)
@@ -598,6 +625,7 @@ class App {
         $('#view3d').hidden = false;
         $('#map').style.visibility = 'hidden';
         this.view3d.show(this.pendingPose || { x: c.x, z: c.z, zoom: this.map.getZoom() });
+        this.help3d(false);
         this.pendingPose = null;
         this.mode = '3d';
         if (this.layers.players.following) this.view3d.follow(this.layers.players.following);

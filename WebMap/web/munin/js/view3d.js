@@ -197,6 +197,7 @@ export class View3D {
     });
     document.addEventListener('keyup', (e) => { this.keys.delete(keyOf(e)); });
     window.addEventListener('blur', () => this.keys.clear());
+    this.streetInput(canvas);
     // double click: centre on that spot
     canvas.addEventListener('dblclick', (e) => {
       const r = canvas.getBoundingClientRect();
@@ -253,6 +254,7 @@ export class View3D {
   // ---------------------------------------------------------------- lifecycle
   // pose: {x, z, dist, yaw, pitch} from the URL, or {x, z, zoom} from the 2D map
   show(pose) {
+    if (this.street) { this.street = null; this.controls.enabled = true; this.camera.fov = this.orbitFov ?? this.camera.fov; this.camera.updateProjectionMatrix(); }   // the overview again
     this.resize();
     if (pose.dist === undefined) {
       const dist = Math.min(5000, Math.max(80, 3200 / Math.pow(2, (pose.zoom ?? 4) - 3)));
@@ -530,7 +532,93 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
     return t;
   }
 
-  center() { return { x: this.controls.target.x, z: -this.controls.target.z }; }
+  center() { return this.street ? { x: this.street.x, z: this.street.z } : { x: this.controls.target.x, z: -this.controls.target.z }; }
+
+  // ---------------------------------------------------------------- ForgeMap: Street View
+  // Stood in at a Viking's eye height, as in ForgeMap 1.4: drag to look around, the wheel zooms the
+  // eye, Z Q S D (W A S D) or the arrows walk (Shift runs), A E (Q E) turn, a click on the ground
+  // walks there. The orbit's controls rest meanwhile; leave() hands the view back to them, over
+  // the spot where you stood. heading: degrees clockwise from north.
+  stand(x, z, heading = 0) {
+    this.follow(null);
+    this.street = { x, z, heading, pitch: 0, goal: null };
+    this.controls.enabled = false;
+    this.placeStreet();
+  }
+  leaveStreet() {
+    const s = this.street; if (!s) return;
+    this.street = null;
+    this.camera.fov = this.orbitFov ?? this.camera.fov; this.camera.updateProjectionMatrix();
+    this.controls.enabled = true;
+    this.setPose({ x: s.x, z: s.z, dist: 140, yaw: (s.heading + 180) % 360, pitch: 40 });
+  }
+  placeStreet() {
+    const s = this.street, g = Math.max(this.heightAt(s.x, s.z) ?? this.waterLevel, this.waterLevel - 1.2);
+    const h = s.heading * Math.PI / 180, pt = s.pitch * Math.PI / 180;
+    const cam = this.camera.position;
+    cam.set(s.x, g + STREET_EYE, -s.z);
+    // three.js has north at -z: the game's (x, z) is three's (x, -z)
+    const dx = Math.sin(h) * Math.cos(pt), dy = Math.sin(pt), dz = -Math.cos(h) * Math.cos(pt);
+    this.controls.target.set(cam.x + dx * 10, cam.y + dy * 10, cam.z + dz * 10);
+    this.camera.lookAt(this.controls.target);
+    this.scheduleUpdate();
+  }
+  streetTick(dt) {
+    const s = this.street, K = this.keys, run = K.has('Shift') ? 3 : 1;
+    let fwd = 0, side = 0;
+    if (K.has('w') || K.has('ArrowUp')) fwd += 1;
+    if (K.has('s') || K.has('ArrowDown')) fwd -= 1;
+    if (K.has('d') || K.has('ArrowRight')) side += 1;
+    if (K.has('a') || K.has('ArrowLeft')) side -= 1;
+    if (K.has('q')) s.heading -= 70 * dt;
+    if (K.has('e')) s.heading += 70 * dt;
+    if (K.has('r')) s.pitch = Math.min(80, s.pitch + 50 * dt);
+    if (K.has('f')) s.pitch = Math.max(-80, s.pitch - 50 * dt);
+    const h = s.heading * Math.PI / 180, speed = 4 * run * dt;   // a jog, a run with Shift
+    if (fwd || side) {
+      s.goal = null;
+      s.x += (Math.sin(h) * fwd + Math.cos(h) * side) * speed;
+      s.z += (Math.cos(h) * fwd - Math.sin(h) * side) * speed;
+    } else if (s.goal) {
+      const dx = s.goal.x - s.x, dz = s.goal.z - s.z, d = Math.hypot(dx, dz), step = 6 * dt;
+      if (d <= step) s.goal = null; else { s.x += dx / d * step; s.z += dz / d * step; }
+    }
+    s.heading = (s.heading % 360 + 360) % 360;
+    this.placeStreet();
+    if (this.onStreetMove) this.onStreetMove(s);
+  }
+  streetInput(canvas) {
+    let drag = null;
+    canvas.addEventListener('pointerdown', (e) => { if (this.street) { drag = { x: e.clientX, y: e.clientY, moved: 0 }; canvas.setPointerCapture?.(e.pointerId); } });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!this.street || !drag) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+      const k = this.camera.fov / 75 * 0.25;            // degrees a pixel, finer when zoomed in
+      this.street.heading -= dx * k;
+      this.street.pitch = Math.max(-80, Math.min(80, this.street.pitch + dy * k));
+      this.placeStreet();
+    });
+    canvas.addEventListener('pointerup', (e) => {
+      if (!this.street || !drag) return;
+      const tap = drag.moved < 5; drag = null;
+      if (!tap) return;
+      // a click on the ground walks there
+      const r = canvas.getBoundingClientRect();
+      const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      this.raycaster.setFromCamera(ndc, this.camera);
+      const ground = [...this.terrain.values()].filter((t) => t.mesh).map((t) => t.mesh);
+      const hit = this.raycaster.intersectObjects(ground, false)[0];
+      if (hit && hit.distance < 300) this.street.goal = { x: hit.point.x, z: -hit.point.z };
+    });
+    canvas.addEventListener('wheel', (e) => {
+      if (!this.street) return;
+      e.preventDefault();
+      this.orbitFov ??= this.camera.fov;
+      this.camera.fov = Math.max(20, Math.min(80, this.camera.fov * Math.exp(e.deltaY * 0.001)));
+      this.camera.updateProjectionMatrix(); this.scheduleUpdate();
+    }, { passive: false });
+  }
 
   // where the camera is, for the URL: target (game x, z), distance, heading (deg, 0 = looking
   // north, clockwise) and tilt (deg above the ground)
@@ -574,8 +662,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
     if (!this.running) return;
     requestAnimationFrame(() => this.loop());
     const now = performance.now(), dt = Math.min(0.1, (now - (this.lastFrame || now)) / 1000); this.lastFrame = now;
-    this.handleKeys(dt);
-    this.controls.update();
+    if (this.street) this.streetTick(dt); else { this.handleKeys(dt); this.controls.update(); }
     // a camera that moved by any means (drag, keys, glide, follow) needs a frame
     const cam = this.camera.position, tgt = this.controls.target;
     const sig = `${cam.x.toFixed(2)},${cam.y.toFixed(2)},${cam.z.toFixed(2)},${tgt.x.toFixed(2)},${tgt.z.toFixed(2)}`;
@@ -588,7 +675,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
     if (!this.dirty && now - (this.lastRender || 0) < IDLE_MS) return;
     this.dirty = false; this.lastRender = now;
     // keep the target on the ground so orbiting feels anchored
-    const h = this.heightAt(this.controls.target.x, -this.controls.target.z);
+    const h = this.street ? null : this.heightAt(this.controls.target.x, -this.controls.target.z);
     if (h !== null && Math.abs(h - this.controls.target.y) > 0.5) {
       const d = h - this.controls.target.y;
       this.controls.target.y += d * 0.2; this.camera.position.y += d * 0.2;
@@ -1263,6 +1350,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
 
 // ForgeMap: letters by where they sit on the keyboard (e.code), not what they type, so the moves are
 // the same keys on AZERTY (Z Q S D) as on QWERTY (W A S D); the rest by what they type
+const STREET_EYE = 1.8;   // ForgeMap: a Viking's eyes above the ground
 const keyOf = (e) => { const m = /^Key([A-Z])$/.exec(e.code || ''); return m ? m[1].toLowerCase() : e.key.length === 1 ? e.key.toLowerCase() : e.key; };
 const KEYS = new Set(['w', 'a', 's', 'd', 'q', 'e', 'r', 'f', 'z', 'x', '+', '=', '-', '_', 'Shift', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home']);
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
