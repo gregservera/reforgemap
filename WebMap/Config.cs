@@ -62,6 +62,17 @@ namespace WebMap
         public static int TEXTURE_MAX_SIZE = 512;
         public static string OBJECT_CATEGORIES = "piece,other,rock,bush,tree";
 
+        // Munin's map tiles (Tiles/TileStore): worker threads, the zooms drawn ahead for the whole
+        // world, the closest zoom drawn over walked ground, the closest height tiles (the 3D view),
+        // and WebP storage. 0 render threads samples the terrain on the game thread, sliced.
+        public static int RENDER_THREADS = 1;
+        public static int PRERENDER_ZOOM = 5;
+        public static int MAX_RENDER_ZOOM = 7;
+        public static int HEIGHT_MAX_ZOOM = 7;
+        public static int MAIN_THREAD_ROWS_PER_FRAME = 24;
+        public static bool TILE_WEBP = true;
+        public static int HeightMaxZoom => HEIGHT_MAX_ZOOM;
+
         // One switch for small servers (2-4 GB): ApplyLightMode says what it turns down.
         public static bool LIGHT_MODE = false;
         // what light mode keeps of object_categories: buildings and the world's locations
@@ -223,6 +234,37 @@ namespace WebMap
                 WebMapConfig.OBJECT_CATEGORIES,
                 "What the 3D view is sent, of piece, other, rock, bush, tree (comma separated).").Value;
 
+            RENDER_THREADS = config.Bind("Render", "render_threads",
+                WebMapConfig.RENDER_THREADS,
+                "Worker threads drawing the map tiles. 1 suits most servers; 2 or more on a box with spare cores. "
+                + "0 samples the terrain on the game thread in small slices (slowest, safest).").Value;
+            RENDER_THREADS = Math.Max(0, Math.Min(16, RENDER_THREADS));
+
+            PRERENDER_ZOOM = config.Bind("Render", "prerender_zoom",
+                WebMapConfig.PRERENDER_ZOOM,
+                "Draw the whole world up to this zoom on the first start (0 = 128 m/px ... 7 = 1 m/px). "
+                + "5 (4 m/px, about 400 tiles) takes about a minute. Closer zooms are only drawn where players have walked.").Value;
+            PRERENDER_ZOOM = Math.Max(0, Math.Min(Tiles.TileMath.MAX_ZOOM, PRERENDER_ZOOM));
+
+            MAX_RENDER_ZOOM = config.Bind("Render", "max_render_zoom",
+                WebMapConfig.MAX_RENDER_ZOOM,
+                "Closest zoom drawn over walked ground. 7 = 1 m/px (full detail), 6 = 2 m/px (a quarter of the disk and CPU).").Value;
+            MAX_RENDER_ZOOM = Math.Max(PRERENDER_ZOOM, Math.Min(Tiles.TileMath.MAX_ZOOM, MAX_RENDER_ZOOM));
+
+            HEIGHT_MAX_ZOOM = config.Bind("Render", "height_max_zoom",
+                WebMapConfig.HEIGHT_MAX_ZOOM,
+                "Closest zoom for height tiles (the 3D view and the contour lines). -1 turns height tiles off.").Value;
+            HEIGHT_MAX_ZOOM = Math.Max(-1, Math.Min(Tiles.TileMath.MAX_ZOOM, HEIGHT_MAX_ZOOM));
+
+            MAIN_THREAD_ROWS_PER_FRAME = config.Bind("Render", "main_thread_rows_per_frame",
+                WebMapConfig.MAIN_THREAD_ROWS_PER_FRAME,
+                "When the terrain is sampled on the game thread, how many tile rows a frame.").Value;
+
+            TILE_WEBP = config.Bind("Render", "tile_webp",
+                WebMapConfig.TILE_WEBP,
+                "Store map tiles as lossless WebP: the same picture, 25-35% less to upload. New tiles are served "
+                + "as PNG at once and converted in the background; a browser without WebP still gets PNG.").Value;
+
             LIGHT_MODE = config.Bind("Performance", "light_mode",
                 WebMapConfig.LIGHT_MODE,
                 "FR : mode léger pour les petits serveurs (2 à 4 Go). Coupe l'export des modèles 3D et la lecture "
@@ -295,6 +337,9 @@ namespace WebMap
             config["max_messages"] = MAX_MESSAGES;
             config["always_map"] = ALWAYS_MAP;
             config["always_visible"] = ALWAYS_VISIBLE;
+            config["prerender_zoom"] = PRERENDER_ZOOM;
+            config["max_render_zoom"] = MAX_RENDER_ZOOM;
+            config["height_max_zoom"] = HEIGHT_MAX_ZOOM;
 
             string json = DictionaryToJson(config);
             return json;

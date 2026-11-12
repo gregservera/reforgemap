@@ -416,6 +416,19 @@ namespace WebMap
                 ServeModel(req, res, rawRequestPath.Substring(8));
                 return true;
             }
+            // Munin's map: the tile pyramid and the trees and rocks over walked ground. Reading
+            // tiles does not arm the sweep, as /map does not.
+            if (rawRequestPath.StartsWith("/tiles/", StringComparison.Ordinal) && req.HttpMethod == "GET")
+            {
+                ServeTile(req, res, rawRequestPath);
+                return true;
+            }
+            if (rawRequestPath.StartsWith("/data/veg/", StringComparison.Ordinal) && req.HttpMethod == "GET")
+            {
+                StructureMap.LastRead = Environment.TickCount;
+                ServeVegetation(req, res, rawRequestPath.Substring("/data/veg/".Length));
+                return true;
+            }
 
             switch (rawRequestPath)
             {
@@ -454,6 +467,22 @@ namespace WebMap
                         if (bytes == null) { Answer(res, 503, "{\"error\":\"not ready\"}"); return true; }
                         res.Headers.Add("X-Rev", rev.ToString(CultureInfo.InvariantCulture));
                         SendBytes(req, res, bytes, "application/octet-stream");
+                        return true;
+                    }
+                case "/api/status":
+                    // how far the map's drawing has got
+                    res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                    Answer(res, 200, "{\"tiles\":" + Tiles.TileStore.StatusJson() + "}");
+                    return true;
+                case "/api/rerender":
+                    // draw the tiles again from a zoom up (after a look change): an admin's
+                    {
+                        if (req.HttpMethod != "POST") { Answer(res, 405, "{\"error\":\"POST\"}"); return true; }
+                        if (!Caller(req, out _, out bool admin) || !admin) { Answer(res, 403, "{\"error\":\"forbidden\"}"); return true; }
+                        if (!int.TryParse(req.QueryString["zoom"] ?? "0", NumberStyles.Integer, CultureInfo.InvariantCulture, out int fromZoom)
+                            || fromZoom < 0 || fromZoom > Tiles.TileMath.MAX_ZOOM)
+                        { Answer(res, 400, "{\"error\":\"zoom is 0 to " + Tiles.TileMath.MAX_ZOOM + "\"}"); return true; }
+                        Answer(res, 202, "{\"queued\":" + Tiles.TileStore.Rerender(fromZoom) + "}");
                         return true;
                     }
                 case "/config":
@@ -946,6 +975,91 @@ namespace WebMap
             SendBytes(req, res, body, glb ? "model/gltf-binary" : "image/png", compressible: glb);
         }
 
+        // /tiles/{map,terra,veg,height}/{z}/{x}/{y}.png, Munin's pyramid (Tiles/TileStore). A tile not
+        // drawn yet is a 404 marked pending, and is queued if anyone can see it. Stored as lossless
+        // WebP where it can be; the URL still says .png, so a browser that does not take WebP (it
+        // says so in Accept) gets the same pixels as a PNG made on the spot.
+        internal static bool ParseTile(string path, out string layer, out int z, out int x, out int y)
+        {
+            layer = null; z = x = y = 0;
+            string[] p = path.Split('/');
+            if (p.Length != 6 || p[0] != "" || p[1] != "tiles" || !p[5].EndsWith(".png", StringComparison.Ordinal)) return false;
+            layer = p[2];
+            if (layer != "map" && layer != "height" && layer != "veg" && layer != "terra") return false;
+            return int.TryParse(p[3], NumberStyles.None, CultureInfo.InvariantCulture, out z)
+                && int.TryParse(p[4], NumberStyles.None, CultureInfo.InvariantCulture, out x)
+                && int.TryParse(p[5].Substring(0, p[5].Length - 4), NumberStyles.None, CultureInfo.InvariantCulture, out y);
+        }
+
+        private static void ServeTile(HttpListenerRequest req, HttpListenerResponse res, string path)
+        {
+            if (!ParseTile(path, out string layer, out int z, out int x, out int y)) { Answer(res, 404, "{\"error\":\"no such tile\"}"); return; }
+            byte[] data = Tiles.TileStore.Get(layer, z, x, y, out string etag);
+            if (data == null)
+            {
+                res.Headers.Add("X-Munin-Tile", "pending");
+                res.Headers.Add(HttpResponseHeader.CacheControl, "no-store");
+                Answer(res, 404, "{\"error\":\"not drawn yet\"}");
+                return;
+            }
+            // tiles hardly ever change: reused for 10 minutes without asking, then shown from cache
+            // while checked again; a re-render reaches open pages over the websocket
+            res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=600, stale-while-revalidate=2592000");
+            string type = "image/png";
+            if (Util.WebP.IsWebp(data))
+            {
+                res.Headers.Add(HttpResponseHeader.Vary, "Accept");
+                if ((req.Headers["Accept"] ?? "").Contains("image/webp")) type = "image/webp";
+                else
+                {
+                    data = Util.WebP.ToPng(data);
+                    if (data == null) { Answer(res, 500, "{\"error\":\"tile conversion failed\"}"); return; }
+                    etag = "\"p" + etag.Substring(1);
+                }
+            }
+            res.Headers.Add(HttpResponseHeader.ETag, etag);
+            if (req.Headers["If-None-Match"] == etag) { res.StatusCode = 304; res.Close(); return; }
+            res.ContentType = type;
+            res.StatusCode = 200;
+            res.ContentLength64 = data.Length;
+            res.Close(data, true);
+        }
+
+        // /data/veg/index.json, /data/veg/r3/{rx}_{rz}.bin (a 4x4-chunk region, cached for good at
+        // its ?h=), /data/veg/{cx}_{cz}.bin (one chunk): trees and rocks over walked ground only
+        private static void ServeVegetation(HttpListenerRequest req, HttpListenerResponse res, string rest)
+        {
+            if (rest == "index.json")
+            {
+                res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                SendBytes(req, res, Encoding.UTF8.GetBytes(Tiles.Vegetation.IndexJson()), "application/json");
+                return;
+            }
+            if (!rest.EndsWith(".bin", StringComparison.Ordinal)) { Answer(res, 404, "{\"error\":\"no such data\"}"); return; }
+            if (rest.StartsWith("r3/", StringComparison.Ordinal))
+            {
+                string id = rest.Substring(3, rest.Length - 7);
+                byte[] bin = null; int rev = 0;
+                if (Tiles.Regions.Parse(id, out int rx, out int rz, Tiles.Vegetation.REGION)) bin = Tiles.Vegetation.RegionBin(rx, rz, out rev);
+                if (bin == null) { Answer(res, 404, "{\"error\":\"nothing walked there\"}"); return; }
+                bool exact = req.QueryString["h"] == rev.ToString(CultureInfo.InvariantCulture);
+                res.Headers.Add(HttpResponseHeader.CacheControl, exact ? "public, max-age=31536000, immutable" : "no-cache");
+                SendBytes(req, res, bin, "application/octet-stream");
+                return;
+            }
+            string chunk = rest.Substring(0, rest.Length - 4);
+            int us = chunk.IndexOf('_');
+            if (us <= 0 || !int.TryParse(chunk.Substring(0, us), NumberStyles.None, CultureInfo.InvariantCulture, out int cx)
+                || !int.TryParse(chunk.Substring(us + 1), NumberStyles.None, CultureInfo.InvariantCulture, out int cz)
+                || cx >= Tiles.TileMath.ChunksPerSide || cz >= Tiles.TileMath.ChunksPerSide)
+            { Answer(res, 404, "{\"error\":\"no such chunk\"}"); return; }
+            float minX = Tiles.TileMath.ChunkMin(cx), minZ = Tiles.TileMath.ChunkMin(cz);
+            if (!MapFog.AnyExplored(minX, minZ, minX + Tiles.TileMath.CHUNK_SIZE, minZ + Tiles.TileMath.CHUNK_SIZE))
+            { Answer(res, 404, "{\"error\":\"nothing walked there\"}"); return; }
+            res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=600");
+            SendBytes(req, res, Tiles.Vegetation.Chunk(cx, cz), "application/octet-stream");
+        }
+
         // A full-quality map (or the folder's index.json), streamed from disk a piece at a time:
         // never read whole, never cached, never gzipped (PNG is compressed already). The viewer
         // asks for each map with ?v=<its version from index.json>, so a map is kept a week; the
@@ -1223,6 +1337,20 @@ namespace WebMap
                 if (tosend != null && tosend.Count > 0)
                     webSocketHandler.Sessions.Broadcast("messages\n[" + string.Join(",", tosend) + "]");
             }
+            // the tiles drawn again since the last tick, "z/x/y" each, for open maps to fetch anew
+            string tiles = TilesFrame(Tiles.TileStore.DrainNotifications(), Tiles.TileStore.OnDisk, Tiles.TileStore.QueueLength);
+            if (tiles != null) webSocketHandler.Sessions.Broadcast(tiles);
+        }
+
+        // tiles\n{"keys":["z/x/y",...],"status":"<on disk>/<queued>"}; null with nothing drawn
+        internal static string TilesFrame(List<string> keys, int onDisk, int queued)
+        {
+            if (keys == null || keys.Count == 0) return null;
+            var j = new Util.JsonWriter(keys.Count * 12 + 48);
+            j.BeginObject().Key("keys").BeginArray();
+            foreach (var k in keys) j.Value(k);
+            j.End().Prop("status", onDisk + "/" + queued).End();
+            return "tiles\n" + j;
         }
 
         public void BroadcastPing(long id, string name, Vector3 position)

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using UnityEngine;
+using WebMap.Tiles;
 
 namespace WebMap
 {
@@ -38,6 +39,7 @@ namespace WebMap
         private static volatile byte[] png;
         public static volatile int Rev;                    // content revision of the PNG
         private static volatile bool sweeping;            // set on the game thread, cleared by the pool thread
+        private static int sweeps;                        // finished since start: the first only sets the tiles' baseline
         // BepInEx only captures Unity log calls made on the main thread, so the
         // pool thread leaves its summary here and the loop prints it next tick.
         private static volatile string pendingLog;
@@ -154,6 +156,8 @@ namespace WebMap
             Graves.Begin();
             WorldObjects.Begin();
             TerrainPatches.Begin();
+            Vegetation.Begin();                               // the map tiles' trees and rocks
+            LocationTerrain.Begin();                          // and the ground the game shapes round its locations
             Stats.BeginSweep();
             try { Stats.ObserveKeys(ZoneSystem.instance != null ? ZoneSystem.instance.GetGlobalKeys() : null); } catch { }
             Traders.ScanIfNeeded();                           // once, on the game thread
@@ -185,6 +189,7 @@ namespace WebMap
                         // the 3D view: every visible object in walked ground, and the terraforming under it
                         if (pref == TerrainPatches.CompilerHash) TerrainPatches.Observe(zdo, p);
                         else WorldObjects.Observe(zdo, pref, p, creator);
+                        if (LocationTerrain.Is(pref)) LocationTerrain.Observe(zdo, p);
                         if (Graves.IsGrave(pref))
                         {
                             Graves.Observe(zdo, p);   // spawned by the game, so no creator
@@ -217,6 +222,7 @@ namespace WebMap
                         else
                         {
                             ForestMap.Observe(pref, idx);     // trees and stumps aren't placed by anyone
+                            Vegetation.Observe(pref, p, zdo);  // and the same again, each where it stands, for the tiles
                         }
                     }
                 }
@@ -229,16 +235,28 @@ namespace WebMap
             }
             walk.Stop();
 
+            // Two steps of the map tiles still need the game thread: the locations' ground loads
+            // their prefabs, and the trees are published in slices (Tiles.WorldSweep.Due). Each is
+            // stepped by hand, so a throw ends that step and not the sweep.
+            var changedZones = new HashSet<long>();
+            foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones) })
+                while (true)
+                {
+                    try { if (!step.MoveNext()) break; }
+                    catch (Exception e) { ZLog.LogWarning("WebMap: sweep tile step failed: " + e); break; }
+                    yield return step.Current;
+                }
+
             // The walk is over and nothing below reads the game: hand the rest to
             // the pool. The per-sweep lists stay quiet until the pool thread clears
             // `sweeping`, which is what lets the next walk begin.
             int started = lastSweepStart, gcBefore = gc2, walkFrames = frames;
             long walkMs = walk.ElapsedMilliseconds;
-            ThreadPool.QueueUserWorkItem(_ => Finish(size, byPrefab, found, seen, walkMs, walkFrames, wall, gcBefore, started));
+            ThreadPool.QueueUserWorkItem(_ => Finish(size, byPrefab, found, seen, walkMs, walkFrames, wall, gcBefore, started, changedZones));
         }
 
         private static void Finish(int size, Dictionary<int, int> byPrefab, int found, int seen,
-                                   long walkMs, int frames, Stopwatch wall, int gcBefore, int started)
+                                   long walkMs, int frames, Stopwatch wall, int gcBefore, int started, HashSet<long> changedZones)
         {
             try
             {
@@ -254,7 +272,8 @@ namespace WebMap
                 Graves.Finish();
                 Locations.Finish();
                 int objectChunks = WorldObjects.Finish();
-                TerrainPatches.Finish();
+                TerrainPatches.Finish(changedZones);
+                int redrawn = RedrawTiles(changedZones);
                 Stats.PublishSweep();
                 finish.Stop();
 
@@ -264,6 +283,7 @@ namespace WebMap
                 pendingLog = $"WebMap: structures sweep -> {found} placed pieces from {seen} zdos; "
                            + $"forest {ForestMap.LastTrees} trees / {ForestMap.LastStumps} stumps; "
                            + $"3D {WorldObjects.Total} objects in walked ground ({objectChunks} chunks changed), {TerrainPatches.Count} terraformed zones, {Models.ModelStore.QueueLength} models to export; "
+                           + $"map tiles: {Vegetation.LastTrees} trees, {Vegetation.LastRocks} rocks, {LocationTerrain.Count} location zones, {redrawn} zones to draw again; "
                            + $"walk {walkMs} ms over {frames} frames + finish {finish.ElapsedMilliseconds} ms off-thread, "
                            + $"{wall.ElapsedMilliseconds} ms wall, {gc2} gen2 gc";
             }
@@ -273,8 +293,22 @@ namespace WebMap
             }
             finally
             {
+                sweeps++;
                 sweeping = false;
             }
+        }
+
+        // The tiles over zones whose ground or trees changed are drawn again. The first sweep
+        // after a start only sets the baseline (every zone is new to it): of those, only the
+        // tiles drawn since the start are drawn again, as they were drawn before any sweep.
+        private static int RedrawTiles(HashSet<long> zones)
+        {
+            foreach (long key in zones)
+            {
+                TileMath.UnzoneKey(key, out int zx, out int zz);
+                TileStore.OnZoneChanged(zx, zz, onlyFresh: sweeps == 0);
+            }
+            return zones.Count;
         }
 
         // Each pixel takes the weighted average albedo of the pieces standing on

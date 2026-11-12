@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 namespace WebMap
@@ -24,6 +25,42 @@ namespace WebMap
             }
             catch { return true; }
         }
+
+        // Any walked ground in a box of world metres (the tile store and the tree regions, from their
+        // own threads: the fog is only ever read here). Before the fog loads, nothing is walked: the
+        // close-zoom tiles wait for it rather than render the whole world.
+        public static bool AnyExplored(float minX, float minZ, float maxX, float maxZ) =>
+            AnyExplored(WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRgba : null, minX, minZ, maxX, maxZ);
+
+        internal static bool AnyExplored(byte[] fog, float minX, float minZ, float maxX, float maxZ)
+        {
+            if (fog == null) return false;
+            int size = WebMapConfig.TEXTURE_SIZE, half = size / 2;
+            float ps = WebMapConfig.PIXEL_SIZE;
+            int x0 = Math.Max(0, Mathf.FloorToInt(minX / ps + half)), x1 = Math.Min(size - 1, Mathf.CeilToInt(maxX / ps + half));
+            int y0 = Math.Max(0, Mathf.FloorToInt(minZ / ps + half)), y1 = Math.Min(size - 1, Mathf.CeilToInt(maxZ / ps + half));
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++)
+                    if (fog[(y * size + x) * 4] > 127) return true;
+            return false;
+        }
+
+        // Every walked fog pixel, every `stride` pixels each way, as world metres (the map tiles
+        // queue what is missing over walked ground at start)
+        public static void ForEachExplored(Action<float, float> at, int stride)
+        {
+            var fog = WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRgba : null;
+            if (fog == null) return;
+            int size = WebMapConfig.TEXTURE_SIZE, half = size / 2;
+            float ps = WebMapConfig.PIXEL_SIZE;
+            stride = Math.Max(1, stride);
+            for (int y = 0; y < size; y += stride)
+                for (int x = 0; x < size; x += stride)
+                    if (fog[(y * size + x) * 4] > 127) at((x - half) * ps, (y - half) * ps);
+        }
+
+        // moves each time the fog lifts somewhere: a cache key for what is built from it
+        public static int Revision => WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRev : 0;
 
         // The 3D view's data comes in 256 m chunks (WorldObjects.ChunkOf), and a chunk
         // with any walked ground in it is a walked chunk. Built from the whole fog when

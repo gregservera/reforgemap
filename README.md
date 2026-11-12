@@ -189,6 +189,12 @@ The full documentation of every feature, route and setting (English) is in
   [Kyle Paulsen](https://github.com/kylepaulsen)
 * The 3D view's model export, asset readers, world objects and sky are ported from
   [f00d4tehg0dz/valheim-webmap](https://github.com/f00d4tehg0dz/valheim-webmap) (MIT)
+* The map tiles (terrain, water, trees and rocks drawn in the background, at a metre a pixel)
+  are ported from [Munin Map](https://github.com/cocopuff2u-gaming/munin-map) by
+  [Cody Keats](https://github.com/cocopuff2u) (MIT)
+* [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp) 2.1 (Apache-2.0), merged into
+  `ForgeMap.dll` for the WebP map tiles, with System.Buffers, System.Numerics.Vectors and
+  System.Text.Encoding.CodePages (MIT, Microsoft)
 * [three.js](https://threejs.org) r180 (MIT), vendored under `web/vendor/three`
 * [JetBrains Mono](https://www.jetbrains.com/lp/mono/) (SIL Open Font License 1.1), `web/fonts`
 * [websocket-sharp](https://github.com/sta/websocket-sharp) by sta.blockhead (MIT),

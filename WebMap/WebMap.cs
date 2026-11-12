@@ -88,6 +88,12 @@ namespace WebMap
             if (WebMapConfig.EXPORT_MODELS) StaticCoroutine.Start(Models.ModelStore.Pump());
             StaticCoroutine.Start(Heights.Pump());
             ChatRelay.Start();          // Discord -> game, its own pool-thread timer
+            // the map tiles: the workers, the game-thread fallback for terrain sampling, and the
+            // close-zoom tiles over everything already walked (only what is missing is queued)
+            StaticCoroutine.Start(Tiles.TileStore.MainThreadPump());
+            Tiles.TileStore.Start();
+            int stride = Math.Max(1, (int)(Tiles.TileMath.TileSpanMeters(WebMapConfig.PRERENDER_ZOOM + 1) / WebMapConfig.PIXEL_SIZE / 2));
+            MapFog.ForEachExplored(Tiles.TileStore.OnExplored, stride);
             NotifyOnline();
         }
 
@@ -146,6 +152,9 @@ namespace WebMap
             Features.Load(worldDataPath);
             Portals.Load(worldDataPath);
             Locations.Load(worldDataPath);
+            // Munin's map tiles: the trees the last sweep saw, then what is drawn already
+            Tiles.Vegetation.LoadCache(worldDataPath);
+            Tiles.TileStore.Init(worldDataPath);
             // prefabs are the same in every world, so the model library sits beside the worlds
             if (Models.ModelStore.Root == null) Models.ModelStore.Init(mapDataPath);
 
@@ -296,6 +305,7 @@ namespace WebMap
                                             changed = true;
                                             fog[o] = fog[o + 1] = fog[o + 2] = fog[o + 3] = 255;
                                             MapFog.MarkPixel(x, y);
+                                            Tiles.TileStore.OnExplored((x - halfTextureSize) * WebMapConfig.PIXEL_SIZE, (y - halfTextureSize) * WebMapConfig.PIXEL_SIZE);
                                         }
                                     }
                                 }
@@ -548,6 +558,7 @@ namespace WebMap
             {
                 Stats.Save();
                 Trails.Save();
+                Tiles.TileStore.Stop();
                 mapDataServer.Stop();
                 WebMap.instance.NotifyOffline();
             }

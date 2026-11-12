@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ImageSharp (lossless WebP map tiles, Util/WebP.cs) and the System DLLs it needs are merged
+     into ForgeMap.dll after the build and made internal, as Munin Map does: one DLL to ship, and
+     no clash with another mod's copy. The game has its own System.Memory and Unsafe, so those stay
+     out; websocket-sharp.dll ships beside ForgeMap.dll as before. -->
+<Project>
+  <Target Name="ILRepacker" AfterTargets="Build">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)$(AssemblyName).dll" />
+      <InputAssemblies Include="$(OutputPath)SixLabors.ImageSharp.dll" />
+      <InputAssemblies Include="$(OutputPath)System.Buffers.dll" />
+      <InputAssemblies Include="$(OutputPath)System.Numerics.Vectors.dll" />
+      <InputAssemblies Include="$(OutputPath)System.Text.Encoding.CodePages.dll" />
+      <LibraryPath Include="$(OutputPath)" />
+      <LibraryPath Include="..\libs\valheim" />
+      <LibraryPath Include="..\libs\BepInEx\core" />
+    </ItemGroup>
+    <ILRepack Parallel="true" Internalize="true" DebugInfo="true" LibraryPath="@(LibraryPath)"
+              InputAssemblies="@(InputAssemblies)" TargetKind="Dll" LogFile="$(OutputPath)ilrepack.log"
+              OutputFile="$(OutputPath)$(AssemblyName).dll" />
+  </Target>
+</Project>
