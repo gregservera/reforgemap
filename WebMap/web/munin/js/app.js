@@ -23,6 +23,7 @@ import { Sidebar, newerVersion } from './ui.js';
 import { BiomeHover } from './biomehover.js';
 import { NamesLayer } from './layers/names.js';
 import { PlanLayer } from './layers/plan.js';
+import { ForgeCard } from './fmcard.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -263,7 +264,7 @@ class App {
     $('#btn-menu').addEventListener('click', () => this.toggleSidebar());
     $('#btn-home').addEventListener('click', () => this.goToSpawn(true));
     for (const b of $('#btn-mode').querySelectorAll('button')) b.addEventListener('click', () => this.setMode(b.dataset.mode));
-    this.playerCard = new PlayerCard(this);
+    this.playerCard = new ForgeCard(this);   // ForgeMap's card, Munin's place for it (fmcard.js)
     this.layers.players.onClick = (p, x, y) => this.playerCard.show(p, x, y);
     this.layers.players.onChange((list) => this.playerCard.update(list));
     $('#btn-export').addEventListener('click', () => this.openExport());

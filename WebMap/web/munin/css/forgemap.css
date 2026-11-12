@@ -53,3 +53,29 @@
 /* a place's card (munin/js/layers/names.js): the name and its pencil on one line */
 .fm-place .fm-name { display: flex; align-items: center; gap: 8px; }
 .fm-place .fm-name .btn { padding: 0 6px; line-height: 1.4; }
+
+/* the player's card on the map (munin/js/fmcard.js): ForgeMap's pieces of a player (js/card.js), with
+   the colours site.css gives them, in Munin's card */
+.fm-card { --gold: var(--accent); --hair: rgba(255,255,255,.035); --nil: #5e534b; --ink: var(--text); --ink-2: var(--muted); --pill: 999px; --off: var(--danger); }
+.fm-card .fm-card-x { position: absolute; top: 6px; right: 8px; background: none; border: 0; color: var(--muted); font-size: 18px; cursor: pointer; }
+.fm-card .fm-card-head { display: flex; align-items: center; gap: 8px; font-size: 15px; padding-right: 20px; }
+.fm-card .fm-card-state { color: var(--muted); margin: 4px 0 8px; }
+.fm-card .fm-card-body { display: grid; justify-items: center; gap: 6px; margin: 8px 0; }
+.fm-card .dot { display: inline-block; width: .55rem; height: .55rem; border-radius: 50%; background: #8a8577; }
+.fm-card .dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.fm-card .cls { display: inline-block; padding: .1rem .45rem; border-radius: var(--pill); border: 1px solid var(--line); background: var(--hair); font-size: .62rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); white-space: nowrap; }
+.fm-card .cls.early { color: var(--muted); border-style: dashed; }
+.fm-card .mini { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .4rem; width: 100%; text-align: center; }
+.fm-card .mini .m { display: grid; min-width: 0; }
+.fm-card .mini .v { font-size: .92rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.fm-card .mini .k { font-size: .55rem; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); white-space: nowrap; }
+.fm-card .mini .nil .v { color: var(--nil); font-weight: 600; }
+.fm-card .radar { width: 210px; height: 210px; overflow: visible; }
+.fm-card .radar .fill { fill: var(--gold); fill-opacity: .2; stroke: var(--gold); stroke-width: 1.6; stroke-linejoin: round; }
+.fm-card .radar .grid { fill: none; stroke: var(--line); stroke-width: 1; }
+.fm-card .radar .spoke { stroke: var(--hair); stroke-width: 1; }
+.fm-card .radar .pt { fill: var(--gold); }
+.fm-card .radar .lb { font-size: 9.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--muted); }
+.fm-card .radar .lv { font-size: 9px; fill: var(--ink-2); font-variant-numeric: tabular-nums; }
+.fm-card .fm-ping { font-family: var(--mono); font-size: .72em; font-weight: 700; padding: .05em .4em; border-radius: var(--pill); border: 1px solid currentColor; white-space: nowrap; }
+.fm-card .fm-ping.good { color: var(--ok); } .fm-card .fm-ping.fair { color: var(--gold); } .fm-card .fm-ping.bad { color: var(--off); }
