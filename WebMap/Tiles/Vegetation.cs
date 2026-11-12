@@ -253,6 +253,9 @@ namespace WebMap.Tiles
             for (int zz = zz0; zz <= zz1; zz++)
                 for (int zx = zx0; zx <= zx1; zx++)
                     if (zoneHash.TryGetValue(TileMath.ZoneKey(zx, zz), out int zh)) { h = unchecked(h * 31 + zh); any = true; }
+            // ForgeMap: the points sent are the walked ones only, so how much of the chunk is walked is
+            // part of what it holds: as the fog lifts, its revision moves and browsers fetch it again
+            if (any) h = unchecked(h * 31 + MapFog.ExploredIn(minX, minZ, minX + TileMath.CHUNK_SIZE, minZ + TileMath.CHUNK_SIZE));
             return any ? (int?)(h & 0x7fffffff) : null;
         }
 
@@ -302,7 +305,7 @@ namespace WebMap.Tiles
                     for (int cx = rx * REGION; cx < Math.Min(rx * REGION + REGION, TileMath.ChunksPerSide); cx++)
                     {
                         if (ListedRev(cx, cz) == null) continue;
-                        var pts = ChunkPoints(cx, cz).FindAll((p) => WaterState(p) != Sunk);
+                        var pts = ChunkPoints(cx, cz).FindAll((p) => WaterState(p) != Sunk && MapFog.IsExplored(p.x, p.z));
                         bw.Write((byte)cx); bw.Write((byte)cz); bw.Write(pts.Count);
                         float minX = TileMath.ChunkMin(cx), minZ = TileMath.ChunkMin(cz);
                         foreach (var p in pts)
@@ -427,7 +430,7 @@ namespace WebMap.Tiles
         public static byte[] Chunk(int cx, int cz)
         {
             float minX = TileMath.ChunkMin(cx), minZ = TileMath.ChunkMin(cz);
-            var pts = ChunkPoints(cx, cz);
+            var pts = ChunkPoints(cx, cz).FindAll((p) => MapFog.IsExplored(p.x, p.z));   // ForgeMap: walked ground only
             using (var ms = new MemoryStream(8 + pts.Count * 8))
             using (var bw = new BinaryWriter(ms))
             {

@@ -45,6 +45,21 @@ namespace WebMap
             return false;
         }
 
+        // How many walked fog pixels a box of world metres holds (a cache key: it only grows)
+        public static int ExploredIn(float minX, float minZ, float maxX, float maxZ)
+        {
+            var fog = WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRgba : null;
+            if (fog == null) return 0;
+            int size = WebMapConfig.TEXTURE_SIZE, half = size / 2, n = 0;
+            float ps = WebMapConfig.PIXEL_SIZE;
+            int x0 = Math.Max(0, Mathf.FloorToInt(minX / ps + half)), x1 = Math.Min(size - 1, Mathf.CeilToInt(maxX / ps + half));
+            int y0 = Math.Max(0, Mathf.FloorToInt(minZ / ps + half)), y1 = Math.Min(size - 1, Mathf.CeilToInt(maxZ / ps + half));
+            for (int y = y0; y <= y1; y++)
+                for (int x = x0; x <= x1; x++)
+                    if (fog[(y * size + x) * 4] > 127) n++;
+            return n;
+        }
+
         // Every walked fog pixel, every `stride` pixels each way, as world metres (the map tiles
         // queue what is missing over walked ground at start)
         public static void ForEachExplored(Action<float, float> at, int stride)

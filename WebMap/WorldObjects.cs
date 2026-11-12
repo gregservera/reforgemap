@@ -91,6 +91,9 @@ namespace WebMap
             if (!building) return;
             int cx = ChunkOf(pos.x), cz = ChunkOf(pos.z);
             if (cx < -64 || cz < -64 || cx > 63 || cz > 63 || !MapFog.ChunkExplored(cx, cz)) return;
+            // and the object's own spot: a chunk part walked does not show its dark part (spec F3); as
+            // the fog lifts, the next sweep finds the object and the chunk's revision moves
+            if (!MapFog.IsExplored(pos.x, pos.z)) return;
             if (prefabHash == proxyHash)
             {
                 // every game spawns the location itself from the hash on its proxy, where the proxy stands

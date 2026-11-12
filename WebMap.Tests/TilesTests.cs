@@ -45,6 +45,28 @@ namespace WebMap.Tests
             Assert.False(MapFog.AnyExplored(null, -20000f, -20000f, 20000f, 20000f)); // before the fog loads: nothing
         }
 
+        // A chunk part walked sends only its walked part: what is sent is told by how much is walked,
+        // and nothing is walked before the fog has loaded.
+        [Fact]
+        public void HowMuchOfABoxIsWalkedCountsItsWalkedPixelsAndNothingBeforeTheFog()
+        {
+            int size = WebMapConfig.TEXTURE_SIZE, half = size / 2;
+            var server = new MapDataServer();
+            try
+            {
+                global::WebMap.WebMap.mapDataServer = server;
+                Assert.Equal(0, MapFog.ExploredIn(-500f, -500f, 500f, 500f));
+                Assert.False(MapFog.IsExplored(0f, 0f));
+                server.fogRgba = new byte[size * size * 4];
+                for (int y = half; y < half + 3; y++) for (int x = half; x < half + 2; x++) server.fogRgba[(y * size + x) * 4] = 255;
+                Assert.Equal(6, MapFog.ExploredIn(-100f, -100f, 100f, 100f));
+                Assert.Equal(0, MapFog.ExploredIn(1000f, 1000f, 1200f, 1200f));
+                Assert.True(MapFog.IsExplored(0f, 0f));
+                Assert.False(MapFog.IsExplored(300f, 0f));
+            }
+            finally { global::WebMap.WebMap.mapDataServer = null; }
+        }
+
         // The tile route takes its path apart: anything but a tile of a known layer is no tile.
         [Fact]
         public void OnlyATilePathOfAKnownLayerIsATile()
