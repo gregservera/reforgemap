@@ -885,6 +885,7 @@ I18N.add("fr", {
   "Show or hide the sidebar": "Afficher ou masquer le panneau latéral",
   "Show these events": "Afficher ces événements",
   "Show yourself on the map": "Apparaître sur la carte",
+  "Shown by a Vegvisir: nobody has been there yet": "Montré par un Vegvisir : personne n'y est encore allé",
   "Shut": "Fermé",
   "Sidebar": "Panneau latéral",
   "Sign": "Panneau",

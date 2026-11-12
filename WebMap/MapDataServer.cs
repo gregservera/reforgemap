@@ -1063,6 +1063,7 @@ namespace WebMap
                 case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
                 case "environments.json": json = "{}"; break;
                 case "pins.json": json = PinsMuninJson(); break;
+                case "markers.json": json = Locations.MuninMarkersJson(); break;   // boss altars, Forge of Potential
             }
             if (json == null && bin == null && rest.StartsWith("objects/", StringComparison.Ordinal) && rest.EndsWith(".bin", StringComparison.Ordinal))
             {

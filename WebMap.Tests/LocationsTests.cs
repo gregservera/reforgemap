@@ -41,6 +41,14 @@ namespace WebMap.Tests
                 Assert.Equal(new[] { "GoblinKing", "Eikthyrnir" }, all.Select(l => l.Str("kind")));
                 Assert.Equal(1, all[0].GetProperty("v").GetInt32());
                 Assert.False(all[1].TryGetProperty("v", out _));
+
+                // Munin's map: the altars as its boss markers, the Vegvisir's one said to be unvisited;
+                // the altar nobody walked to nor read of is not among them
+                var sets = J.Parse(Locations.MuninMarkersJson()).GetProperty("sets").EnumerateArray().ToList();
+                var bosses = sets.Single(x => x.Str("id") == "bosses").GetProperty("markers").EnumerateArray().ToList();
+                Assert.Equal(new[] { "Yagluth", "Eikthyr" }, bosses.Select(m => m.Str("label")));
+                Assert.Contains("Vegvisir", bosses[0].Str("description"));
+                Assert.False(bosses[1].TryGetProperty("description", out _));
             }
             finally { Locations.ResetForTests(); Directory.Delete(dir, true); }
         }

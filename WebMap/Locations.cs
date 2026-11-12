@@ -133,9 +133,42 @@ namespace WebMap
                 sb.Append('}');
             }
             json = sb.Append("],\"count\":").Append(n).Append('}').ToString();
+            muninJson = BuildMunin(found);
         }
 
         public static string GetJson() => json;
+
+        // ---------- Munin's map (data/markers.json) ----------
+        // The boss altars someone has walked to, or a Vegvisir pointed to (ForgeMap 1.4.0), and the Forge
+        // of Potential, as Munin's marker sets: {"rev","sets":[{"id","label","markers":[{x,z,cat,icon,
+        // label,description}]}]}. Labels in English: the page puts them through its table.
+        private static readonly (string prefix, string name)[] Bosses = {
+            ("Eikthyrnir", "Eikthyr"), ("GDKing", "The Elder"), ("Bonemass", "Bonemass"), ("Dragonqueen", "Moder"),
+            ("GoblinKing", "Yagluth"), ("Mistlands_DvergrBossEntrance", "The Queen"), ("Fader", "Fader") };
+        private static volatile string muninJson = "{\"rev\":0,\"sets\":[]}";
+        public static string MuninMarkersJson() => muninJson;
+
+        // after the sweep's scan, where the site's list is made (Finish)
+        private static string BuildMunin(List<Entry> list)
+        {
+            var bosses = new List<string>(); var forges = new List<string>();
+            foreach (var e in list)
+            {
+                if (!e.explored && !e.revealed) continue;
+                string name = null;
+                foreach (var (prefix, n) in Bosses) if (e.kind.StartsWith(prefix, StringComparison.Ordinal)) { name = n; break; }
+                bool forge = e.kind.StartsWith("AncientUpgradeStation", StringComparison.Ordinal);
+                if (name == null && !forge && !(e.revealed && !e.explored)) continue;   // a Vegvisir only points at altars
+                if (name == null && !forge) name = e.kind;
+                string desc = e.revealed && !e.explored ? ",\"description\":\"Shown by a Vegvisir: nobody has been there yet\"" : "";
+                string m = FormattableString.Invariant($"{{\"x\":{e.x:0.#},\"z\":{e.z:0.#},\"cat\":\"{(forge ? "landmark" : "boss")}\",\"icon\":\"{(forge ? "forge" : "boss")}\",\"label\":\"{(forge ? "Forge of Potential" : name.Replace("\"", ""))}\"{desc}}}");
+                (forge ? forges : bosses).Add(m);
+            }
+            string sets = ""
+                + "{\"id\":\"bosses\",\"label\":\"Boss altars\",\"markers\":[" + string.Join(",", bosses) + "]},"
+                + "{\"id\":\"landmarks\",\"label\":\"Landmarks\",\"markers\":[" + string.Join(",", forges) + "]}";
+            return "{\"rev\":" + Fnv.Of(sets) + ",\"sets\":[" + sets + "]}";
+        }
 
         // ---------- for the tests (WebMap.Tests) ----------
         internal static void ResetForTests(string worldDataPath = null)

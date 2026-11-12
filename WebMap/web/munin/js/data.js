@@ -270,6 +270,10 @@ export const markers = {
       const m = await getJSON('data/markers.json');
       if (m.rev === this.rev) return;
       this.rev = m.rev; this.sets = m.sets || [];
+      // ForgeMap: the labels through the page's table (the map draws them on a canvas, out of the
+      // page's own translation's reach)
+      const t = window.I18N ? (s) => (s ? window.I18N.t(s) : s) : (s) => s;
+      for (const set of this.sets) { set.label = t(set.label); for (const mk of set.markers || []) { mk.label = t(mk.label); if (mk.description) mk.description = t(mk.description); } }
       for (const fn of this.listeners) fn(this.sets);
     } catch (e) { console.warn('markers', e); }
   },
