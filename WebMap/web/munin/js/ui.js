@@ -216,6 +216,8 @@ export class Sidebar {
       <div class="act-line"><span class="mp-seg"><button data-d="1" class="on">Last day</button><button data-d="7">Last week</button></span></div>
       <div class="act-key"><span><i class="built"></i>Built</span><span><i class="gone"></i>Taken down</span></div></div>`);
     const trailRow = row(TRAIL_SVG, 'Trails', 'Where players went, last 3 hours', false, (v) => { trailOpts.hidden = !v; A.set('trails', v); });
+    // ForgeMap: everywhere people have walked, all told (layers/paths.js); Munin's trails are the last hours
+    if (L.paths) act.append(row(TRAIL_SVG, 'Frequented paths', 'Everywhere players walk, all told: the busiest show deepest', false, (v) => L.paths.setOn(v)));
     act.append(trailRow, trailOpts);
     act.append(row(HEAT_SVG, 'Time spent', 'Click a square for who and how long', false, (v) => A.set('heat', v)));
     act.append(row(ico('tombstone', '#e0485a'), 'Deaths', 'Where players have died', false, (v) => A.set('deaths', v)));

@@ -24,6 +24,7 @@ import { BiomeHover } from './biomehover.js';
 import { NamesLayer } from './layers/names.js';
 import { PlanLayer } from './layers/plan.js';
 import { ForgeCard } from './fmcard.js';
+import { PathsLayer } from './layers/paths.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -181,6 +182,7 @@ class App {
     this.layers.markers = new MarkerLayers(this.map, { gl: this.gl });
     this.layers.names = new NamesLayer().addTo(this.map);   // ForgeMap: the land named (layers/names.js)
     // ForgeMap: the floor plan up close and the lights (layers/plan.js)
+    this.layers.paths = new PathsLayer().addTo(this.map);   // ForgeMap: the frequented paths (layers/paths.js)
     this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names }).addTo(this.map);
     this.layers.activity = new ActivityLayers(this.map, this.gl);
     // right click (long press on a phone) places a pin, unless the server turned web pins off
