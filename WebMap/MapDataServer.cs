@@ -653,7 +653,7 @@ namespace WebMap
                         string state = "{\"now\":" + DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                             + ",\"rev\":{\"fog\":" + fogRev + ",\"pieces\":" + Pieces.Rev + ",\"forest\":" + ForestMap.Rev
                             + ",\"structures\":" + StructureMap.Rev + ",\"chart\":" + Chart.Rev + ",\"trails\":" + Trails.Rev
-                            + ",\"features\":" + Features.Rev + ",\"objects\":" + WorldObjects.Rev + ",\"height\":" + TerrainPatches.Rev
+                            + ",\"features\":" + FeaturesRev() + ",\"objects\":" + WorldObjects.Rev + ",\"height\":" + TerrainPatches.Rev
                             + ",\"models\":" + Models.ModelStore.Rev + "}"
                             + ",\"time\":" + timeJson
                             + ",\"players\":" + playersJson + ",\"messages\":" + messagesJson + ",\"pins\":" + pinsJson
@@ -742,11 +742,11 @@ namespace WebMap
                         return true;
                     }
                 case "/features":
-                    // the world's geography with its names; the fog is the viewer's to apply
+                    // the world's geography with its names, the walked part of it only (Features.WalkedJson)
                     res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
                     res.ContentType = "application/json";
                     res.StatusCode = 200;
-                    textBytes = Encoding.UTF8.GetBytes(Features.Json());
+                    textBytes = Encoding.UTF8.GetBytes(Features.WalkedJson());
                     res.ContentLength64 = textBytes.Length;
                     res.Close(textBytes, true);
                     return true;
@@ -758,7 +758,7 @@ namespace WebMap
                         string err = Features.ParseBody(body, out string id, out string name)
                             ? Features.SetName(id, name, who, out log) : "expected {\"id\":..,\"name\":..}";
                         Answer(res, err == null ? 200 : 400, err == null
-                            ? "{\"ok\":true,\"rev\":" + Features.Rev + ",\"log\":\"" + JsonEscape(log ?? "") + "\"}"
+                            ? "{\"ok\":true,\"rev\":" + FeaturesRev() + ",\"log\":\"" + JsonEscape(log ?? "") + "\"}"
                             : "{\"error\":\"" + JsonEscape(err) + "\"}");
                         return true;
                     }
@@ -1101,6 +1101,9 @@ namespace WebMap
             if (json != null) SendBytes(req, res, Encoding.UTF8.GetBytes(json), "application/json");
             else SendBytes(req, res, bin, type, compressible: type != "image/png");
         }
+
+        // the revision of /features as served: the walked places move with the fog, not only with names
+        private static int FeaturesRev() { Features.WalkedJson(); return Features.WalkedRev; }
 
         // Munin numbers 256 m chunks from the world's south-west corner (TileMath.ChunkCoord), ForgeMap
         // from its middle (WorldObjects.ChunkOf): the same squares, 42 apart (10752 m / 256)

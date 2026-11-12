@@ -148,6 +148,26 @@ namespace WebMap.Tests
             finally { global::WebMap.WebMap.mapDataServer = null; }
         }
 
+        // Spoilers: a place nobody has walked is not sent at all, and a walked one carries where its name
+        // goes for those who have been there: on the ground they walked, not the middle of the whole land.
+        [Fact]
+        public void OnlyWalkedPlacesAreSentTheirNameOnTheWalkedPart()
+        {
+            new Grid().Box(400, 400, 600, 600).Read();
+            int size = WebMapConfig.TEXTURE_SIZE, per = size / Grid.N;
+            var fog = new byte[size * size * 4];
+            Assert.Equal(0, J.Parse(Features.WalkedJsonForTests(fog)).GetProperty("count").GetInt32());
+            for (int cz = 410; cz < 420; cz++)                    // a corner of the land walked
+                for (int cx = 410; cx < 420; cx++)
+                    fog[((cz * per + per / 2) * size + cx * per + per / 2) * 4] = 255;
+            var land = J.Parse(Features.WalkedJsonForTests(fog)).GetProperty("features").EnumerateArray()
+                .Single(f => f.Str("kind") == "continent" || f.Str("kind") == "island");
+            float lx = land.GetProperty("lx").GetSingle(), lz = land.GetProperty("lz").GetSingle();
+            Assert.InRange(Grid.C(lx), 410, 419);
+            Assert.InRange(Grid.C(lz), 410, 419);
+            Assert.InRange(Grid.C(land.GetProperty("x").GetSingle()), 480, 520);   // the land's own middle kept
+        }
+
         [Fact]
         public void ClassAtIsMinusOneBeforeTheWorldIsReadAndOffTheGrid()
         {

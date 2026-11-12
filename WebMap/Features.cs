@@ -503,6 +503,99 @@ namespace WebMap
 
         public static string Json() => json;
 
+        // ---------- what the site is sent ----------
+        // The places someone has walked a part of, and nothing of the rest: a name over ground nobody
+        // has seen would give it away (spec F3). Each carries where its name is best written for those
+        // who have been there, lx, lz: the walked cell nearest the middle of its walked cells (x, z stay
+        // the place's own, for the pages that measure it); a river, the longest walked stretch of its
+        // course, wline. Made again when the fog has moved and at most every WalkedEveryMs.
+        private const int WalkedEveryMs = 15000;
+        private static volatile string walkedJson = "{\"features\":[],\"count\":0,\"rev\":0}";
+        private static int walkedOf = int.MinValue, walkedFog = int.MinValue, walkedAt;
+        public static volatile int WalkedRev;
+
+        public static string WalkedJson()
+        {
+            int fogRev = MapFog.Revision, now = Environment.TickCount;
+            if (walkedOf == Rev && (walkedFog == fogRev || unchecked((uint)(now - walkedAt)) < WalkedEveryMs)) return walkedJson;
+            var fog = WebMap.mapDataServer != null ? WebMap.mapDataServer.fogRgba : null;
+            walkedJson = WalkedJson(grids, fog);
+            WalkedRev = Fnv.Of(walkedJson);
+            walkedOf = Rev; walkedFog = fogRev; walkedAt = now;
+            return walkedJson;
+        }
+
+        private static string WalkedJson(Grids g, byte[] fog)
+        {
+            var sb = new StringBuilder("{\"features\":[");
+            int n = 0;
+            if (g != null && fog != null)
+            lock (gate)
+            {
+                int count = found.Length, size = TEXTURE_SIZE, per = size / N;
+                var seen = new int[count]; var sx = new double[count]; var sz = new double[count];
+                bool Walked(int cx, int cz) { int px = cx * per + per / 2, py = cz * per + per / 2; return fog[(py * size + px) * 4] > 127; }
+                var layers = new[] { g.water, g.range, g.region, g.land };
+                foreach (var layer in layers)
+                    for (int cz = 0; cz < N; cz++)
+                        for (int cx = 0; cx < N; cx++)
+                        {
+                            int k = layer[cz * N + cx];
+                            if (k == 0 || k > count || !Walked(cx, cz)) continue;
+                            seen[k - 1]++; sx[k - 1] += cx; sz[k - 1] += cz;
+                        }
+                // the walked cell nearest the middle of the walked ones: inside the place, on seen ground
+                var best = new int[count]; var bestD = new double[count];
+                for (int i = 0; i < count; i++) bestD[i] = double.MaxValue;
+                foreach (var layer in layers)
+                    for (int cz = 0; cz < N; cz++)
+                        for (int cx = 0; cx < N; cx++)
+                        {
+                            int k = layer[cz * N + cx];
+                            if (k == 0 || k > count || seen[k - 1] == 0 || !Walked(cx, cz)) continue;
+                            double mx = sx[k - 1] / seen[k - 1], mz = sz[k - 1] / seen[k - 1], d = (cx - mx) * (cx - mx) + (cz - mz) * (cz - mz);
+                            if (d < bestD[k - 1]) { bestD[k - 1] = d; best[k - 1] = cz * N + cx; }
+                        }
+                for (int i = 0; i < count; i++)
+                {
+                    var f = found[i];
+                    List<float[]> run = null;
+                    if (f.line != null)
+                    {
+                        // a river: its longest stretch on walked ground
+                        List<float[]> cur = null;
+                        foreach (var q in f.line)
+                        {
+                            int cx = (int)Math.Floor(q[0] / g.cell + N / 2f), cz = (int)Math.Floor(q[1] / g.cell + N / 2f);
+                            bool on = cx >= 0 && cz >= 0 && cx < N && cz < N && Walked(cx, cz);
+                            if (on) { (cur ??= new List<float[]>()).Add(q); if (run == null || cur.Count > run.Count) run = cur; }
+                            else cur = null;
+                        }
+                        if (run == null) continue;
+                    }
+                    else if (seen[i] == 0) continue;
+                    if (n++ > 0) sb.Append(',');
+                    Open(sb, f);
+                    if (run != null)
+                    {
+                        var mid = run[run.Count / 2];
+                        sb.Append(Inv($",\"lx\":{mid[0]:0.#},\"lz\":{mid[1]:0.#},\"wline\":["));
+                        for (int j = 0; j < run.Count; j++) { if (j > 0) sb.Append(','); sb.Append(Inv($"[{run[j][0]:0.#},{run[j][1]:0.#}]")); }
+                        sb.Append(']');
+                    }
+                    else
+                    {
+                        int c = best[i], bx = c % N, bz = c / N;
+                        sb.Append(Inv($",\"lx\":{(bx + 0.5f - N / 2f) * g.cell:0.#},\"lz\":{(bz + 0.5f - N / 2f) * g.cell:0.#}"));
+                    }
+                    sb.Append('}');
+                }
+            }
+            sb.Append("],\"count\":").Append(n).Append('}');
+            return sb.ToString();
+        }
+        internal static string WalkedJsonForTests(byte[] fog) => WalkedJson(grids, fog);
+
         // What is at a spot: the biome and height there, and the places it lies in,
         // most particular first, each with how much of it has been walked and what
         // stands on it. Null for ground nobody has walked: that stays a mystery.

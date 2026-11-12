@@ -69,7 +69,7 @@ export default [
   {files: ES_MODULES, languageOptions: {sourceType: "module"}},
   // kept as Munin wrote them: the mistake rules hold, its own style (an unread name, a let never
   // reassigned, a worker's self) is let be, so a port stays close to the original
-  {files: MUNIN, languageOptions: {sourceType: "module", globals: {...globals.browser, ...globals.worker, L: "readonly"}},
+  {files: MUNIN, languageOptions: {sourceType: "module", globals: {...globals.browser, ...globals.worker, L: "readonly", MapCore: "readonly"}},
     rules: {"no-unused-vars": "off", "prefer-const": "off", "no-restricted-globals": "off"}},
   {files: ["WebMap.Tests/web/*.mjs", "tools/*.mjs"], languageOptions: {sourceType: "module", globals: globals.node}, rules},
 ];
