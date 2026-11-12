@@ -22,6 +22,7 @@ import { chunks, objects, prefabs, markers, stats } from './data.js';
 import { Sidebar, newerVersion } from './ui.js';
 import { BiomeHover } from './biomehover.js';
 import { NamesLayer } from './layers/names.js';
+import { PlanLayer } from './layers/plan.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -178,6 +179,8 @@ class App {
     this.layers.structures = (this.gl ? new BuildingsGL() : new StructuresLayer()).addTo(this.map);
     this.layers.markers = new MarkerLayers(this.map, { gl: this.gl });
     this.layers.names = new NamesLayer().addTo(this.map);   // ForgeMap: the land named (layers/names.js)
+    // ForgeMap: the floor plan up close and the lights (layers/plan.js)
+    this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names }).addTo(this.map);
     this.layers.activity = new ActivityLayers(this.map, this.gl);
     // right click (long press on a phone) places a pin, unless the server turned web pins off
     this.map.on('contextmenu', (e) => { if (this.measure?.active) { this.measure.undo(); return; } if (this.config?.web_pins !== false) this.layers.markers.openPinEditor(e.latlng); });

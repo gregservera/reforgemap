@@ -1,18 +1,13 @@
 // ForgeMap: the land named -- landmasses, ranges and their peaks, lakes, bays, rivers along their
-// course -- over Munin's map, drawn by ForgeMap's own drawNames (map-core.js, loaded by the page as
-// the global MapCore) into a canvas the size of the map, again at every move and zoom. A click on a
-// name opens its card: what /at knows of the place, and a member may rename it (/names).
-//
-// MapCore draws in its texture's pixels (2048 of 12 m, north up); Leaflet in metres. Both are
-// linear in x and z with north up, so the view is the screen point of the world's middle and the
-// screen pixels per texture pixel: 12 m times Leaflet's pixels per metre.
+// course -- over Munin's map, drawn by ForgeMap's own drawNames (forgecanvas.js). A click on a name
+// opens its card: what /at knows of the place, and a member may rename it (/names).
 
-import { fromLatLng, toLatLng } from '../crs.js';
+import { fromLatLng } from '../crs.js';
+import { ForgeCanvas, MC } from './forgecanvas.js';
 import { layerState } from '../layerstate.js';
 import { whoami, writeHeaders, canSignIn, signIn } from '../forgeauth.js';
 
-// (MapCore is a classic script's top-level const: a global name, but not a property of window)
-const MC = MapCore, T = (s, v) => window.I18N.t(s, v);
+const T = (s, v) => window.I18N.t(s, v);
 const KIND = { continent: 'Continent', island: 'Island', holm: 'Holm', range: 'Mountain range', lake: 'Lake', bay: 'Bay',
   river: 'River', forest: 'Black Forest', swamp: 'Swamp', plains: 'Plains', meadows: 'Meadows',
   mistlands: 'Mistlands', ashlands: 'Ashlands', north: 'Deep North' };
@@ -21,81 +16,27 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const dec1 = (n) => window.I18N.num(n, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 const km2 = (a) => (a >= 1 ? dec1(a) + ' km²' : Math.round(a * 100) + ' ha');
 
-export class NamesLayer extends L.Layer {
-  constructor() {
-    super();
-    this.features = []; this.boxes = []; this.fog = null; this.frame = 0; this.on_ = layerState.placeNames !== false;
-  }
+export class NamesLayer extends ForgeCanvas {
+  constructor() { super('fmNames', 590); this.features = []; this.boxes = []; this.on_ = layerState.placeNames !== false; }
 
-  onAdd(map) {
-    this.map = map;
-    if (!map.getPane('fmNames')) { const p = map.createPane('fmNames'); p.style.zIndex = 590; p.style.pointerEvents = 'none'; }
-    this.canvas = L.DomUtil.create('canvas', 'fm-names', map.getPane('fmNames'));
-    this.g = this.canvas.getContext('2d');
-    map.on('move zoom viewreset resize', this.request, this);
-    map.on('click', this.click, this);
-    this.load();
-    this.timer = setInterval(() => this.load(), 60000);   // renamed places, new walked ground
-    this.request();
-  }
-
-  onRemove(map) {
-    map.off('move zoom viewreset resize', this.request, this);
-    map.off('click', this.click, this);
-    clearInterval(this.timer);
-    this.canvas.remove(); this.boxes = [];
-  }
+  onAdd(map) { super.onAdd(map); map.on('click', this.click, this); }
+  onRemove(map) { map.off('click', this.click, this); super.onRemove(map); this.boxes = []; }
 
   setOn(v) { this.on_ = v; this.request(); }
 
+  // the walked places only (the server leaves the rest out), each written where it was walked:
+  // lx, lz, and a river along its walked stretch
   async load() {
-    try { await MC.fetchConfig(MC.cfg.api); } catch (e) { /* the default geometry */ }
-    // the walked places only (the server leaves the rest out), each written where it was walked:
-    // lx, lz, and a river along its walked stretch
     try {
       const j = await MC.fetchJSON(MC.cfg.api, '/features');
       this.features = ((j && j.features) || []).map((f) => Object.assign({}, f, { x: f.lx ?? f.x, z: f.lz ?? f.z, line: f.wline ?? f.line }));
     } catch (e) { /* none yet */ }
-    // the explored mask names are read against, at the fog's own 12 m (MapCore.explored reads it at
-    // 48 m, and a name at the edge showed over ground the map draws black)
-    const img = new Image();
-    img.onload = () => { this.fog = this.walked(img); this.request(); };
-    img.src = MC.cfg.api + '/fog?t=' + Date.now();
-    this.request();
   }
 
-  // (px, py) in MapCore's texture pixels -> walked, from the fog picture at its full size
-  walked(img) {
-    const n = img.naturalWidth, c = document.createElement('canvas');
-    c.width = c.height = n;
-    const g = c.getContext('2d', { willReadFrequently: true });
-    g.drawImage(img, 0, 0);
-    let d;
-    try { d = g.getImageData(0, 0, n, n).data; } catch (e) { return null; }
-    const k = n / MC.geom.size;
-    return (px, py) => { const x = Math.min(n - 1, Math.max(0, (px * k) | 0)), y = Math.min(n - 1, Math.max(0, (py * k) | 0)); return d[(y * n + x) * 4] > 127; };
-  }
-
-  request() { if (!this.frame) this.frame = requestAnimationFrame(() => { this.frame = 0; this.draw(); }); }
-
-  draw() {
-    const map = this.map; if (!map) return;
-    const size = map.getSize(), pix = window.devicePixelRatio || 1;
-    // the canvas stays on the screen while the map pane is dragged under it
-    L.DomUtil.setPosition(this.canvas, map.containerPointToLayerPoint([0, 0]));
-    if (this.canvas.width !== Math.round(size.x * pix) || this.canvas.height !== Math.round(size.y * pix)) {
-      this.canvas.width = Math.round(size.x * pix); this.canvas.height = Math.round(size.y * pix);
-      this.canvas.style.width = size.x + 'px'; this.canvas.style.height = size.y + 'px';
-    }
-    this.g.setTransform(1, 0, 0, 1, 0, 0);
-    this.g.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  paint(g, v, walked) {
     this.boxes = [];
-    const ok = this.fog;
-    if (!this.on_ || !ok || !this.features.length) return;
-    const geom = MC.geom, mid = map.latLngToContainerPoint(toLatLng(0, 0));
-    const metre = map.latLngToContainerPoint(toLatLng(1, 0)).x - mid.x;   // screen px per metre
-    const scale = metre * geom.pixel, half = geom.size / 2;
-    this.boxes = MC.drawNames(this.g, { scale, tx: mid.x - half * scale, ty: mid.y - half * scale, w: size.x, h: size.y, pix }, this.features, ok);
+    if (!this.on_ || !walked || !this.features.length) return;
+    this.boxes = MC.drawNames(g, v, this.features, walked);
   }
 
   click(e) {
@@ -147,7 +88,7 @@ export class NamesLayer extends L.Layer {
         const r = await fetch(MC.cfg.api + '/names', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, writeHeaders() || {}), body: JSON.stringify({ id: p.id, name: name.trim() }) });
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(r.status === 403 ? T('not allowed: sign in again') : j.error || r.status);
-        await this.load();
+        await this.load(); this.request();
         const fresh = this.features.find((g) => g.id === p.id);
         if (fresh) { p.name = fresh.name; p.by = fresh.by; }
         render(false);

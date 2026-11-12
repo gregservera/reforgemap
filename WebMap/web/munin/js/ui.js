@@ -154,6 +154,8 @@ export class Sidebar {
     // ForgeMap: the names of the land (islands, ranges, lakes, bays, rivers), drawn by ForgeMap
     if (L.names) world.append(row(LABEL_SVG, 'Place names', 'Islands, ranges, lakes, bays and rivers; click one for its card', true, (v) => L.names.setOn(v)));
     world.append(row(ico('house', '#c9a26b'), 'Buildings', 'Player builds, coloured by material', S.buildings, (v) => { if (v) L.structures.addTo(this.app.map); else L.structures.remove(); S.set('buildings', v); }));
+    // ForgeMap: torches, fires and hearths, lit or burnt out (layers/plan.js); off until asked for
+    if (L.plan) world.append(row(ico('fire', '#ff9d3c'), 'Lights & fires', 'Torches, fires and hearths: a glow while they burn', false, (v) => L.plan.setLights(v)));
     // a row with a switch, and under its arrow a checklist ([[id, name, swatch]]) of what can be hidden one by one
     const groupRow = (icon, label, desc, on, onToggle, kinds, hidden, key) => {
       const list = el(`<div class="vkinds${on ? '' : ' off'}" hidden></div>`);
