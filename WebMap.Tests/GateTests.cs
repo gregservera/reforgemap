@@ -108,6 +108,19 @@ namespace WebMap.Tests
             Assert.Equal(503, Get("/data/fog.png"));                    // no fog yet: never an empty 200
         }
 
+        // Munin's 3D view reads ForgeMap's objects in its own chunk numbering: a chunk nobody walked
+        // sends nothing, and the index lists none of them.
+        [Fact]
+        public void MuninsThreeDPathsServeForgeMapsObjectsAndNothingUnwalked()
+        {
+            Assert.Equal(42, MapDataServer.MuninChunkShift);           // 10752 m from the corner to the middle
+            var r = http.Send(new HttpRequestMessage(HttpMethod.Get, "/data/objects/index.json"));
+            Assert.Equal(HttpStatusCode.OK, r.StatusCode);
+            Assert.Contains("\"chunks\":[]", r.Content.ReadAsStringAsync().Result);
+            Assert.Equal(404, Get("/data/objects/42_42.bin"));          // the world's middle, unwalked
+            Assert.Equal(200, Get("/data/prefabs.json"));
+        }
+
         [Fact]
         public void TheProxysTokenWritesAsTheUserItNames()
         {

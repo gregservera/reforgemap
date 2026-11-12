@@ -1058,6 +1058,17 @@ namespace WebMap
                 case "biomes.grid": bin = Tiles.BiomeMap.GridFor(); break;
                 case "biomes.png": bin = Tiles.BiomeMap.PngFor(); type = "image/png"; break;
                 case "mist.png": bin = Tiles.BiomeMap.MistPngFor(); type = "image/png"; break;
+                // the 3D view: ForgeMap's objects and model library, at Munin's paths and in its numbering
+                case "objects/index.json": json = WorldObjects.MuninIndexJson(MuninChunkShift); break;
+                case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
+                case "environments.json": json = "{}"; break;
+            }
+            if (json == null && bin == null && rest.StartsWith("objects/", StringComparison.Ordinal) && rest.EndsWith(".bin", StringComparison.Ordinal))
+            {
+                // objects/{cx}_{cz}.bin in Munin's numbering: ForgeMap's OBJ2 of that chunk (the page reads it)
+                if (ParseChunk(rest.Substring(8, rest.Length - 12), out int mcx, out int mcz))
+                    bin = WorldObjects.ChunkBytes(mcx - MuninChunkShift, mcz - MuninChunkShift, out _);
+                if (bin == null) { Answer(res, 404, "{\"error\":\"nothing walked there\"}"); return; }
             }
             if (json == null && bin == null && rest.EndsWith(".json", StringComparison.Ordinal))
             {
@@ -1089,6 +1100,10 @@ namespace WebMap
             if (json != null) SendBytes(req, res, Encoding.UTF8.GetBytes(json), "application/json");
             else SendBytes(req, res, bin, type, compressible: type != "image/png");
         }
+
+        // Munin numbers 256 m chunks from the world's south-west corner (TileMath.ChunkCoord), ForgeMap
+        // from its middle (WorldObjects.ChunkOf): the same squares, 42 apart (10752 m / 256)
+        internal const int MuninChunkShift = Tiles.TileMath.WORLD_HALF / Tiles.TileMath.CHUNK_SIZE;
 
         // "cx_cz", two chunk numbers inside the grid
         internal static bool ParseChunk(string s, out int cx, out int cz)

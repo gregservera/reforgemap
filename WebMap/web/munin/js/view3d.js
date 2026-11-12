@@ -192,10 +192,10 @@ export class View3D {
     // keyboard: WASD / arrows pan, Q E turn, R F tilt, + - (or Z X) zoom, Shift is fast. Polled in loop().
     document.addEventListener('keydown', (e) => {
       if (!this.running || e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.metaKey || e.ctrlKey || e.altKey) return;
-      const k = e.key.length === 1 ? e.key.toLowerCase() : e.key;
+      const k = keyOf(e);
       if (KEYS.has(k)) { this.keys.add(k); e.preventDefault(); }
     });
-    document.addEventListener('keyup', (e) => { this.keys.delete(e.key.length === 1 ? e.key.toLowerCase() : e.key); });
+    document.addEventListener('keyup', (e) => { this.keys.delete(keyOf(e)); });
     window.addEventListener('blur', () => this.keys.clear());
     // double click: centre on that spot
     canvas.addEventListener('dblclick', (e) => {
@@ -1261,6 +1261,9 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
   }
 }
 
+// ForgeMap: letters by where they sit on the keyboard (e.code), not what they type, so the moves are
+// the same keys on AZERTY (Z Q S D) as on QWERTY (W A S D); the rest by what they type
+const keyOf = (e) => { const m = /^Key([A-Z])$/.exec(e.code || ''); return m ? m[1].toLowerCase() : e.key.length === 1 ? e.key.toLowerCase() : e.key; };
 const KEYS = new Set(['w', 'a', 's', 'd', 'q', 'e', 'r', 'f', 'z', 'x', '+', '=', '-', '_', 'Shift', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home']);
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 const IDENTITY = new THREE.Matrix4();

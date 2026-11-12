@@ -237,7 +237,9 @@ class ObjectStore {
     const p = getBuffer(`data/objects/${k}.bin`).then((buf) => {
       const dv = new DataView(buf);
       const objs = [];
-      if (buf.byteLength >= 12 && String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3)) === 'OBJ1') {
+      // ForgeMap serves OBJ2: OBJ1's layout, then a table of mined rocks after the objects (not read here)
+      const magic = buf.byteLength >= 12 ? String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3)) : '';
+      if (magic === 'OBJ1' || magic === 'OBJ2') {
         const n = dv.getUint32(4, true), np = dv.getUint32(8, true);
         const table = new Int32Array(np);
         let o = 12;

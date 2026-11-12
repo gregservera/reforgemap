@@ -347,7 +347,7 @@ namespace WebMap
             config["fog_size"] = TEXTURE_SIZE;
             config["fog_pixel"] = PIXEL_SIZE;
             config["water_level"] = 30;
-            config["enable_3d"] = false;
+            config["enable_3d"] = true;
             config["web_pins"] = false;
             config["web_pings"] = false;
             config["web_edit_bases"] = false;

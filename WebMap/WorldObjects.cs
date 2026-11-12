@@ -311,6 +311,31 @@ namespace WebMap
             }
         }
 
+        // Munin's 3D view: {"rev":..,"chunks":[[cx,cz,rev,count],...]}, the walked chunks that hold
+        // anything, numbered from the world's south-west corner as Munin numbers them (TileMath:
+        // a chunk there is this one plus `shift`, 42). Cached per revision and fog.
+        private static string indexJson; private static long indexKey = long.MinValue;
+        public static string MuninIndexJson(int shift)
+        {
+            long key = ((long)Rev << 32) | (uint)MapFog.Revision;
+            var cached = indexJson;
+            if (cached != null && key == indexKey) return cached;
+            var j = new Util.JsonWriter(4096);
+            j.BeginObject().Prop("rev", unchecked(Rev * 1000003 + MapFog.Revision) & 0x7fffffff).Key("chunks").BeginArray();
+            foreach (var kv in chunks)
+            {
+                int cx = kv.Key / 128 - 64, cz = kv.Key % 128 - 64;
+                if (!MapFog.ChunkExplored(cx, cz)) continue;
+                var c = kv.Value;
+                int count = c.objs != null ? c.objs.Length : (c.bytes != null && c.bytes.Length >= 8 ? BitConverter.ToInt32(c.bytes, 4) : 0);
+                if (count == 0) continue;
+                j.BeginArray().Value(cx + shift).Value(cz + shift).Value(c.rev).Value(count).End();
+            }
+            j.End().End();
+            indexJson = j.ToString(); indexKey = key;
+            return indexJson;
+        }
+
         // for the tests: a chunk's bytes from objects as the walk would find them
         internal static byte[] EncodeForTests(Obj[] objs) => Encode(objs);
 
