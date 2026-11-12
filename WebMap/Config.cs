@@ -348,7 +348,7 @@ namespace WebMap
             config["fog_pixel"] = PIXEL_SIZE;
             config["water_level"] = 30;
             config["enable_3d"] = true;
-            config["web_pins"] = false;
+            config["web_pins"] = true;                // the page's form; the write itself wants a member (/pins)
             config["web_pings"] = false;
             config["web_edit_bases"] = false;
             config["github_link"] = false;            // Munin's link to its own repository

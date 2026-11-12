@@ -191,8 +191,8 @@ class App {
     // form has a Ping button too, for touch screens
     const box = this.map.getContainer();
     box.addEventListener('mousedown', (e) => { if (e.button === 1) e.preventDefault(); });   // no auto-scroll
-    box.addEventListener('auxclick', (e) => { if (e.button === 1) { e.preventDefault(); this.webPing(this.map.mouseEventToLatLng(e)); } });
-    this.layers.markers.onPing = (latlng, name) => this.webPing(latlng, name);
+    box.addEventListener('auxclick', (e) => { if (e.button === 1 && this.config?.web_pings !== false) { e.preventDefault(); this.webPing(this.map.mouseEventToLatLng(e)); } });
+    if (this.config?.web_pings !== false) this.layers.markers.onPing = (latlng, name) => this.webPing(latlng, name);   // (ForgeMap: no pings yet)
     this.layers.players = new PlayersLayer(this.map);
     this.layers.raid = new RaidLayer(this.map, this.layers.markers);
     this.layers.players.onFollow = (id) => { if (this.view3d) this.view3d.follow(id); };

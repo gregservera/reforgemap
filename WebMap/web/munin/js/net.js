@@ -40,10 +40,17 @@ export function connect() {
 }
 
 // one ForgeMap frame as Munin's: live (the players, {ts, players}) as players {data}, tiles {keys,
-// status}, reload; the others are not used yet
+// status}, pin, rmpin, reload; the others are not used yet
 export function frame(text) {
   const nl = text.indexOf('\n'), type = nl < 0 ? text : text.slice(0, nl), body = nl < 0 ? '' : text.slice(nl + 1);
   if (type === 'reload') return { t: 'reload' };
+  // pin: placer, id, type, owner, "x,z", text (the text may hold new lines no more than commas)
+  if (type === 'pin') {
+    const f = body.split('\n'), [x, z] = (f[4] || '').split(',').map(Number);
+    if (f.length < 5 || !isFinite(x) || !isFinite(z)) return null;
+    return { t: 'pin', id: f[1], type: f[2], name: f[3], x, z, text: f.slice(5).join('\n') };
+  }
+  if (type === 'rmpin') return body ? { t: 'rmpin', id: body.trim() } : null;
   if (type === 'live') { try { return { t: 'players', data: JSON.parse(body) }; } catch { return null; } }
   if (type === 'tiles') { try { return Object.assign({ t: 'tiles' }, JSON.parse(body)); } catch { return null; } }
   return null;

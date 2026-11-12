@@ -25,3 +25,11 @@ test("a live frame is Munin's players frame, its data as sent", () => {
   assert.deepEqual(f.data.players[0], {id: 7, name: "Rurik", x: 1.5, z: -2, yaw: 90});
   assert.equal(frame("live\n{"), null);
 });
+
+// A pin placed or taken up anywhere shows on every open map at once.
+test("pin and rmpin frames are Munin's, the text whole", () => {
+  assert.deepEqual(frame("pin\nweb\nw17\nfire\nRurik\n12.5,-40\nCamp, by the lake"),
+                   {t: "pin", id: "w17", type: "fire", name: "Rurik", x: 12.5, z: -40, text: "Camp, by the lake"});
+  assert.deepEqual(frame("rmpin\nw17"), {t: "rmpin", id: "w17"});
+  assert.equal(frame("pin\nweb\nw17"), null);
+});

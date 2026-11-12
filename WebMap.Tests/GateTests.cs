@@ -121,6 +121,19 @@ namespace WebMap.Tests
             Assert.Equal(200, Get("/data/prefabs.json"));
         }
 
+        // Munin's page reads the pins as JSON, the same ones /pins writes; whose they are is the member's name.
+        [Fact]
+        public void APinWrittenThroughPinsShowsInMuninsPinList()
+        {
+            server.pins.Add("web,w1,fire,Rurik,10.5,-20,Camp, by the lake");
+            var j = J.Parse(server.PinsMuninJson()).EnumerateArray().Single();
+            Assert.Equal("w1", j.Str("id"));
+            Assert.Equal("fire", j.Str("type"));
+            Assert.Equal("Rurik", j.Str("name"));
+            Assert.Equal("Camp, by the lake", j.Str("text"));
+            Assert.Equal(200, Get("/data/pins.json"));
+        }
+
         [Fact]
         public void TheProxysTokenWritesAsTheUserItNames()
         {

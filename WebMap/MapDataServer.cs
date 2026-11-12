@@ -1062,6 +1062,7 @@ namespace WebMap
                 case "objects/index.json": json = WorldObjects.MuninIndexJson(MuninChunkShift); break;
                 case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
                 case "environments.json": json = "{}"; break;
+                case "pins.json": json = PinsMuninJson(); break;
             }
             if (json == null && bin == null && rest.StartsWith("objects/", StringComparison.Ordinal) && rest.EndsWith(".bin", StringComparison.Ordinal))
             {
@@ -1295,6 +1296,25 @@ namespace WebMap
             Discord.Tell(log);
             return null;
         }
+        // Munin's map: [{"id","type","name","x","z","text"}], the same pins as /pins. Never whose
+        // browser placed one ("mine"): writes go by the signed-in member, whoever they are.
+        internal string PinsMuninJson()
+        {
+            var j = new Util.JsonWriter(256);
+            j.BeginArray();
+            lock (pins)
+                foreach (string line in pins)
+                {
+                    var f = line.Split(',');
+                    if (f.Length < 6) continue;
+                    if (!float.TryParse(f[4], NumberStyles.Float, CultureInfo.InvariantCulture, out float x)
+                        || !float.TryParse(f[5], NumberStyles.Float, CultureInfo.InvariantCulture, out float z)) continue;
+                    j.BeginObject().Prop("id", f[1]).Prop("type", f[2]).Prop("name", f[3]).Prop("x", x, 1).Prop("z", z, 1).Prop("text", PinText(f)).End();
+                }
+            j.End();
+            return j.ToString();
+        }
+
         // under lock (pins); a line is placer,id,type,owner,x,z,text
         private int FindPin(string id) => pins.FindIndex(l => { var f = l.Split(','); return f.Length >= 6 && f[1] == id; });
         // the text is last and may hold commas

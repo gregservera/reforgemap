@@ -2,6 +2,7 @@
 // pins, each as a toggleable Leaflet layer group. Portals sharing a tag are
 // joined by a dashed line.
 
+import { whoami, writeHeaders, canSignIn, signIn, adminKey, setAdminKey } from '../forgeauth.js';
 import { toLatLng, fromLatLng } from '../crs.js';
 import { markers as store } from '../data.js';
 import { iconSvg, colors } from '../icons.js';
@@ -154,7 +155,7 @@ export class MarkerLayers {
   async loadPins() {
     try {
       // the server marks this browser's own pins "mine" (it never sends who owns the others)
-      const pins = await getJSON('data/pins.json?client=' + encodeURIComponent(clientId()));
+      const pins = await getJSON('data/pins.json');
       this.pins.clear();
       for (const p of pins) this.addPin(p);
     } catch (e) { console.warn('pins', e); }
@@ -172,26 +173,32 @@ export class MarkerLayers {
     if (this.pins.delete(id)) { this.list = null; this.canvas.draw(); this.emitPins(); }
   }
 
-  openPin(p, ll) {
-    let key = '';
-    try { key = localStorage.getItem('munin-admin-key') || ''; } catch (e) { /* no storage */ }
-    const mine = !!p.mine;
+  // ForgeMap: a pin is taken up by a signed-in member (or the admin key) through /pins
+  async openPin(p, ll) {
+    await whoami();
+    const can = !!writeHeaders();
     const el = document.createElement('div');
     el.innerHTML = `<b>${escape(p.text || 'Pin')}</b><small>by ${escape(p.name)} · ${p.x}, ${p.z}</small>` +
-      (mine || key ? `<div class="pin-actions"><button class="btn small" type="button">Remove pin</button></div><small class="err" hidden></small>` : '');
+      (can ? `<div class="pin-actions"><button class="btn small" type="button">Remove pin</button></div><small class="err" hidden></small>` : '');
     el.querySelector('button')?.addEventListener('click', async () => {
       const err = el.querySelector('.err');
-      const headers = { 'Content-Type': 'application/json', 'X-Munin-Client': clientId() };
-      if (key) headers['X-Munin-Token'] = key;
       try {
-        // the server's web stack refuses a POST with an empty body (411), so send {}
-        const r = await fetch('api/unpin?id=' + encodeURIComponent(p.id), { method: 'POST', headers, body: '{}' });
-        if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || r.status); }
+        await this.writePin({ op: 'delete', id: p.id });
         this.removePin(p.id);
         this.map.closePopup();
       } catch (e) { err.textContent = 'Could not remove: ' + e.message; err.hidden = false; }
     });
     L.popup({ offset: [0, -16] }).setLatLng(ll).setContent(el).openOn(this.map);
+  }
+
+  // POST /pins as the member (or the admin key); the server's answer, or an Error in its words
+  async writePin(body) {
+    const h = writeHeaders();
+    if (!h) throw new Error('sign in first');
+    const r = await fetch('pins', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, h), body: JSON.stringify(body) });
+    const j = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(r.status === 403 ? 'not allowed: sign in again' : j.error || r.status);
+    return j;
   }
 
   // a portal's popup, with a button to each other end of its tag (byTag: tag -> portals, filled
@@ -243,52 +250,47 @@ export class MarkerLayers {
     return el;
   }
 
-  // right click / long press on the map: a small form, then POST /api/pin
-  openPinEditor(latlng) {
+  // right click / long press on the map. ForgeMap: placing a pin wants a signed-in Discord member,
+  // or the admin key; without either the popup says how to get one (decision D7)
+  async openPinEditor(latlng) {
     const { x, z } = fromLatLng(latlng);
-    let name = '';
-    try { name = localStorage.getItem('munin-pin-name') || ''; } catch (e) { /* no storage */ }
+    await whoami();
     const el = document.createElement('form');
     el.className = 'pin-form';
+    if (!writeHeaders()) {
+      el.innerHTML = `<b>New pin</b><small>${Math.round(x)}, ${Math.round(z)}</small>` +
+        (canSignIn() ? `<p class="hint">Placing a pin needs a member of the server's Discord, signed in.</p><div class="row"><button class="btn small" type="button" data-act="in">Sign in with Discord</button></div>`
+                     : `<p class="hint">Placing pins needs a Discord sign-in, which this server has not set up.</p>`) +
+        `<details class="pin-key"><summary>Admin key</summary><small>The text in announce.token beside the plugin on the server.</small>
+        <div class="row"><input name="key" type="password" autocomplete="off" spellcheck="false"><button class="btn small" type="button" data-act="key">Use key</button></div></details>`;
+      const popup = L.popup({ closeButton: true, autoPan: true, className: 'pin-form-popup' }).setLatLng(latlng).setContent(el).openOn(this.map);
+      el.querySelector('[data-act=in]')?.addEventListener('click', () => signIn());
+      el.querySelector('[data-act=key]').addEventListener('click', () => {
+        const k = el.querySelector('[name=key]').value.trim();
+        if (!k) return;
+        setAdminKey(k);
+        this.map.closePopup(popup);
+        this.openPinEditor(latlng);
+      });
+      return;
+    }
+    const names = { dot: 'Dot', fire: 'Fire', mine: 'Mine', house: 'House', cave: 'Cave' };
     el.innerHTML = `<b>New pin</b><small>${Math.round(x)}, ${Math.round(z)}</small>
-      <div class="row"><select name="type">${PIN_TYPES.map((t) => `<option value="${t}">${t}</option>`).join('')}</select>
-      <input name="text" maxlength="20" placeholder="Label (letters, numbers)" autocomplete="off"></div>
-      <div class="row"><input name="name" maxlength="16" placeholder="Your name" value="${escape(name)}" autocomplete="off"><button class="btn small" type="submit">Add pin</button>${this.onPing ? '<button class="btn small" type="button" data-act="ping" title="Ping this spot in game">Ping</button>' : ''}</div>
-      <small class="err" hidden></small>
-      <details class="pin-key"><summary>Pin key</summary><small>Your pins can be removed from this browser only. To remove them from another one, copy this key there.</small>
-      <div class="row"><input name="key" value="${escape(clientId())}" autocomplete="off" spellcheck="false"><button class="btn small" type="button" data-act="key">Use key</button></div></details>`;
+      <div class="row"><select name="type">${PIN_TYPES.map((t) => `<option value="${t}">${names[t] || t}</option>`).join('')}</select>
+      <input name="text" maxlength="60" placeholder="Label" autocomplete="off"><button class="btn small" type="submit">Add pin</button></div>
+      <small class="err" hidden></small>` +
+      (adminKey() ? `<div class="row"><button class="btn small" type="button" data-act="forget">Forget the admin key in this browser</button></div>` : '');
     const popup = L.popup({ closeButton: true, autoPan: true, className: 'pin-form-popup' }).setLatLng(latlng).setContent(el).openOn(this.map);
     setTimeout(() => el.querySelector('[name=text]').focus(), 50);
-    el.querySelector('[data-act=ping]')?.addEventListener('click', () => {
-      const who = String(new FormData(el).get('name') || '').trim();
-      if (!who) { el.querySelector('[name=name]').focus(); return; }
-      try { localStorage.setItem('munin-pin-name', who); } catch (e) { /* no storage */ }
-      this.onPing(latlng, who);
-      this.map.closePopup(popup);
-    });
-    el.querySelector('[data-act=key]').addEventListener('click', () => {
-      const err = el.querySelector('.err'), key = el.querySelector('[name=key]');
-      if (key.value.trim() === clientId()) return;
-      if (!setClientId(key.value.trim())) { err.textContent = 'That key can\'t be used here'; err.hidden = false; return; }
-      key.value = clientId();
-      this.loadPins();
-      this.map.closePopup(popup);
-    });
+    el.querySelector('[data-act=forget]')?.addEventListener('click', () => { setAdminKey(''); this.map.closePopup(popup); });
     el.addEventListener('submit', async (ev) => {
       ev.preventDefault();
-      const fd = new FormData(el);
-      const who = String(fd.get('name') || '').trim();
-      try { localStorage.setItem('munin-pin-name', who); } catch (e) { /* no storage */ }
-      const err = el.querySelector('.err');
+      const fd = new FormData(el), err = el.querySelector('.err');
+      const px = Math.round(x * 10) / 10, pz = Math.round(z * 10) / 10;
       try {
-        const r = await fetch('api/pin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Munin-Client': clientId() },
-          body: JSON.stringify({ x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10, type: fd.get('type'), text: fd.get('text'), name: who, client: clientId() }) });
-        const j = await r.json().catch(() => ({}));
-        if (!r.ok) throw new Error(j.error || r.status);
+        const j = await this.writePin({ op: 'add', x: px, z: pz, type: fd.get('type'), text: String(fd.get('text') || '') });
         // the live pin may have come in already, or still be on its way
-        const placed = this.pins.get(j.id);
-        if (placed) placed.mine = true; else if (j.id) this.pins.set(j.id, { id: j.id, mine: true, type: fd.get('type'), name: who, x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10, text: fd.get('text') });
-        this.list = null; this.canvas.draw(); this.emitPins();
+        if (j.id && !this.pins.has(j.id)) this.addPin({ id: j.id, type: fd.get('type'), name: '', x: px, z: pz, text: String(fd.get('text') || '') });
         this.map.closePopup(popup);
       } catch (e) { err.textContent = 'Could not add pin: ' + e.message; err.hidden = false; }
     });
