@@ -123,6 +123,7 @@ namespace WebMap
 
             ZLog.Log($"WebMap: player {name} died");
             Stats.Death(name);              // first: the feed's line takes the spot from it
+            if (Stats.LastDeath(name, out float dx, out float dz)) Activity.OnDeath(dx, dz);   // the Dangerous zones
             server.AddMessage(peerID, (int)Talker.Type.Normal, "Server", $"player _{name}_ died", true);
         }
 

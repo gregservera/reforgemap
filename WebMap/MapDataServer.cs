@@ -1112,6 +1112,20 @@ namespace WebMap
                 case "objects/index.json": json = WorldObjects.MuninIndexJson(MuninChunkShift); break;
                 case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
                 case "environments.json": json = Weather.EnvironmentsJson(); break;   // each weather's light, for the 3D sky
+                // the Activity layers: trails of the last hours, time spent and deaths per 64 m zone
+                case "activity.json":
+                    {
+                        int.TryParse(req.QueryString["hours"] ?? "3", NumberStyles.Integer, CultureInfo.InvariantCulture, out int hours);
+                        json = Activity.Json(hours); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                        break;
+                    }
+                case "activity/zone.json":
+                    {
+                        int.TryParse(req.QueryString["zx"] ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out int zx);
+                        int.TryParse(req.QueryString["zz"] ?? "", NumberStyles.Integer, CultureInfo.InvariantCulture, out int zz);
+                        json = Activity.ZoneJson(zx, zz); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                        break;
+                    }
                 case "stats.json": json = Weather.StatsJson; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;   // the world's clock and forecast
                 case "pins.json": json = PinsMuninJson(); break;
                 case "markers.json": json = Tiles.Markers.Json; break;   // Munin's marker sets (Tiles/Markers)
@@ -1403,11 +1417,16 @@ namespace WebMap
                 // the wind blows the same way everywhere (the page's arrow); the clock and forecast now and then
                 try { worldWindDeg = Weather.At(Vector3.zero, out var ww) ? Mathf.RoundToInt(ww.windDeg) % 360 : -1; } catch { }
                 if (now - weatherAt > 5f) { weatherAt = now; try { Weather.Refresh(); } catch (Exception e) { WarnOnce(ref weatherWarned, "the weather could not be read", e); } }
+                var snaps = new List<Activity.Snap>();
                 foreach (var player in players)
                 {
                     ZDO z = null;
                     try { z = ZDOMan.instance.GetZDO(player.m_characterID); } catch { }
                     if (z == null) continue;
+                    // the Activity layers: only who shows on the map, as the live dots
+                    Vector3 at = z.GetPosition();
+                    snaps.Add(new Activity.Snap { key = player.m_playerName, name = player.m_playerName, x = at.x, z = at.z,
+                        hasPos = player.m_publicRefPos || WebMapConfig.ALWAYS_VISIBLE, dead = z.GetBool(ZDOVars.s_dead) });
                     long pid = 0L;
                     try { pid = z.GetLong(ZDOVars.s_playerID, 0L); } catch { }
                     float hp = -1f, maxHp = -1f;
@@ -1416,6 +1435,7 @@ namespace WebMap
                     Gear.Sample(player.m_playerName, z, PLAYER_UPDATE_INTERVAL);
                     Trails.Mark(pid != 0L ? pid : player.m_playerName.GetHashCode(), z.GetPosition());
                 }
+                Activity.Sample(snaps);
             }
             catch (Exception ex) { WarnOnce(ref snapshotWarned, "player snapshot failed", ex); }
             // a failing snapshot must not also stop the tallies being saved
@@ -1426,6 +1446,7 @@ namespace WebMap
                 LearnPublicIp();
                 Stats.MaybeSave();
                 Trails.MaybeSave();
+                Activity.MaybeSave();
                 timeJson = BuildTimeJson();
             }
             catch (Exception ex) { WarnOnce(ref saveWarned, "player snapshot's saves failed", ex); }

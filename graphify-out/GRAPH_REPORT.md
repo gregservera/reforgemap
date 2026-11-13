@@ -1,17 +1,17 @@
 # Graph Report - forgemap  (2026-11-13)
 
 ## Corpus Check
-- 208 files · ~704,820 words
+- 210 files · ~706,592 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: .css 4, (none) 2, .targets 1)
 
 ## Summary
-- 6615 nodes · 15921 edges · 223 communities (157 shown, 66 thin omitted)
-- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 761 edges (avg confidence: 0.86)
+- 6635 nodes · 15995 edges · 217 communities (153 shown, 64 thin omitted)
+- Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 773 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b0928a52`
+- Built from commit: `7257ad4c`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -24,21 +24,21 @@
 - Object3D
 - Vector3
 - BatchedMesh
-- .Finish
+- ForestMap
 - ui.js
 - .Export
 - View3D
-- Ruins
+- Vegetation
 - OrbitControls
 - BufferAttribute
 - List
-- .parseObject
+- ObjectLoader
 - WebGLRenderer
 - Markers
 - markers.js
 - Dictionary
 - .start
-- WebGLState
+- .toArray
 - Stats
 - update
 - textures-hd.py
@@ -59,32 +59,32 @@
 - playercard.js
 - ZDOID
 - JsonWriter
-- ChunkShapes
+- RenderTarget
 - leaflet.js
-- Vehicles
-- WebXRController
 - .Sweep
+- WebXRController
+- Vector3
 - AuthTests
-- .constructor
+- .parseObject
 - .equals
 - WebXRManager
 - Vector4
 - Veg
-- FogLayer
+- vegpack.js
 - PropertyBinding
-- GateTests
+- WithDir
 - Light
 - Color
 - Quaternion
 - Box3
-- .constructor
+- GateTests
 - TileStore
 - markercanvas.js
 - Euler
-- push
+- .render
 - GLTFLoader.js
 - InlineData
-- Discord
+- Func
 - AnimationAction
 - TileJob
 - Curve
@@ -98,9 +98,9 @@
 - Items
 - MapDataServer
 - .assignTexture
-- Func
+- Loader
 - LoadingManager
-- JsonElement
+- addToRenderList
 - AnimationMixer
 - OrbitControls.js
 - WebGLProgram
@@ -109,9 +109,9 @@
 - GLTFParser
 - Fact
 - MigrationTests
-- RuinsGL
+- ChunkShapes
 - RaidLayer
-- BuildingsGL
+- Activity
 - web/js/view3d.js
 - Matrix3
 - WebGLBindingStates
@@ -122,25 +122,25 @@
 - BiomeMap
 - Heights
 - Using the map
-- ShapesCanvas
+- Pieces
 - PropertyMixer
-- Loader
+- .load
 - toLatLng
 - MeshDecoder
 - Hand
 - GroundGL
-- TreesGL
+- FogLayer
 - Changelog
 - WorldEvents
-- TerrainPatches
+- HashSet
 - Structures
 - arraysEqual
 - .LookJson
 - map-core.test.mjs
 - Locations
-- .build
+- .Tick
 - Deeds
-- .applyMatrix4
+- .copy
 - particles.js
 - portrait.js
 - ContourGL
@@ -149,7 +149,7 @@
 - CubicBezierCurve
 - onTouchMove
 - Fact
-- Material
+- Timer
 - get
 - .update
 - BufferGeometryUtils.js
@@ -163,12 +163,12 @@
 - PolyhedronGeometry
 - InterleavedBuffer
 - Feed
-- Part
+- Layers
 - WebMap.cs
 - AltBiomeGL
-- GlbWriter
+- CompressedTexture
 - check.mjs
-- ChatRelay
+- LineCurve
 - parseUniform
 - bench.mjs
 - TextureDecoder
@@ -176,32 +176,33 @@
 - MistGL
 - FallbackTileLayer
 - SmoothZoom
-- vegpack.js
+- .parse
 - .parse
 - addShape
-- GuideGL
-- MeshCache
+- .parse
+- SphereGeometry
 - VideoTexture
-- WebGLShaderCache
+- WebMapConfig
 - WebP
-- Regex
+- DataArrayTexture
 - BiomeGL
 - Preview
-- d
+- oi
 - ServerLog
-- Shape
-- Kind
+- Fog
+- FogExp2
 - ZNetPeer
 - m
 - EllipseCurve
-- FogGL
+- ArrayCamera
 - Spherical
 - WebMap.Tests.csproj
 - WebMap.csproj
-- CylinderGeometry
+- CubicPoly
 - Window
 - render
 - fetchTerrarium
+- getKeyframeOrder
 - GLTFMaterialsDispersionExtension
 - Cylindrical
 - GLBufferAttribute
@@ -209,23 +210,17 @@
 - flatten
 - ForgeMap — translation brief (read fully before editing)
 - manifest.json
-- Int16BufferAttribute
-- Uint16BufferAttribute
 - .NewWorld
 - MeshPhysicalMaterial
 - GLTFCubicSplineInterpolant
 - GLTFLightsExtension
-- Uint32BufferAttribute
-- Uint8BufferAttribute
 - .Start
 - bi
 - Third-party notices
-- Uint8ClampedBufferAttribute
 - .load
 - InstancedBufferGeometry
 - TextureUtils
 - testserver.sh
-- allocateTextureUnit
 - MultiDrawRenderList
 - Uniform
 - layers.js
@@ -260,55 +255,59 @@
 ## Import Cycles
 - None detected.
 
-## Communities (223 total, 66 thin omitted)
+## Communities (217 total, 64 thin omitted)
 
 ### Community 0 - "three.core.js"
 Cohesion: 0.01
-Nodes (222): _addedEvent, _alignedPosition, _axis, _basePosition, _batchIntersects, _boneMatrix, _box, _box$1 (+214 more)
+Nodes (219): _addedEvent, _alignedPosition, _axis, _basePosition, _batchIntersects, _boneMatrix, _box, _box$1 (+211 more)
 
 ### Community 1 - "three.module.js"
 Cohesion: 0.01
-Nodes (35): _cache, ColorManagement, DefaultLoadingManager, MOUSE, TimestampQuery, TOUCH, UniformsUtils, arrayCacheF32 (+27 more)
+Nodes (31): ColorManagement, DefaultLoadingManager, TimestampQuery, UniformsUtils, arrayCacheF32, arrayCacheI32, _axisDirections, _clearColor (+23 more)
 
 ### Community 2 - ".push"
 Cohesion: 0.03
-Nodes (38): AxesHelper, Box3Helper, buildPlane(), BoxHelper, BufferGeometry, CameraHelper, addLine(), addPoint() (+30 more)
+Nodes (40): AxesHelper, Box3Helper, BoxGeometry, buildPlane(), BoxHelper, BufferGeometry, getArrayBuffer(), getInterleavedBuffer() (+32 more)
 
 ### Community 3 - "app.js"
 Cohesion: 0.04
-Nodes (78): chunkOf(), chunksOneZoomOut(), MAX_ZOOM, metersPerPixel(), OUTSIDE_COLOR, OUTSIDE_RIM, OVER_ZOOM, TILE (+70 more)
+Nodes (87): chunkOf(), chunksOneZoomOut(), MAX_ZOOM, metersPerPixel(), OUTSIDE_COLOR, OUTSIDE_RIM, OVER_ZOOM, TILE (+79 more)
 
 ### Community 4 - ".copy"
-Cohesion: 0.04
-Nodes (12): a(), c(), handleTriangle(), handleVertex(), checkGeometryIntersection(), cloneUniformsGroups(), Line3, Plane (+4 more)
+Cohesion: 0.06
+Nodes (7): a(), c(), checkGeometryIntersection(), Plane, Ray, satForAxes(), Triangle
 
 ### Community 5 - "Object3D"
-Cohesion: 0.03
-Nodes (9): Camera, CubeCamera, DirectionalLightHelper, DirectionalLightShadow, Matrix4, Object3D, OrthographicCamera, SpotLightHelper (+1 more)
+Cohesion: 0.02
+Nodes (14): Camera, CubeCamera, DirectionalLightHelper, DirectionalLightShadow, FrustumArray, HemisphereLightHelper, Matrix2, Matrix4 (+6 more)
 
 ### Community 6 - "Vector3"
 Cohesion: 0.03
-Nodes (16): onQuaternionChange(), onRotationChange(), applyRadius(), azimuth(), correctSeam(), correctUV(), correctUVs(), generateUVs() (+8 more)
+Nodes (12): applyRadius(), azimuth(), correctSeam(), correctUV(), correctUVs(), generateUVs(), getVertexByIndex(), inclination() (+4 more)
 
 ### Community 7 - "BatchedMesh"
-Cohesion: 0.05
-Nodes (9): ascIdSort(), BatchedMesh, Bone, CatmullRomCurve3, copyArrayContents(), flattenJSON(), Matrix2, Skeleton (+1 more)
+Cohesion: 0.07
+Nodes (8): ascIdSort(), BatchedMesh, convertBufferAttribute(), CameraHelper, copyArrayContents(), copyAttributeData(), setPoint(), sortedArray()
 
-### Community 8 - ".Finish"
-Cohesion: 0.06
-Nodes (17): Cell, ForestMap, LastStumps, LastTrees, Kind, Other, Stump, Tree (+9 more)
+### Community 8 - "ForestMap"
+Cohesion: 0.15
+Nodes (8): Cell, ForestMap, LastStumps, LastTrees, Kind, Other, Stump, Tree
 
 ### Community 9 - "ui.js"
 Cohesion: 0.05
-Nodes (58): iconSvg(), escape(), makeIcon(), statsHtml(), BIOME_SVG, breakable(), BUILD_SVG, BUSH_SVG (+50 more)
+Nodes (59): iconSvg(), byName(), escape(), makeIcon(), statsHtml(), BIOME_SVG, breakable(), BUILD_SVG (+51 more)
+
+### Community 10 - ".Export"
+Cohesion: 0.06
+Nodes (11): GlbWriter, Count, Node, Primitive, Skin, PrefabExporter, Result, Joints (+3 more)
 
 ### Community 11 - "View3D"
 Cohesion: 0.06
 Nodes (13): DAY, DUSK, lerp(), Lighting, NIGHT, smooth(), farSkip(), keyOf() (+5 more)
 
-### Community 12 - "Ruins"
-Cohesion: 0.06
-Nodes (12): LocationTerrain, Count, Mod, Patch, Regions, Class, Crunched, Point (+4 more)
+### Community 12 - "Vegetation"
+Cohesion: 0.15
+Nodes (7): Class, Crunched, Point, Vegetation, LastRocks, LastTrees, ZoneCount
 
 ### Community 13 - "OrbitControls"
 Cohesion: 0.11
@@ -316,47 +315,47 @@ Nodes (4): onMouseDown(), onMouseWheel(), onPointerDown(), OrbitControls
 
 ### Community 14 - "BufferAttribute"
 Cohesion: 0.04
-Nodes (10): BufferAttribute, convertBufferAttribute(), copyAttributeData(), createColorManagement(), DataUtils, denormalize(), Float16BufferAttribute, InterleavedBufferAttribute (+2 more)
+Nodes (13): BufferAttribute, DataUtils, denormalize(), Float16BufferAttribute, Int16BufferAttribute, Int32BufferAttribute, Int8BufferAttribute, InterleavedBufferAttribute (+5 more)
 
 ### Community 15 - "List"
 Cohesion: 0.15
 Nodes (6): Peak, Peaks, All, Kind, Runestones, Stone
 
-### Community 16 - ".parseObject"
-Cohesion: 0.06
-Nodes (15): 2.9.1, getArrayBuffer(), getInterleavedBuffer(), DataTexture, Fog, FogExp2, getTypedArray(), LightProbe (+7 more)
+### Community 16 - "ObjectLoader"
+Cohesion: 0.16
+Nodes (4): DataTexture, ImageLoader, ObjectLoader, deserializeImage()
 
 ### Community 17 - "WebGLRenderer"
 Cohesion: 0.07
-Nodes (19): WebGLRenderTarget, WebGLClipping(), projectPlanes(), resetGlobalState(), WebGLRenderer, renderObject(), renderObjects(), renderScene() (+11 more)
+Nodes (24): WebGLRenderTarget, WebGLRenderer, renderObject(), renderObjects(), renderTransmissionPass(), VSMPass(), WebGLState(), ColorBuffer() (+16 more)
 
 ### Community 18 - "Markers"
-Cohesion: 0.07
-Nodes (11): BaseOverride, BedSpot, Findable, Markers, Json, Rev, PartTimer, Portal (+3 more)
+Cohesion: 0.06
+Nodes (13): BaseOverride, BedSpot, Findable, Markers, Json, Rev, PartTimer, Portal (+5 more)
 
 ### Community 19 - "markers.js"
 Cohesion: 0.07
-Nodes (24): adminKey(), canSignIn(), setAdminKey(), signIn(), whoami(), writeHeaders(), byName(), collator (+16 more)
+Nodes (24): adminKey(), canSignIn(), setAdminKey(), signIn(), whoami(), writeHeaders(), collator, dungeonHtml() (+16 more)
 
 ### Community 20 - "Dictionary"
-Cohesion: 0.11
-Nodes (13): Info, ModelStore, Exported, MeshesPresent, MeshesWanted, PrefabsJson, QueueLength, Readable (+5 more)
+Cohesion: 0.08
+Nodes (15): Data, MeshCache, Info, ModelStore, Exported, MeshesPresent, MeshesWanted, PrefabsJson (+7 more)
 
 ### Community 21 - ".start"
-Cohesion: 0.09
-Nodes (9): App, BiomeHover, fromLatLng(), toLatLng(), esc(), ForgeCard, T(), weatherWord() (+1 more)
+Cohesion: 0.07
+Nodes (14): App, BiomeHover, fromLatLng(), toLatLng(), esc(), ForgeCard, T(), weatherWord() (+6 more)
 
-### Community 22 - "WebGLState"
-Cohesion: 0.22
-Nodes (17): WebGLState(), ColorBuffer(), compressedTexImage3D(), DepthBuffer(), disable(), enable(), reset(), scissor() (+9 more)
+### Community 22 - ".toArray"
+Cohesion: 0.10
+Nodes (5): Bone, CatmullRomCurve3, flattenJSON(), InstancedBufferAttribute, Skeleton
 
 ### Community 23 - "Stats"
 Cohesion: 0.08
-Nodes (9): What a regression would do on the live server, worst first, Boss, D, Kit, P, Spot, Standing, Stats (+1 more)
+Nodes (8): Boss, D, Kit, P, Spot, Standing, Stats, StatsTests
 
 ### Community 24 - "update"
-Cohesion: 0.09
-Nodes (31): warnOnce(), createBuffer(), WebGLBufferRenderer(), render(), renderInstances(), renderMultiDraw(), renderMultiDrawInstances(), WebGLExtensions() (+23 more)
+Cohesion: 0.08
+Nodes (34): warnOnce(), createBuffer(), WebGLBufferRenderer(), render(), renderInstances(), renderMultiDraw(), renderMultiDrawInstances(), WebGLExtensions() (+26 more)
 
 ### Community 25 - "textures-hd.py"
 Cohesion: 0.06
@@ -367,24 +366,24 @@ Cohesion: 0.12
 Nodes (9): MapFog, Revision, ParticleSystem, ThreeDTests, Chunk, Obj, Rock, WorldObjects (+1 more)
 
 ### Community 27 - "get"
-Cohesion: 0.10
-Nodes (53): createElementNS(), getContext(), activeTexture(), bindFramebuffer(), bindTexture(), compressedTexImage2D(), compressedTexSubImage2D(), compressedTexSubImage3D() (+45 more)
+Cohesion: 0.09
+Nodes (59): createElementNS(), setValueT1(), setValueT2DArray1(), setValueT3D1(), setValueT6(), WebGLCapabilities(), getMaxAnisotropy(), getMaxPrecision() (+51 more)
 
 ### Community 29 - "measure.js"
-Cohesion: 0.06
-Nodes (16): rgb(), WorldEdgeGL, BAND_COLOURS, cache, fmtDist(), fmtMin(), fmtTime(), MeasureTool (+8 more)
+Cohesion: 0.10
+Nodes (9): fmtDist(), fmtMin(), fmtTime(), MeasureTool, reachBands(), ReachGL, RouteGL, textImage() (+1 more)
 
 ### Community 30 - "system"
 Cohesion: 0.05
 Nodes (8): WebMap.Models.Unity, WebMap.Util, WebMap, WebMap.Tests, WebMap.Models, WebMap.Tiles, Setup, StaticFilesTests
 
 ### Community 31 - "Features"
-Cohesion: 0.09
-Nodes (6): Chart, Feature, Features, Grids, Named, Fnv
+Cohesion: 0.10
+Nodes (5): Feature, Features, Grids, Named, Fnv
 
 ### Community 32 - "ForgeCanvas"
 Cohesion: 0.06
-Nodes (15): Tour, DeathsLayer, fogUsers, ForgeCanvas, loadFog(), MC, walkedFn(), PathsLayer (+7 more)
+Nodes (14): Tour, DeathsLayer, fogUsers, ForgeCanvas, loadFog(), MC, walkedFn(), PathsLayer (+6 more)
 
 ### Community 33 - "Audio"
 Cohesion: 0.05
@@ -395,7 +394,7 @@ Cohesion: 0.06
 Nodes (10): LineDashedMaterial, Material, MeshDepthMaterial, MeshDistanceMaterial, MeshMatcapMaterial, MeshNormalMaterial, MeshToonMaterial, PointsMaterial (+2 more)
 
 ### Community 35 - "Gear"
-Cohesion: 0.07
+Cohesion: 0.08
 Nodes (20): Armor, Heavy, Light, Mage, Medium, None, Diet, Balanced (+12 more)
 
 ### Community 36 - "activity.js"
@@ -403,96 +402,100 @@ Cohesion: 0.08
 Nodes (17): ActivityLayers, colorRgb(), fmtAgo(), fmtClock(), fmtSpan(), gridOverlay(), HEAT, hslRgb() (+9 more)
 
 ### Community 37 - "Sphere"
-Cohesion: 0.07
-Nodes (5): ascSort(), Box2, intersect(), Raycaster, Sphere
+Cohesion: 0.05
+Nodes (6): ascSort(), Box2, Mesh, Raycaster, SkinnedMesh, Sphere
 
 ### Community 38 - ".constructor"
-Cohesion: 0.12
-Nodes (26): WebGLMaterials(), refreshFogUniforms(), refreshMaterialUniforms(), refreshTransformUniform(), refreshUniformsCommon(), refreshUniformsDash(), refreshUniformsDistance(), refreshUniformsLine() (+18 more)
+Cohesion: 0.16
+Nodes (21): WebGLMaterials(), refreshFogUniforms(), refreshMaterialUniforms(), refreshTransformUniform(), refreshUniformsCommon(), refreshUniformsDash(), refreshUniformsDistance(), refreshUniformsLine() (+13 more)
 
 ### Community 40 - "playercard.js"
-Cohesion: 0.13
-Nodes (20): activityHtml(), ARMOR_SLOTS, at(), BIOME_COL, clock(), connHtml(), day(), dayLabel() (+12 more)
+Cohesion: 0.07
+Nodes (27): ChunkStore, RegionLoader, stats, RuinsLayer, RuinStore, getJSON(), activityHtml(), ARMOR_SLOTS (+19 more)
 
 ### Community 41 - "ZDOID"
-Cohesion: 0.09
+Cohesion: 0.08
 Nodes (15): Kind, Kitchen, Made, Brewed, Burnt, Cooked, Honey, Smelted (+7 more)
+
+### Community 42 - "JsonWriter"
+Cohesion: 0.13
+Nodes (4): JsonWriter, Length, Now, Weather
+
+### Community 43 - "RenderTarget"
+Cohesion: 0.13
+Nodes (6): CubeTexture, CubeTextureLoader, Data3DTexture, RenderTarget, RenderTarget3D, WebGL3DRenderTarget
 
 ### Community 44 - "leaflet.js"
 Cohesion: 0.06
-Nodes (36): Ae(), be(), Ci(), De(), ei(), F(), G(), h() (+28 more)
+Nodes (41): Ae(), at(), be(), Ci(), d(), De(), ei(), F() (+33 more)
 
-### Community 45 - "Vehicles"
-Cohesion: 0.13
-Nodes (7): Entry, Traders, Kind, Boat, Cart, None, Vehicles
+### Community 45 - ".Sweep"
+Cohesion: 0.05
+Nodes (14): Entry, Graves, Entry, Last, Portals, Demisters, Entry, Traders (+6 more)
 
-### Community 47 - ".Sweep"
-Cohesion: 0.06
-Nodes (11): Entry, Graves, Demisters, Dungeons, Signature, Inside, Visited, Placed (+3 more)
+### Community 46 - "WebXRController"
+Cohesion: 0.11
+Nodes (3): Group, UniformsGroup, WebXRController
+
+### Community 47 - "Vector3"
+Cohesion: 0.08
+Nodes (14): Dungeons, Signature, Inside, Visited, Kind, Chest, Gate, Generator (+6 more)
 
 ### Community 48 - "AuthTests"
 Cohesion: 0.15
 Nodes (3): Auth, Session, AuthTests
 
-### Community 49 - ".constructor"
+### Community 49 - ".parseObject"
 Cohesion: 0.07
-Nodes (9): ArrowHelper, BoxGeometry, HemisphereLightHelper, Line, Mesh, MeshBasicMaterial, PlaneHelper, PointLightHelper (+1 more)
+Nodes (8): ArrowHelper, ConeGeometry, DirectionalLight, Line, LineLoop, LOD, getMaterial(), Sprite
 
 ### Community 50 - ".equals"
 Cohesion: 0.07
 Nodes (34): addContour(), compareXYSlope(), createNode(), cureLocalIntersections(), earcut(), earcutLinked(), eliminateHole(), eliminateHoles() (+26 more)
 
 ### Community 51 - "WebXRManager"
-Cohesion: 0.07
-Nodes (12): cloneUniforms(), getUnlitUniformColorSpace(), mergeUniforms(), PlaneGeometry, WebGLBackground(), addToRenderList(), dispose(), getBackground() (+4 more)
-
-### Community 52 - "Vector4"
-Cohesion: 0.04
-Nodes (3): LightShadow, PointLightShadow, Vector4
+Cohesion: 0.08
+Nodes (10): WebGLAnimation(), onAnimationFrame(), onAnimationFrame(), WebXRManager, onInputSourcesChange(), onSessionEnd(), onSessionEvent(), setProjectionFromUnion() (+2 more)
 
 ### Community 53 - "Veg"
 Cohesion: 0.05
 Nodes (40): Veg, AshFern, AshTree, AshVine, BarleyWild, Berry, Birch, BirchAutumn (+32 more)
 
-### Community 54 - "FogLayer"
-Cohesion: 0.05
-Nodes (21): ChunkStore, ObjectStore, parseVeg(), RegionLoader, VegStore, FogLayer, RuinsLayer, RuinStore (+13 more)
+### Community 54 - "vegpack.js"
+Cohesion: 0.09
+Nodes (14): ObjectStore, parseVeg(), VegStore, getBuffer(), packTrees(), radiusOf(), RGB, seedOf() (+6 more)
 
 ### Community 55 - "PropertyBinding"
 Cohesion: 0.06
 Nodes (3): AnimationObjectGroup, Composite, PropertyBinding
 
-### Community 56 - "GateTests"
-Cohesion: 0.09
-Nodes (3): Given, GateTests, LightModeTests
+### Community 56 - "WithDir"
+Cohesion: 0.08
+Nodes (5): HdMaps, HdMapsTests, Sink, LightModeTests, WithDir
 
 ### Community 57 - "Light"
-Cohesion: 0.06
-Nodes (8): AmbientLight, DirectionalLight, HemisphereLight, Light, PointLight, RectAreaLight, SpotLight, SpotLightShadow
+Cohesion: 0.11
+Nodes (5): AmbientLight, HemisphereLight, Light, LightProbe, RectAreaLight
 
 ### Community 58 - "Color"
 Cohesion: 0.07
-Nodes (6): Color, damp(), euclideanModulo(), hue2rgb(), LinearToSRGB(), pingpong()
-
-### Community 61 - ".constructor"
-Cohesion: 0.12
-Nodes (22): createCanvasElement(), WebGLAnimation(), onAnimationFrame(), acquireProgram(), releaseShaderCache(), remove(), deallocateMaterial(), getProgram() (+14 more)
+Nodes (8): Color, createColorManagement(), damp(), euclideanModulo(), hue2rgb(), LinearToSRGB(), pingpong(), SRGBToLinear()
 
 ### Community 62 - "TileStore"
 Cohesion: 0.08
 Nodes (9): TileMath, ChunksPerSide, TileStore, ClearTile, MainThreadSampling, OnDisk, QueueLength, Rendered (+1 more)
 
 ### Community 63 - "markercanvas.js"
-Cohesion: 0.10
-Nodes (13): colors, asDot(), badgeCache, countBadge(), gamePinImage(), iconCache, iconImage(), labelCache (+5 more)
+Cohesion: 0.11
+Nodes (12): asDot(), badgeCache, countBadge(), gamePinImage(), iconCache, iconImage(), labelCache, labelImage() (+4 more)
 
 ### Community 64 - "Euler"
-Cohesion: 0.09
-Nodes (5): Euler, MeshLambertMaterial, MeshPhongMaterial, MeshStandardMaterial, Scene
+Cohesion: 0.08
+Nodes (7): Euler, MeshBasicMaterial, MeshLambertMaterial, MeshPhongMaterial, onQuaternionChange(), onRotationChange(), Scene
 
-### Community 65 - "push"
-Cohesion: 0.11
-Nodes (21): ExternalTexture, WebGLLights(), setup(), setupView(), getProgramCacheKey(), getProgramCacheKeyBooleans(), getProgramCacheKeyParameters(), checkMaterialsReady() (+13 more)
+### Community 65 - ".render"
+Cohesion: 0.05
+Nodes (42): renderTarget(), ExternalTexture, shadowCastingAndTexturingLightsFirst(), ShadowUniformsCache(), UniformsCache(), WebGLClipping(), projectPlanes(), resetGlobalState() (+34 more)
 
 ### Community 66 - "GLTFLoader.js"
 Cohesion: 0.08
@@ -502,25 +505,25 @@ Nodes (26): addMorphTargets(), addPrimitiveAttributes(), assignAttributeAccessor
 Cohesion: 0.11
 Nodes (8): ChatCommands, Command, Kind, Delete, None, Pin, Undo, ChatCommandsTests
 
-### Community 68 - "Discord"
-Cohesion: 0.11
-Nodes (6): Body, Discord, Token, DiscordRef, Result, DiscordTests
+### Community 68 - "Func"
+Cohesion: 0.05
+Nodes (15): Body, ChatRelay, Discord, Token, DiscordMessage, DiscordRef, Result, Entry (+7 more)
 
 ### Community 70 - "TileJob"
-Cohesion: 0.13
-Nodes (9): Palette, Rgb, TileJob, ColorImage, HeightPng, SampledRows, TerraImage, VegImage (+1 more)
+Cohesion: 0.07
+Nodes (25): Material, Ashwood, BlackMarble, Cloth, CoreWood, Crystal, DarkWood, Fire (+17 more)
 
 ### Community 71 - "Curve"
-Cohesion: 0.09
-Nodes (3): Curve, LineCurve, LineCurve3
+Cohesion: 0.13
+Nodes (3): CatmullRom(), Curve, SplineCurve
 
 ### Community 72 - "PMREMGenerator"
 Cohesion: 0.14
 Nodes (9): RawShaderMaterial, ShaderMaterial, _createRenderTarget(), _getBlurShader(), _getCommonVertexShader(), _getCubemapMaterial(), _getEquirectMaterial(), PMREMGenerator (+1 more)
 
 ### Community 74 - "Texture"
-Cohesion: 0.04
-Nodes (16): CanvasTexture, CompressedArrayTexture, CompressedCubeTexture, CompressedTexture, CubeTexture, Data3DTexture, DataArrayTexture, DepthTexture (+8 more)
+Cohesion: 0.08
+Nodes (5): CanvasTexture, DepthTexture, FramebufferTexture, Source, Texture
 
 ### Community 75 - "web/js/sky.js"
 Cohesion: 0.10
@@ -535,28 +538,32 @@ Cohesion: 0.07
 Nodes (7): GLTFLoader, GLTFMaterialsBumpExtension, GLTFMaterialsEmissiveStrengthExtension, GLTFMaterialsIorExtension, GLTFMaterialsIridescenceExtension, GLTFMeshGpuInstancing, GLTFMeshoptCompression
 
 ### Community 78 - "KeyframeTrack"
-Cohesion: 0.10
-Nodes (9): Coming from WebMap, Install, BooleanKeyframeTrack, ColorKeyframeTrack, KeyframeTrack, QuaternionKeyframeTrack, StringKeyframeTrack, subclip() (+1 more)
+Cohesion: 0.09
+Nodes (8): BooleanKeyframeTrack, ColorKeyframeTrack, KeyframeTrack, LinearInterpolant, QuaternionKeyframeTrack, StringKeyframeTrack, subclip(), VectorKeyframeTrack
 
 ### Community 79 - "Items"
-Cohesion: 0.12
+Cohesion: 0.15
 Nodes (3): Items, Ready, ItemsTests
+
+### Community 80 - "MapDataServer"
+Cohesion: 0.09
+Nodes (3): MapDataServer, PlayersWs, WebSocketHandler
 
 ### Community 81 - ".assignTexture"
 Cohesion: 0.07
 Nodes (7): GLTFMaterialsAnisotropyExtension, GLTFMaterialsClearcoatExtension, GLTFMaterialsSheenExtension, GLTFMaterialsSpecularExtension, GLTFMaterialsTransmissionExtension, GLTFMaterialsVolumeExtension, GLTFTextureTransformExtension
 
-### Community 82 - "Func"
-Cohesion: 0.14
-Nodes (5): Entry, Settings, Live, Stats, WorldEvents
+### Community 82 - "Loader"
+Cohesion: 0.12
+Nodes (6): AudioLoader, BufferGeometryLoader, CompressedTextureLoader, DataTextureLoader, Loader, TextureLoader
 
 ### Community 83 - "LoadingManager"
-Cohesion: 0.07
-Nodes (8): EventDispatcher, handleVisibilityChange(), ImageBitmapLoader, onImageError(), onImageLoad(), removeEventListeners(), LoadingManager, Timer
+Cohesion: 0.08
+Nodes (11): 2.9.1, EventDispatcher, getTypedArray(), ImageBitmapLoader, onImageError(), onImageLoad(), removeEventListeners(), intersect() (+3 more)
 
-### Community 84 - "JsonElement"
-Cohesion: 0.20
-Nodes (5): Testing, Entry, Last, Portals, PortalsTests
+### Community 84 - "addToRenderList"
+Cohesion: 0.15
+Nodes (11): cloneUniforms(), getUnlitUniformColorSpace(), mergeUniforms(), PlaneGeometry, WebGLBackground(), addToRenderList(), dispose(), getBackground() (+3 more)
 
 ### Community 86 - "OrbitControls.js"
 Cohesion: 0.11
@@ -579,28 +586,32 @@ Cohesion: 0.20
 Nodes (3): addUnknownExtensionsToUserData(), assignExtrasToUserData(), GLTFParser
 
 ### Community 91 - "Fact"
-Cohesion: 0.15
-Nodes (4): FeaturesTests, Grid, Cell, J
+Cohesion: 0.10
+Nodes (6): Testing, FeaturesTests, PortalsTests, Grid, Cell, J
 
 ### Community 92 - "MigrationTests"
 Cohesion: 0.18
 Nodes (6): Migration, MigrationTests, Configs, NewCfg, OldCfg, Plugins
 
-### Community 93 - "RuinsGL"
-Cohesion: 0.12
-Nodes (5): hexRgb(), materialRgb(), PackedRegions, packRects(), RuinsGL
+### Community 93 - "ChunkShapes"
+Cohesion: 0.04
+Nodes (14): BuildingsGL, ChunkShapes, compile(), drawPicture(), hexRgb(), materialRgb(), PackedRegions, packRects() (+6 more)
 
 ### Community 94 - "RaidLayer"
 Cohesion: 0.18
 Nodes (5): MapCore, ago(), areaCache, areaImage(), RaidLayer
+
+### Community 95 - "Activity"
+Cohesion: 0.24
+Nodes (4): Activity, Snap, Trail, ActivityTests
 
 ### Community 96 - "web/js/view3d.js"
 Cohesion: 0.13
 Nodes (13): Street, _ahead, AROUND, bigFromAfar(), checksum(), decodeObjects(), EDGES(), fallbackColor() (+5 more)
 
 ### Community 98 - "WebGLBindingStates"
-Cohesion: 0.13
-Nodes (22): WebGLBindingStates(), bindVertexArrayObject(), createBindingState(), createVertexArrayObject(), deleteVertexArrayObject(), disableUnusedAttributes(), dispose(), enableAttribute() (+14 more)
+Cohesion: 0.17
+Nodes (21): WebGLBindingStates(), bindVertexArrayObject(), createBindingState(), createVertexArrayObject(), deleteVertexArrayObject(), disableUnusedAttributes(), dispose(), enableAttribute() (+13 more)
 
 ### Community 99 - "BundleFile"
 Cohesion: 0.14
@@ -612,27 +623,27 @@ Nodes (20): CONFUSING, ES_MODULES, MODULES, MUNIN, rules, UNUSED, description, d
 
 ### Community 101 - "Clock"
 Cohesion: 0.12
-Nodes (5): AudioContext, AudioListener, Clock, ImageUtils, SRGBToLinear()
+Nodes (5): AudioContext, AudioListener, Clock, ImageUtils, serializeImage()
 
-### Community 103 - "BiomeMap"
-Cohesion: 0.13
-Nodes (4): BiomeMap, Label, Now, Weather
+### Community 102 - "Path"
+Cohesion: 0.10
+Nodes (4): Path, Shape, ShapePath, toShapesNoHoles()
 
 ### Community 104 - "Heights"
-Cohesion: 0.19
+Cohesion: 0.17
 Nodes (5): Heights, KeepSamples, Job, Served, Job
 
 ### Community 105 - "Using the map"
-Cohesion: 0.11
-Nodes (18): Chat commands, Checking the viewer against a live server, Configuration, Discord, Features, Full-quality textures (optional), Licence and credit, Local test server (+10 more)
+Cohesion: 0.10
+Nodes (20): Chat commands, Checking the viewer against a live server, Coming from WebMap, Configuration, Discord, Features, Full-quality textures (optional), Install (+12 more)
 
-### Community 108 - "Loader"
-Cohesion: 0.09
-Nodes (14): AnimationLoader, AudioLoader, handleError(), BufferGeometryLoader, CompressedTextureLoader, loadTexture(), CubeTextureLoader, loadTexture() (+6 more)
+### Community 106 - "Pieces"
+Cohesion: 0.24
+Nodes (4): Entry, Kind, Pieces, PiecesTests
 
-### Community 110 - "MeshDecoder"
-Cohesion: 0.23
-Nodes (3): Decoded, MeshDecoder, MeshData
+### Community 108 - ".load"
+Cohesion: 0.28
+Nodes (4): handleError(), loadTexture(), loadTexture(), FileLoader
 
 ### Community 111 - "Hand"
 Cohesion: 0.10
@@ -643,28 +654,28 @@ Cohesion: 0.22
 Nodes (3): GroundGL, perSide(), span()
 
 ### Community 114 - "Changelog"
-Cohesion: 0.12
-Nodes (16): 2.10.0, 2.11.0, 2.14.0, 2.16.0, 2.16.1, 2.7.1 and earlier, 2.8.0, 2.9.0 (+8 more)
+Cohesion: 0.10
+Nodes (19): 2.10.0, 2.11.0, 2.14.0, 2.16.0, 2.16.1, 2.7.1 and earlier, 2.8.0, 2.9.0 (+11 more)
 
 ### Community 115 - "WorldEvents"
-Cohesion: 0.16
-Nodes (4): SkipToMorningPatch, WorldEvents, InvasionsPath, StatePath
+Cohesion: 0.12
+Nodes (5): WorldSweep, Due, WorldEvents, InvasionsPath, StatePath
 
-### Community 116 - "TerrainPatches"
-Cohesion: 0.20
-Nodes (3): Patch, TerrainPatches, Count
+### Community 116 - "HashSet"
+Cohesion: 0.10
+Nodes (7): Patch, TerrainPatches, Count, LocationTerrain, Count, Mod, Patch
 
 ### Community 117 - "Structures"
 Cohesion: 0.06
-Nodes (19): ChunkCache, Line, Chunk, Ruins, IndexJson, LastChanged, Total, Site (+11 more)
+Nodes (19): ChunkCache, Line, Regions, Chunk, Ruins, IndexJson, LastChanged, Total (+11 more)
 
 ### Community 118 - "arraysEqual"
 Cohesion: 0.21
 Nodes (19): allocTexUnits(), arraysEqual(), copyArray(), setValueM2(), setValueM3(), setValueM4(), setValueT1Array(), setValueT2DArrayArray() (+11 more)
 
 ### Community 119 - ".LookJson"
-Cohesion: 0.20
-Nodes (5): Item, Joints, Look, Rig, RigTests
+Cohesion: 0.22
+Nodes (4): Item, Look, Rig, RigTests
 
 ### Community 120 - "map-core.test.mjs"
 Cohesion: 0.13
@@ -675,12 +686,12 @@ Cohesion: 0.21
 Nodes (5): Entry, Locations, RevealedCount, VegvisirAnswerPatch, LocationsTests
 
 ### Community 123 - "Deeds"
-Cohesion: 0.14
-Nodes (9): Deeds, DeedsGonePatch, DeedsRoutePatch, Kind, Kill, Rock, Tree, Last (+1 more)
+Cohesion: 0.13
+Nodes (10): What a regression would do on the live server, worst first, Deeds, DeedsGonePatch, DeedsRoutePatch, Kind, Kill, Rock, Tree (+2 more)
 
-### Community 124 - ".applyMatrix4"
+### Community 124 - ".copy"
 Cohesion: 0.05
-Nodes (9): checkIntersection(), checkIntersection$1(), Frustum, FrustumArray, InstancedBufferAttribute, InstancedMesh, LOD, SkinnedMesh (+1 more)
+Nodes (12): handleTriangle(), handleVertex(), checkIntersection(), checkIntersection$1(), cloneUniformsGroups(), Frustum, InstancedMesh, isUniqueEdge() (+4 more)
 
 ### Community 125 - "particles.js"
 Cohesion: 0.22
@@ -691,16 +702,16 @@ Cohesion: 0.26
 Nodes (11): bodyTexture(), curlNoise(), finish(), image(), info(), lib(), model(), models (+3 more)
 
 ### Community 127 - "ContourGL"
-Cohesion: 0.17
-Nodes (4): ContourGL, labelImage(), span(), screenArea()
+Cohesion: 0.06
+Nodes (9): ContourGL, labelImage(), span(), FogGL, glyphAtlas(), GuideGL, rgb(), textImage() (+1 more)
 
 ### Community 128 - ".load"
 Cohesion: 0.14
 Nodes (5): getImageURIMimeType(), GLTFTextureAVIFExtension, GLTFTextureBasisUExtension, GLTFTextureWebPExtension, LoaderUtils
 
 ### Community 129 - "AnimationClip"
-Cohesion: 0.11
-Nodes (5): AnimationClip, AnimationUtils, getTrackTypeForValueTypeName(), NumberKeyframeTrack, parseKeyframeTrack()
+Cohesion: 0.15
+Nodes (3): AnimationClip, AnimationUtils, NumberKeyframeTrack
 
 ### Community 130 - "CubicBezierCurve"
 Cohesion: 0.12
@@ -710,13 +721,9 @@ Nodes (7): CubicBezier(), CubicBezierCurve, CubicBezierCurve3, CubicBezierP0(), 
 Cohesion: 0.10
 Nodes (6): GearTests, PinsTests, File_, SettingsTests, TilesTests, VersionTests
 
-### Community 133 - "Material"
-Cohesion: 0.12
-Nodes (16): Material, Ashwood, BlackMarble, Cloth, CoreWood, Crystal, DarkWood, Fire (+8 more)
-
 ### Community 134 - "get"
-Cohesion: 0.08
-Nodes (39): renderTarget(), arrayNeedsUint32(), WebGLCubeRenderTarget, WebGLAttributes(), get(), remove(), update(), updateBuffer() (+31 more)
+Cohesion: 0.06
+Nodes (54): arrayNeedsUint32(), createCanvasElement(), WebGLCubeRenderTarget, WebGLAttributes(), get(), remove(), update(), updateBuffer() (+46 more)
 
 ### Community 136 - "BufferGeometryUtils.js"
 Cohesion: 0.15
@@ -727,11 +734,11 @@ Cohesion: 0.12
 Nodes (6): QuadraticBezier(), QuadraticBezierCurve, QuadraticBezierCurve3, QuadraticBezierP0(), QuadraticBezierP1(), QuadraticBezierP2()
 
 ### Community 139 - "Png"
-Cohesion: 0.19
+Cohesion: 0.20
 Nodes (6): Format, Gray16, Gray8, RGB, RGBA, Png
 
 ### Community 140 - "Français"
-Cohesion: 0.12
+Cohesion: 0.14
 Nodes (13): Ce que tu vois sur la carte, Credits / Crédits, English, For the server admin, ForgeMap, Français, Install, Installation (+5 more)
 
 ### Community 141 - "i18n.js"
@@ -739,44 +746,36 @@ Cohesion: 0.17
 Nodes (7): Gear, fill(), has(), num(), t(), tn(), translateTree()
 
 ### Community 142 - "PerspectiveCamera"
-Cohesion: 0.10
-Nodes (4): ArrayCamera, Layers, PerspectiveCamera, StereoCamera
+Cohesion: 0.07
+Nodes (5): LightShadow, PerspectiveCamera, PointLight, PointLightShadow, StereoCamera
 
 ### Community 143 - "Interpolant"
-Cohesion: 0.17
-Nodes (4): CubicInterpolant, DiscreteInterpolant, Interpolant, LinearInterpolant
+Cohesion: 0.18
+Nodes (3): CubicInterpolant, DiscreteInterpolant, Interpolant
 
 ### Community 144 - "PolyhedronGeometry"
 Cohesion: 0.13
 Nodes (5): DodecahedronGeometry, IcosahedronGeometry, OctahedronGeometry, PolyhedronGeometry, TetrahedronGeometry
 
 ### Community 145 - "InterleavedBuffer"
-Cohesion: 0.09
-Nodes (4): generateUUID(), InstancedInterleavedBuffer, InterleavedBuffer, UniformsGroup
+Cohesion: 0.13
+Nodes (3): generateUUID(), InstancedInterleavedBuffer, InterleavedBuffer
 
 ### Community 146 - "Feed"
-Cohesion: 0.23
-Nodes (5): Ev, Feed, Keep, RecentJson, FeedTests
-
-### Community 147 - "Part"
-Cohesion: 0.17
-Nodes (4): Node, Part, Player, RigExporter
+Cohesion: 0.20
+Nodes (6): Ev, Feed, Keep, RecentJson, FeedTests, SkipToMorningPatch
 
 ### Community 148 - "WebMap.cs"
-Cohesion: 0.17
-Nodes (4): DeathWatch, WebSocketHandler, ZRoutedRpcPatch, ZRoutedRpcRoutePatch
+Cohesion: 0.32
+Nodes (3): DeathWatch, ZRoutedRpcPatch, ZRoutedRpcRoutePatch
 
-### Community 150 - "GlbWriter"
-Cohesion: 0.20
-Nodes (5): GlbWriter, Count, Primitive, Skin, Result
+### Community 150 - "CompressedTexture"
+Cohesion: 0.25
+Nodes (3): CompressedArrayTexture, CompressedCubeTexture, CompressedTexture
 
 ### Community 151 - "check.mjs"
 Cohesion: 0.32
 Nodes (11): [BASE, PORT, OUT], check(), map(), open(), plan(), players(), portals(), sleep() (+3 more)
-
-### Community 152 - "ChatRelay"
-Cohesion: 0.26
-Nodes (3): ChatRelay, DiscordMessage, ChatRelayTests
 
 ### Community 153 - "parseUniform"
 Cohesion: 0.17
@@ -790,9 +789,9 @@ Nodes (10): 2.12.0, [BASE, PORT], errors, ev(), ms(), pending, send(), tab (+2 m
 Cohesion: 0.36
 Nodes (3): SmoothZoom, SmoothZoomControl, update()
 
-### Community 160 - "vegpack.js"
-Cohesion: 0.23
-Nodes (10): packTrees(), radiusOf(), RGB, seedOf(), SMALL_R, TREE_STRIDE, unpackRegion(), VEG (+2 more)
+### Community 160 - ".parse"
+Cohesion: 0.29
+Nodes (3): AnimationLoader, getTrackTypeForValueTypeName(), parseKeyframeTrack()
 
 ### Community 161 - ".parse"
 Cohesion: 0.18
@@ -802,41 +801,25 @@ Nodes (3): GLTFBinaryExtension, GLTFMaterialsUnlitExtension, GLTFMeshQuantizatio
 Cohesion: 0.27
 Nodes (11): addShape(), addUV(), addVertex(), buildLidFaces(), buildSideFaces(), f3(), f4(), getBevelVec() (+3 more)
 
-### Community 163 - "GuideGL"
-Cohesion: 0.22
-Nodes (3): glyphAtlas(), GuideGL, textImage()
-
-### Community 166 - "WebGLShaderCache"
-Cohesion: 0.20
-Nodes (6): WebGLPrograms(), dispose(), getChannel(), getParameters(), WebGLShaderCache, WebGLShaderStage
-
-### Community 168 - "Regex"
-Cohesion: 0.18
-Nodes (4): HdMaps, HdMapsTests, Sink, WithDir
-
 ### Community 169 - "BiomeGL"
 Cohesion: 0.22
 Nodes (3): 2.13.0, bigText(), BiomeGL
 
-### Community 171 - "d"
-Cohesion: 0.25
-Nodes (9): at(), d(), ht(), i(), Li(), Mi(), v(), W() (+1 more)
+### Community 171 - "oi"
+Cohesion: 0.67
+Nodes (4): Je(), ni(), oi(), si()
 
 ### Community 172 - "ServerLog"
-Cohesion: 0.15
+Cohesion: 0.16
 Nodes (4): Line, ServerLog, Trails, ZNetPatchShutdown
-
-### Community 174 - "Kind"
-Cohesion: 0.25
-Nodes (8): Kind, Chest, Gate, Generator, Mining, Monster, None, Pickable
 
 ### Community 175 - "ZNetPeer"
 Cohesion: 0.06
-Nodes (12): Announce, Token, Pending, DiscordWebHook, MapMessage, Ping, WebMap, ZNetPatchDisconnect (+4 more)
+Nodes (11): Announce, Token, Pending, DiscordWebHook, Ping, WebMap, ZNetPatchDisconnect, ZNetPatchSetServer (+3 more)
 
 ### Community 176 - "m"
-Cohesion: 0.24
-Nodes (11): HTTP endpoints, look(), ct(), e(), hi(), m(), Qe(), ve() (+3 more)
+Cohesion: 0.36
+Nodes (8): e(), hi(), m(), Qe(), ve(), xe(), ye(), z()
 
 ### Community 180 - "WebMap.Tests.csproj"
 Cohesion: 0.29
@@ -867,12 +850,12 @@ Cohesion: 0.33
 Nodes (5): dependencies, description, name, version_number, website_url
 
 ### Community 196 - ".NewWorld"
-Cohesion: 0.15
-Nodes (3): WebMapConfig, HeightMaxZoom, ImageConv
+Cohesion: 0.13
+Nodes (4): ImageConv, Cell, StructureMap, Floor
 
 ### Community 202 - ".Start"
-Cohesion: 0.18
-Nodes (3): StaticCoroutine, StaticCoroutineRunner, ZoneSystemPatch
+Cohesion: 0.14
+Nodes (4): Chart, StaticCoroutine, StaticCoroutineRunner, ZoneSystemPatch
 
 ### Community 203 - "bi"
 Cohesion: 0.33
@@ -882,33 +865,29 @@ Nodes (6): ForgeMap 1.2.0, bi(), Pi(), q(), Ti(), u()
 Cohesion: 0.40
 Nodes (4): Leaflet 1.9.4, SixLabors.ImageSharp 2.1.13, System.Buffers 4.5.1, System.Numerics.Vectors 4.5.0, System.Text.Encoding.CodePages 5.0.0, Third-party notices
 
-### Community 211 - "allocateTextureUnit"
-Cohesion: 0.40
-Nodes (5): setValueT1(), setValueT2DArray1(), setValueT3D1(), setValueT6(), allocateTextureUnit()
-
 ### Community 215 - "Cat"
 Cohesion: 0.29
 Nodes (7): Cat, Bush, Other, Piece, Rock, Skip, Tree
 
 ## Knowledge Gaps
 - **214 isolated node(s):** `Plugins`, `Configs`, `NewCfg`, `OldCfg`, `File_` (+209 more)
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1908 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **66 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 1909 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **64 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `What a regression would do on the live server, worst first` connect `Stats` to `Discord`, `.Finish`, `ServerLog`, `ZNetPeer`, `AuthTests`, `MapDataServer`, `Changelog`, `LoadingManager`, `WebMap.cs`, `JsonElement`, `TerrainPatches`, `ChatRelay`, `WorldObjects`, `Deeds`, `View3D`, `Features`?**
-  _High betweenness centrality (0.330) - this node is a cross-community bridge._
+- **Why does `What a regression would do on the live server, worst first` connect `Deeds` to `Timer`, `ForestMap`, `WebMap.cs`, `Stats`, `WorldObjects`, `View3D`, `Features`, `ServerLog`, `.Sweep`, `ZNetPeer`, `AuthTests`, `Func`, `.NewWorld`, `.Start`, `MapDataServer`, `Fact`, `Pieces`, `Changelog`, `HashSet`?**
+  _High betweenness centrality (0.310) - this node is a cross-community bridge._
 - **Are the 7 inferred relationships involving `get()` (e.g. with `WebGLAttributes()` and `WebGLCubeMaps()`) actually correct?**
   _`get()` has 7 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `Plugins`, `Configs`, `NewCfg` to the rest of the system?**
   _214 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `three.core.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.007751937984496124 - nodes in this community are weakly interconnected._
-- **Why does `Timer` connect `LoadingManager` to `three.core.js`, `three.module.js`, `Stats`?**
-  _High betweenness centrality (0.278) - this node is a cross-community bridge._
+  _Cohesion score 0.008 - nodes in this community are weakly interconnected._
+- **Why does `Timer` connect `Timer` to `three.core.js`, `three.module.js`, `LoadingManager`, `Deeds`?**
+  _High betweenness centrality (0.271) - this node is a cross-community bridge._
 - **Should `three.module.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.00816326530612245 - nodes in this community are weakly interconnected._
-- **Why does `initGLContext()` connect `get` to `push`, `WebGLBindingStates`, `.constructor`, `WebGLShaderCache`, `WebGLRenderer`, `WebXRManager`, `WebGLState`, `update`, `get`, `.constructor`, `portrait.js`?**
-  _High betweenness centrality (0.078) - this node is a cross-community bridge._
+  _Cohesion score 0.008298755186721992 - nodes in this community are weakly interconnected._
+- **Why does `initGLContext()` connect `get` to `.render`, `WebGLBindingStates`, `.constructor`, `WebGLRenderer`, `addToRenderList`, `update`, `get`, `portrait.js`?**
+  _High betweenness centrality (0.070) - this node is a cross-community bridge._

@@ -234,9 +234,9 @@
     "semantic_hash": ""
   },
   "WebMap/DeathWatch.cs": {
-    "mtime": 1794532276.7433548,
-    "seen": 1794532521.0232558,
-    "ast_hash": "cc23f4fe4a40e204ab776a9515b36a72",
+    "mtime": 1794533364.530382,
+    "seen": 1794533527.3825326,
+    "ast_hash": "7d04828e9368e43768963a7475ca3dea",
     "semantic_hash": ""
   },
   "WebMap/Deeds.cs": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "WebMap/MapDataServer.cs": {
-    "mtime": 1794533020.6551974,
-    "seen": 1794533333.3113818,
-    "ast_hash": "7d64aaf9e3cd5b53d3dea9d2544c5fb8",
+    "mtime": 1794533364.529055,
+    "seen": 1794533527.3825502,
+    "ast_hash": "2d1be2e6fbe712f143703c8938c36a8b",
     "semantic_hash": ""
   },
   "WebMap/MapFog.cs": {
@@ -600,9 +600,9 @@
     "semantic_hash": ""
   },
   "WebMap/WebMap.cs": {
-    "mtime": 1794532284.7788024,
-    "seen": 1794532521.0233371,
-    "ast_hash": "0fe1c89ef28d7dbb5ed404b244738211",
+    "mtime": 1794533364.5301387,
+    "seen": 1794533527.3826146,
+    "ast_hash": "f84308040c4336e0b2135987511f4a43",
     "semantic_hash": ""
   },
   "WebMap/WebMap.csproj": {
@@ -1371,6 +1371,18 @@
     "mtime": 1794532986.584326,
     "seen": 1794533333.3114429,
     "ast_hash": "a538b01d03fd4f7b61bdf8b0008601b7",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/ActivityTests.cs": {
+    "mtime": 1794533379.1404257,
+    "seen": 1794533527.3824725,
+    "ast_hash": "6f6d5391bc93a0afd7673bd73a16c908",
+    "semantic_hash": ""
+  },
+  "WebMap/Activity.cs": {
+    "mtime": 1794533393.3970091,
+    "seen": 1794533527.3825223,
+    "ast_hash": "4c1402ad85a7c3b65c67f50ab5193c14",
     "semantic_hash": ""
   }
 }

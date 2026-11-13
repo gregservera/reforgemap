@@ -157,7 +157,8 @@ namespace WebMap
             Trails.Load(worldDataPath);
             Chart.Load(worldDataPath);
             Features.Load(worldDataPath);
-            Feed.Load(worldDataPath);                     // the map's Events panel: the end of its log
+            Feed.Load(worldDataPath);
+            Activity.Load(worldDataPath);                 // the Activity layers' zone totals                     // the map's Events panel: the end of its log
             ServerLog.Open(worldDataPath);                // the game's console lines, for admins
             Portals.Load(worldDataPath);
             Locations.Load(worldDataPath);
@@ -572,6 +573,7 @@ namespace WebMap
             {
                 Stats.Save();
                 Trails.Save();
+                Activity.Save();
                 Tiles.TileStore.Stop();
                 ServerLog.Stop();
                 mapDataServer.Stop();
