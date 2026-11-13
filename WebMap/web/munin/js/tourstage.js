@@ -5,10 +5,11 @@
 //   - WORLD, filled from /state, /features, /pieces, /stats/players and the fog;
 //   - a legend whose details are ForgeMap's layers here (deaths, trails);
 //   - the world's figures (js/spot.js, Spot.world).
-// The 3D cuts are not wired yet (ticket tour-cinematique-3d): every stop plays on the 2D map.
+//   - the 3D cuts, through tourcam.js (ticket tour-cinematique-3d).
 // Started by its button in the bar, or by #tour in the address.
 
 import { toLatLng, fromLatLng } from './crs.js';
+import { TourCam } from './tourcam.js';
 
 const MC = MapCore, API = MC.cfg.api, T = (s, v) => window.I18N.t(s, v);
 
@@ -79,8 +80,10 @@ export function setupTour(app) {
   };
   const keep = {};   // the detail layers as they were when the tour began, put back as it stops
 
-  // ---- the 3D: not wired yet, every stop stays on the map
-  const street = { view: null, on: false, load: () => Promise.reject(new Error('3D cuts: not yet')), feed() {}, armPeg() {}, letGo() {}, markMode() {}, leave() {} };
+  // ---- the 3D: Munin's view, with the 1.4 tour's camera moves (tourcam.js); none when the server has it off
+  const street = app.config?.enable_3d === false
+    ? { view: null, on: false, load: () => Promise.reject(new Error('3D off')), feed() {}, armPeg() {}, letGo() {}, markMode() {}, leave() {} }
+    : new TourCam(app);
 
   // ---- the page: its button, the caption, the figure card, the player card
   const box = document.createElement('div');

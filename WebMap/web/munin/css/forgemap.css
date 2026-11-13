@@ -149,3 +149,4 @@
 .fm-tour-btn { font-size: 13px; }
 .fm-tour-btn.on { color: var(--accent); }
 body.tour .leaflet-control-container, body.tour #wind, body.tour .coords { opacity: .3; transition: opacity .6s; }
+body.tour #view3d .v3d-help { display: none; }

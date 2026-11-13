@@ -972,9 +972,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/view3d.js": {
-    "mtime": 1794555643.7741861,
-    "seen": 1794556556.45024,
-    "ast_hash": "a2c664ac6f8985b68f210c09f8bfa613",
+    "mtime": 1794558351.821777,
+    "seen": 1794559443.7101316,
+    "ast_hash": "d1dc62a6a878681e103cea2252ad5cf4",
     "semantic_hash": ""
   },
   "WebMap/web/site-config.js": {
@@ -1506,9 +1506,15 @@
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/tourstage.js": {
-    "mtime": 1794558110.6082065,
-    "seen": 1794558300.017715,
-    "ast_hash": "951ca1238510ee26b0ff502d901d1b37",
+    "mtime": 1794558394.9326956,
+    "seen": 1794559443.7101266,
+    "ast_hash": "b7276052e777b445a06e7714cf72d286",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/tourcam.js": {
+    "mtime": 1794559332.170008,
+    "seen": 1794559443.7101245,
+    "ast_hash": "7024b9c36cc72dc8802286bb06acc743",
     "semantic_hash": ""
   }
 }

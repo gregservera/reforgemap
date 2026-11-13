@@ -556,7 +556,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
     const s = this.street, g = Math.max(this.heightAt(s.x, s.z) ?? this.waterLevel, this.waterLevel - 1.2);
     const h = s.heading * Math.PI / 180, pt = s.pitch * Math.PI / 180;
     const cam = this.camera.position;
-    cam.set(s.x, g + STREET_EYE, -s.z);
+    cam.set(s.x, g + (s.eye ?? STREET_EYE), -s.z);   // (the tour flies some shots higher: tourcam.js)
     // three.js has north at -z: the game's (x, z) is three's (x, -z)
     const dx = Math.sin(h) * Math.cos(pt), dy = Math.sin(pt), dz = -Math.cos(h) * Math.cos(pt);
     this.controls.target.set(cam.x + dx * 10, cam.y + dy * 10, cam.z + dz * 10);
@@ -697,7 +697,8 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
   // the server's time of day changes slowly: a new light needs a frame
   checkLighting() {
     const pick = layerState.time3d;
-    let frac = { noon: 0.5, morning: 0.3, evening: 0.72, night: 0.02 }[pick];
+    // ForgeMap: the tour sets its own light for a shot (tourcam.js), 0 to 1 of the day
+    let frac = this.clockOverride ?? { noon: 0.5, morning: 0.3, evening: 0.72, night: 0.02 }[pick];
     if (frac === undefined) {
       // the server's clock, kept going here between its updates, stretched as the game stretches it
       // (EnvMan.RescaleDayFraction: the day runs 0.15 to 0.85 of the clock)
