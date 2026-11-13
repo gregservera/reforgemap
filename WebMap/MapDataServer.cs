@@ -300,7 +300,9 @@ namespace WebMap
                 }
                 string common = sb.ToString(mark, sb.Length - mark);
                 live.Add("{\"id\":" + player.m_uid.ToString(CultureInfo.InvariantCulture) + ",\"name\":\"" + JsonEscape(player.m_playerName) + "\""
-                         + common + ",\"pvp\":" + (zdoData.GetBool(ZDOVars.s_pvp) ? "true" : "false") + "}");
+                         + common + ",\"pvp\":" + (zdoData.GetBool(ZDOVars.s_pvp) ? "true" : "false")
+                         // ForgeMap: what they look like, for the 3D's character (personnage-3d)
+                         + (showPos && look != null ? ",\"look\":" + look : "") + "}");
                 if (showPos && look != null) sb.Append(",\"look\":").Append(look);
                 sb.Append("}");
                 entries.Add(sb.ToString());

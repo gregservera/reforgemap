@@ -21,7 +21,7 @@ import { WORLD_HALF, MAX_ZOOM, TILE, metersPerPixel, chunkOf, worldTile, WORLD_S
 import { fetchTerrarium } from './png.js';
 import { keyOf } from './keys.js';
 import { on } from './net.js';
-import { loadHd, dressMaterial } from '../../js/rig.js';
+import { loadHd, dressMaterial, lookKey, RigBuilder } from '../../js/rig.js';
 import { fetchMist, mistIn } from './mist.js';
 
 const RINGS = [                   // zoom -> load within this distance of the target (metres)
@@ -158,6 +158,11 @@ export class View3D {
     this.scene.add(this.pinSprites);
     this.playerGroup = new THREE.Group();
     this.playerGroup.visible = layerState.players;
+    // ForgeMap: the players as their character (ticket personnage-3d), as ForgeMap 1.4's 3D drew
+    // them: body, skin, hair and what they wear, from the rig parts of the model library
+    this.rigs = new RigBuilder(THREE, this.gltf, { api: '.', aniso: this.renderer.capabilities.getMaxAnisotropy() });
+    this.rigs.useHd(this.hdMaps);
+    if (prefabs.map.size) this.rigs.setLibrary(prefabs.map);
     this.scene.add(this.playerGroup);
     this.pins = [];
     layerState.onChange((key) => this.applyLayerState(key));
@@ -183,7 +188,10 @@ export class View3D {
     chunks.onChange(() => { for (const k of [...this.structures.keys()]) this.dropStructures(k); this.scheduleUpdate(); });
     // only the blocks whose chunks changed are rebuilt (all of them were, every time the list moved on)
     objects.onChange(() => { for (const [k, g] of [...this.objChunks]) if (g.userData.sig !== this.blockSig(...k.split('_').map(Number))) this.dropObjects(k); this.scheduleUpdate(); });
-    prefabs.onChange(() => { this.models.clear(); this.pieceMats.clear(); for (const k of this.objChunks.keys()) this.dropObjects(k); this.scheduleUpdate(); });
+    prefabs.onChange(() => {
+      // a rig part new or re-exported: everyone dressed again, from the parts already baked
+      if (this.rigs.setLibrary(prefabs.map)) for (const e of this.players.values()) e.key = undefined;
+      this.models.clear(); this.pieceMats.clear(); for (const k of this.objChunks.keys()) this.dropObjects(k); this.scheduleUpdate(); });
     objectFilter.onChange(() => { for (const k of [...this.objChunks.keys()]) this.dropObjects(k); for (const k of [...this.veg.keys()]) this.dropVeg(k); this.scheduleUpdate(); });   // the trees and rocks chips apply to our shapes too
     markerStore.onChange(() => this.rebuildMarkers());
     window.addEventListener('resize', () => this.resize());
@@ -199,7 +207,7 @@ export class View3D {
       const ndc = new THREE.Vector2(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
       this.raycaster.setFromCamera(ndc, this.camera);
       const bodies = [];
-      for (const [id, en] of this.players) for (const m of en.group.children) { m.userData.playerId = id; bodies.push(m); }   // figure and name label
+      for (const [id, en] of this.players) en.group.traverse((m) => { if (m.isMesh || m.isSprite) { m.userData.playerId = id; bodies.push(m); } });   // the body's meshes and the name label
       const hit = this.raycaster.intersectObjects(bodies, false)[0];
       if (hit) this.onPlayerClick(hit.object.userData.playerId, e.clientX, e.clientY);
     });
@@ -1365,19 +1373,19 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
       seen.add(p.id);
       let e = this.players.get(p.id);
       if (!e) {
-        const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.45, 1.0, 4, 8), this.material('#6fb7ff', 0.6));
-        body.castShadow = true;
         const label = makeLabel(p.name, '#ffffff', 1.4);
         label.position.y = 2.6;
-        const g = new THREE.Group(); g.add(body); g.add(label);
-        body.position.y = 1;
-        e = { group: g, label };
+        const g = new THREE.Group(); g.add(label);
+        e = { group: g, label, body: null, key: undefined };
         this.players.set(p.id, e);
         this.playerGroup.add(g);
       }
       const y = p.y ?? this.heightAt(p.x, p.z) ?? this.waterLevel;
       e.group.position.set(p.x, y, -p.z);
-      e.group.rotation.y = -(p.yaw || 0) * Math.PI / 180;
+      e.yaw = p.yaw || 0;
+      if (e.body) e.body.rotation.y = this.facing(e);
+      const key = lookKey(p.look);
+      if (key !== e.key || !e.body) { e.key = key; this.dress(e, p.look, key); }
       if (this.followId === p.id) this.glideTo(p.x, p.z);
     }
     this.setWisps(list);
@@ -1385,6 +1393,31 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
     for (const [id, e] of this.players) if (!seen.has(id)) { this.playerGroup.remove(e.group); this.players.delete(id); }
     if (this.followId !== null && !seen.has(this.followId)) this.followId = null;
   }
+
+  // ForgeMap: a player's body: their character once its parts are in the library, the plain figure
+  // until then (and for a look the server could not read)
+  async dress(e, look, key) {
+    if (e.dressing === key) return;
+    e.dressing = key;
+    let body = null;
+    try { body = key ? await this.rigs.build(look) : null; } catch (err) { console.warn('rig', err.message || err); }
+    if (e.key !== key) return;                      // dressed again meanwhile
+    e.dressing = undefined;
+    if (!body) {
+      if (e.body && e.body.userData.figure) return;
+      body = new THREE.Group(); body.userData.figure = true;
+      const m = new THREE.Mesh(this._figure || (this._figure = new THREE.CapsuleGeometry(0.45, 1.0, 4, 8)), this.material('#6fb7ff', 0.6));
+      m.castShadow = true; m.position.y = 1; body.add(m);
+    } else body.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    if (e.body) e.group.remove(e.body);
+    e.body = body;
+    body.rotation.y = this.facing(e);
+    e.group.add(body);
+    this.invalidate(true);
+  }
+  // the way a body faces: the game's yaw (degrees clockwise from north); the figure is round, the
+  // character's model looks down its +z
+  facing(e) { return e.body && e.body.userData.figure ? -(e.yaw || 0) * Math.PI / 180 : Math.PI - (e.yaw || 0) * Math.PI / 180; }
 
   // move the camera target to (x, z) over a few frames, keeping the camera's offset (follow mode)
   glideTo(x, z) {
