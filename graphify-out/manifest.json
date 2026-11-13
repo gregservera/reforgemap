@@ -642,21 +642,15 @@
     "semantic_hash": ""
   },
   "WebMap/web/js/lang/fr.js": {
-    "mtime": 1794557318.6523006,
-    "seen": 1794557347.6240149,
-    "ast_hash": "d17a8f7c4d79c50e73063792ea34ae3b",
+    "mtime": 1794571180.4605618,
+    "seen": 1794571963.9552648,
+    "ast_hash": "057e44fc0380038d93bdbec8e2b2c58d",
     "semantic_hash": ""
   },
   "WebMap/web/js/lang/noms.js": {
     "mtime": 1794481539.8884282,
     "seen": 1794532016.1549337,
     "ast_hash": "790ac0ea618750ce6f0166bb2deb60bf",
-    "semantic_hash": ""
-  },
-  "WebMap/web/js/layers.js": {
-    "mtime": 1794481539.8884957,
-    "seen": 1794532016.154935,
-    "ast_hash": "fd2d29c707c74e19fdae59a1ce056b96",
     "semantic_hash": ""
   },
   "WebMap/web/js/rig.js": {
@@ -696,9 +690,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/map-core.js": {
-    "mtime": 1794534152.3682783,
-    "seen": 1794534307.5624409,
-    "ast_hash": "dee63b491be1beba4d593408497eed8e",
+    "mtime": 1794571113.912954,
+    "seen": 1794571963.9552767,
+    "ast_hash": "fc5389f6ee72ec986a78e836eb75607b",
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/app.js": {
@@ -1026,9 +1020,9 @@
     "semantic_hash": ""
   },
   "eslint.config.js": {
-    "mtime": 1794557951.5161982,
-    "seen": 1794558300.0177307,
-    "ast_hash": "93fcda8118a69726feefc1bf62db0736",
+    "mtime": 1794571173.6562114,
+    "seen": 1794571963.9553485,
+    "ast_hash": "5d538e245bee31a0a818c904dd2ee8a5",
     "semantic_hash": ""
   },
   "i18n-work/A-map.json": {
@@ -1068,9 +1062,9 @@
     "semantic_hash": ""
   },
   "i18n-work/G-munin.json": {
-    "mtime": 1794557318.602146,
-    "seen": 1794557347.624103,
-    "ast_hash": "3b7589df8ceeb3590a51c12bb283a904",
+    "mtime": 1794571180.415849,
+    "seen": 1794571963.9553568,
+    "ast_hash": "4dcba408a5484ecfa5ccc74b87943437",
     "semantic_hash": ""
   },
   "i18n-work/_choix.json": {
@@ -1182,9 +1176,9 @@
     "semantic_hash": ""
   },
   "README-WebMap.md": {
-    "mtime": 1794481539.8818126,
-    "seen": 1794532016.1550283,
-    "ast_hash": "76772554f393d776190f55ceead1c9e4",
+    "mtime": 1794571173.6573856,
+    "seen": 1794571963.9553804,
+    "ast_hash": "57af18b03b3a53396dbda2beff5c5b47",
     "semantic_hash": ""
   },
   "README.md": {
@@ -1224,9 +1218,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/plan.html": {
-    "mtime": 1794481539.8895774,
-    "seen": 1794532016.1550355,
-    "ast_hash": "4224ff5bad5a84441806ced4c66150ac",
+    "mtime": 1794571132.8846874,
+    "seen": 1794571963.955389,
+    "ast_hash": "5b621a934a02d0a57707d3a658933e98",
     "semantic_hash": ""
   },
   "WebMap/web/players.html": {
@@ -1236,9 +1230,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/portals.html": {
-    "mtime": 1794534152.3689604,
-    "seen": 1794534307.5625932,
-    "ast_hash": "0e7f934116d1149ab1459b009ba36850",
+    "mtime": 1794571168.0375352,
+    "seen": 1794571963.9553912,
+    "ast_hash": "97fea3de6c005b2515bc3050d5de1036",
     "semantic_hash": ""
   },
   "WebMap/web/settings.html": {
@@ -1452,9 +1446,9 @@
     "semantic_hash": ""
   },
   "WebMap/Tiles/WorldPicture.cs": {
-    "mtime": 1794556675.39266,
-    "seen": 1794556936.7403312,
-    "ast_hash": "bbd7151ac74cc421c19643323fc68015",
+    "mtime": 1794571907.2701411,
+    "seen": 1794571963.9552436,
+    "ast_hash": "aa827c95665c99fbf6e5fb1d02027ad2",
     "semantic_hash": ""
   },
   "WebMap/Models/Libraries.cs": {
@@ -1515,6 +1509,12 @@
     "mtime": 1794559332.170008,
     "seen": 1794559443.7101245,
     "ast_hash": "7024b9c36cc72dc8802286bb06acc743",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/pageground.js": {
+    "mtime": 1794571754.1689262,
+    "seen": 1794571963.9553182,
+    "ast_hash": "2ab85cab821dc52a2ac33837c1663feb",
     "semantic_hash": ""
   }
 }

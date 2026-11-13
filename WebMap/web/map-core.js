@@ -86,13 +86,13 @@ const fetchState = base => fetchJSON(base, "/state");
 async function fetchConfig(base){ return setGeom(await fetchJSON(base, "/config")); }
 
 // ---------- layers ----------
-// The rasters are megabytes; a revision in /state says when one actually moved,
-// and ?v=<rev> lets the edge keep that version for an hour. A replacement decodes
-// off screen and is swapped in, so a refresh never blanks the map.
-const BASE_TEX = cfg.base;              // the world render, versioned by /state's rev.map
+// The two rasters a page still reads: the fog (what is walked) and the server's flat chart of
+// biomes (the tour's). The map itself is Munin's tiles (MapCore.view's ground). A revision in
+// /state says when one actually moved, and ?v=<rev> lets the edge keep that version for an hour.
+// A replacement decodes off screen and is swapped in.
 function layers(base, onLoad){
   const imgs = {}, rev = {};
-  for(const k of ["base", "forest", "struct", "fog", "chart", "trails"]){
+  for(const k of ["fog", "chart"]){
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.addEventListener("load", () => { if(onLoad) onLoad(k); });
@@ -105,13 +105,6 @@ function layers(base, onLoad){
     p.onload = () => { img.src = p.src; if(after) after(); };
     p.src = base + path + (v == null ? "" : "?v=" + v);
   }
-  // The base render is the whole world: it must never be seen without the fog
-  // mask over it, so a page reveals itself only when both have decoded.
-  function whenReady(keys, fn){
-    let n = 0;
-    const hit = () => { if(++n >= keys.length) fn(); };
-    for(const k of keys){ if(ready(k)) hit(); else imgs[k].addEventListener("load", hit, {once: true}); }
-  }
   // The names are a document, not a raster, but kept by their revision all the same, and
   // asked for again after a failure; then(list) hears of a fresh one.
   async function features(v, then){
@@ -119,7 +112,7 @@ function layers(base, onLoad){
     try{ const j = await fetchJSON(base, "/features?v=" + v); if(j && j.features) then(j.features); }
     catch(e){ rev.features = null; }
   }
-  // o: {features(list), pieces(list, json), structures (bool or fn, checked after pieces), onFog()}
+  // o: {features(list), pieces(list, json), onFog(), chart (bool)}
   async function sync(r, o){
     o = o || {}; r = r || {};
     if(o.features && r.features && r.features !== rev.features) features(r.features, o.features);
@@ -129,67 +122,10 @@ function layers(base, onLoad){
         if(pj && pj.pieces){ rev.pieces = r.pieces; o.pieces(parsePieces(pj), pj); }
       }catch(e){}
     }
-    if(r.forest !== rev.forest){ rev.forest = r.forest; load("forest", "/forest", r.forest); }
-    const wantStruct = typeof o.structures === "function" ? o.structures() : o.structures;
-    if(wantStruct && r.structures !== rev.structures){ rev.structures = r.structures; load("struct", "/structures", r.structures); }
     if(r.fog !== rev.fog){ rev.fog = r.fog; load("fog", "/fog", r.fog, o.onFog); }
-    baseRev(r.map);
     if(o.chart && r.chart && r.chart !== rev.chart){ rev.chart = r.chart; load("chart", "/chart", r.chart); }
-    // the trails come only when asked for, like the structures raster
-    const wantTrails = typeof o.trails === "function" ? o.trails() : o.trails;
-    if(wantTrails && r.trails && r.trails !== rev.trails){ rev.trails = r.trails; load("trails", "/trails", r.trails); }
   }
-  // The world render is made again from the map's tiles as they change (2.0): asked for once as it is
-  // now, then again each time /state's rev.map moves on.
-  let baseAsked = false;
-  function baseRev(v){
-    if(v === undefined || v === rev.map) return;
-    const had = rev.map;
-    rev.map = v;
-    if(baseAsked && had !== undefined) load("base", BASE_TEX, v);
-  }
-  return {imgs, rev, ready, load, whenReady, sync, features, baseRev,
-          loadBase: () => { baseAsked = true; load("base", BASE_TEX, rev.map); }};
-}
-
-// ---------- rasters ----------
-// One blit per layer, of the visible window only: base, forest twice, the
-// structures raster while the pieces are absent, fog last. Nearest-neighbour for
-// the base once a texture pixel is bigger than a screen pixel.
-// v: {scale, tx, ty, w, h, pix?}   o: {bg, forest, structures, fogReady, ground, trails}
-// ground: "terrain" (the render) or "atlas" (the server's flat biome chart, when it has come)
-function drawRasters(g, v, imgs, o){
-  o = o || {};
-  const W = v.w, H = v.h, pix = v.pix || 1;
-  g.setTransform(pix, 0, 0, pix, 0, 0);
-  g.globalAlpha = 1;
-  g.globalCompositeOperation = "source-over";
-  g.fillStyle = o.bg || "#0a0c0a";
-  g.fillRect(0, 0, W, H);
-  const sx = -v.tx/v.scale, sy = -v.ty/v.scale, sw = W/v.scale, sh = H/v.scale;
-  const blit = (img, smooth, op) => {
-    if(!img || !img.complete || !img.naturalWidth) return;
-    const k = img.naturalWidth/geom.size;            // source px per texture px
-    g.imageSmoothingEnabled = smooth;
-    g.globalCompositeOperation = op;
-    try{ g.drawImage(img, sx*k, sy*k, sw*k, sh*k, 0, 0, W, H); }catch(e){}
-  };
-  const fogIn = o.fogReady === undefined
-    ? !!(imgs.fog && imgs.fog.complete && imgs.fog.naturalWidth) : !!o.fogReady;
-  if(fogIn){
-    const atlas = o.ground === "atlas" && imgs.chart && imgs.chart.complete && imgs.chart.naturalWidth;
-    // the render goes crisp once its pixels outgrow the screen's; the flat chart
-    // stays smoothed, a soft edge between two biomes reading better than a stair
-    blit(atlas ? imgs.chart : imgs.base, !!atlas || v.scale < 3, "source-over");
-    // multiplied twice, which squares the effect: dense woods go markedly darker
-    // while a thinned patch barely moves, so the difference reads at a glance
-    if(o.forest){ blit(imgs.forest, true, "multiply"); blit(imgs.forest, true, "multiply"); }
-    if(o.structures) blit(imgs.struct, true, "source-over");
-    blit(imgs.fog, true, "multiply");                // unexplored ground stays dark
-    if(o.trails) blit(imgs.trails, true, "source-over");   // walked ground only, so it sits over the fog
-  }
-  g.globalCompositeOperation = "source-over";
-  g.imageSmoothingEnabled = true;
+  return {imgs, rev, ready, load, sync, features};
 }
 
 // ---------- builds ----------
@@ -543,14 +479,24 @@ const hitName = (boxes, x, y) => { const b = (boxes || []).find(b => x >= b.x0 &
 // o: {paint(v), max, min (the floor as a share of the fit, .5), pointer, guard (a selector
 //     no drag starts on), capture (false: links inside the stage keep their clicks, and a
 //     drag is followed on the window instead), down(e) (false refuses the drag),
-//     tap(x, y, e, target), resize()}
+//     tap(x, y, e, target), resize(),
+//     ground: Munin's map under the page's own drawing (munin/js/pageground.js: {veg, look}); it
+//     follows this view, frame by frame. v.ground is it once loaded (null before), v.groundReady
+//     a promise of it.}
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 function view(stage, o){
   o = o || {};
   const max = o.max || MAX_ZOOM, floor = o.min == null ? .5 : o.min;
-  const v = {scale: 1, tx: 0, ty: 0, fit: 1, moved: 0};
+  const v = {scale: 1, tx: 0, ty: 0, fit: 1, moved: 0, ground: null};
   let frame = 0, seenW = 0, seenH = 0;
-  const paint = () => { if(o.paint) o.paint(v); seenW = stage.clientWidth; seenH = stage.clientHeight; };
+  const paint = () => { if(v.ground) v.ground.sync(v); if(o.paint) o.paint(v); seenW = stage.clientWidth; seenH = stage.clientHeight; };
+  if(o.ground){
+    const el = document.createElement("div");
+    stage.insertBefore(el, stage.firstChild);
+    v.groundReady = import("./munin/js/pageground.js")
+      .then(m => { v.ground = m.mount(el, o.ground); v.request(); return v.ground; })
+      .catch(e => { console.warn("ground", e); return null; });
+  }
   v.request = () => { if(frame) return; frame = requestAnimationFrame(() => { frame = 0; paint(); }); };
   v.computeFit = () => (v.fit = Math.min(stage.clientWidth/geom.size, stage.clientHeight/geom.size)*0.98);
   v.fitWorld = () => {
@@ -630,55 +576,6 @@ function view(stage, o){
     on.addEventListener("pointercancel", end);
   }
   return v;
-}
-
-// ---------- view cache ----------
-// The scene, rendered once at a zoom over a window wider than the screen: a pan
-// slides it and a zoom stretches it, and the scene renders again only when the
-// view runs off the window or the zoom changes -- at once where a render is
-// quick, else once the zoom has settled, the stretch holding the screen until
-// then. render(g, v) draws the scene for a view; fresh() hears of a render that
-// landed late. The window is capped: iOS refuses a canvas past 16M px.
-const CACHE_PX = 12e6, CACHE_MARGIN = .5, QUICK_MS = 20, SETTLE_MS = 90;
-function viewCache(render, fresh){
-  const cv = document.createElement("canvas"), g = cv.getContext("2d");
-  let at = null, cost = 0, timer = 0;
-  function renderAt(v){
-    const pix = v.pix || 1;
-    const m = Math.max(0, Math.min(CACHE_MARGIN, (Math.sqrt(CACHE_PX/(v.w*v.h*pix*pix)) - 1)/2));
-    const mw = Math.round(v.w*m), mh = Math.round(v.h*m), W = v.w + 2*mw, H = v.h + 2*mh;
-    if(cv.width !== W*pix || cv.height !== H*pix){ cv.width = W*pix; cv.height = H*pix; }
-    const t0 = performance.now();
-    at = {scale: v.scale, tx: v.tx + mw, ty: v.ty + mh, w: W, h: H, pix};
-    render(g, at);
-    cost = performance.now() - t0;
-  }
-  // paints the view onto dst, leaving its transform at the view's pixel ratio the
-  // way drawRasters does; false when a stretch stood in and a render is due
-  function draw(dst, v, bg){
-    clearTimeout(timer);
-    const pix = v.pix || 1;
-    dst.setTransform(pix, 0, 0, pix, 0, 0);
-    dst.globalAlpha = 1; dst.globalCompositeOperation = "source-over";
-    if(at && at.pix === pix && at.scale !== v.scale && cost >= QUICK_MS){
-      const r = v.scale/at.scale;
-      dst.fillStyle = bg; dst.fillRect(0, 0, v.w, v.h);
-      dst.imageSmoothingEnabled = true;
-      dst.drawImage(cv, v.tx - at.tx*r, v.ty - at.ty*r, at.w*r, at.h*r);
-      timer = setTimeout(() => { renderAt(v); fresh(); }, SETTLE_MS);
-      return false;
-    }
-    let dx = at ? at.tx - v.tx : -1, dy = at ? at.ty - v.ty : -1;   // where the screen sits in the window
-    if(!at || at.pix !== pix || at.scale !== v.scale || dx < 0 || dy < 0 || dx + v.w > at.w || dy + v.h > at.h){
-      renderAt(v); dx = at.tx - v.tx; dy = at.ty - v.ty;
-    }
-    dst.imageSmoothingEnabled = false;
-    dst.drawImage(cv, Math.round(dx*pix), Math.round(dy*pix), v.w*pix, v.h*pix, 0, 0, v.w, v.h);
-    return true;
-  }
-  function invalidate(){ at = null; clearTimeout(timer); }
-  addEventListener("fontready", () => { invalidate(); fresh(); });
-  return {draw, invalidate, cost: () => cost};
 }
 
 // ---------- the stage's canvas and its scale ----------
@@ -1089,8 +986,8 @@ function nav(current, el){
 return {cfg, nav, toggleSide, user, authHeaders, whoami,
         geom, setGeom, toPx, toWorld, PLAN_ZOOM, MAX_ZOOM,
         fetchJSON, fetchBytes, fetchState, fetchConfig, post, layers,
-        drawRasters, parsePieces, explored, nearestExplored, filterExplored, walked, drawPieces, drawFires, drawDeaths, drawNames, hitName,
-        clamp, view, viewCache, fitCanvas, scaleBar,
+        parsePieces, explored, nearestExplored, filterExplored, walked, drawPieces, drawFires, drawDeaths, drawNames, hitName,
+        clamp, view, fitCanvas, scaleBar,
         ICONS, spriteSVG, injectSprite, iconPaths, vehicleStyle, PIN_ICON, BOSSES, BOSS_ICON, PLACE_ICON, place, kitchens, pic, BIOME_INK, biomeRows,
         parsePins, plural, ord, num, km, metres, per, ago, secsAgo, everyMinute, esc};
 })();

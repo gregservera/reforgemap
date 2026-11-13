@@ -8,7 +8,9 @@
 <meta property="og:title" content="Valheim WebMap">
 <meta property="og:description" content="A live map of a Valheim server: builds, forest, portals, boats and players.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪓</text></svg>">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="site.css">
+<script src="vendor/leaflet/leaflet.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/lang/fr.js"></script>
 <script src="js/lang/noms.js"></script>
@@ -40,15 +42,15 @@
   .legend{gap:.35rem .6rem;font-size:.76rem}
 
   /* ---------- map stage ---------- */
-  /* Everything crisp is blitted into one screen-space canvas per view change:
-     under a CSS transform Chrome GPU-scales a 1:1 raster bilinearly and caps how
-     finely it rasterises vectors, which turned 12 m pixels and thin lines into a
-     smear. Drawings live in world metres and are projected every frame instead. */
+  /* The ground is Munin's map (MapCore.view's ground), set to the view each frame; the plan's
+     own marks, the builds and the names are drawn over it on one screen-space canvas, from
+     world metres every frame: under a CSS transform Chrome scales a raster bilinearly and
+     thin lines smear. */
   .stage{cursor:crosshair}
   .stage.pan{cursor:grab}
   .stage.pan.dragging{cursor:grabbing}
   .stage.erase{cursor:cell}
-  #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
+  #cv{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
   .readout{position:absolute;left:.7rem;bottom:.7rem;z-index:10;display:flex;flex-direction:column;
     gap:.3rem;align-items:flex-start;pointer-events:none;font-size:.72rem;color:var(--muted)}
   .readout span{background:var(--glass);border:1px solid var(--line);border-radius:var(--r-sm);padding:.2rem .45rem;white-space:nowrap}
@@ -182,7 +184,7 @@ const MAX_ZOOM = MapCore.MAX_ZOOM;
 const stage = document.getElementById("stage");
 const cv = document.getElementById("cv");
 // the window onto the map; the tools drive the pointer themselves, so the view keeps to the maths and the wheel
-const V = MapCore.view(stage, {pointer: false, max: MAX_ZOOM, paint: () => {
+const V = MapCore.view(stage, {pointer: false, max: MAX_ZOOM, ground: {veg: true}, paint: () => {
   const dpr = MapCore.fitCanvas(cv, stage);
   lastW = stage.clientWidth; lastH = stage.clientHeight;
   render(ctx, lastW, lastH, V, {pix: dpr});
@@ -219,15 +221,15 @@ const DATA = {portals:[], graves:[], vehicles:[], pins:[], players:[]};
 // Builds are footprints, drawn exactly as the live map draws them; the fog says
 // which of them stand in ground someone has actually walked.
 let PIECES = null, PIECES_ALL = null;
-function refilterPieces(){ PIECES = MapCore.filterExplored(PIECES_ALL, RASTER.imgs.fog); SCENE.invalidate(); }
+function refilterPieces(){ PIECES = MapCore.filterExplored(PIECES_ALL, RASTER.imgs.fog); }
 const RASTER = MapCore.layers(API, k => { if(k === "fog"){ refilterPieces(); fogReady(); } redraw(); });
-// The ground and the builds render once per zoom into a window the pans slide
-// over; the plan's own marks are drawn over it every frame.
-const SCENE = MapCore.viewCache((g, v) => ground(g, v), () => draw());
-function redraw(){ SCENE.invalidate(); draw(); }   // the ground, the builds or the layers changed
+// the trees on the ground follow the plan's forest layer
+function redraw(){ if(V.ground) V.ground.setVeg(!!doc.layers.forest); draw(); }   // the builds or the layers changed
+V.groundReady.then(redraw);
 let FEATURES = null;   // the world's geography with its names, by revision
+// what of the world the plan draws over Munin's ground: the builds and the names
 function ground(g, view){
-  MapCore.drawRasters(g, view, RASTER.imgs, {forest:doc.layers.forest});
+  g.setTransform(view.pix, 0, 0, view.pix, 0, 0);
   if(doc.layers.builds && PIECES)
     MapCore.drawPieces(g, view, PIECES, {plan:view.scale >= MapCore.PLAN_ZOOM});
   if(doc.layers.names && FEATURES)
@@ -235,12 +237,18 @@ function ground(g, view){
 }
 
 // ---------- render ----------
-// One pass paints everything, and the PNG export runs the same pass at 2x (direct,
-// off the screen's cache), so what gets shared is exactly what is on screen.
+// One pass paints everything over the ground, and the PNG export runs the same pass at 2x over
+// the ground's tiles as they are on screen (direct), so what gets shared is what is on screen.
 function render(g, W, H, v, o){
   o = o || {};
   const view = {scale:v.scale, tx:v.tx, ty:v.ty, w:W, h:H, pix:o.pix || 1};
-  if(o.direct) ground(g, view); else SCENE.draw(g, view, "#0a0c0a");
+  g.setTransform(view.pix, 0, 0, view.pix, 0, 0);
+  g.globalAlpha = 1; g.globalCompositeOperation = "source-over";
+  if(o.direct){
+    g.fillStyle = "#05070a"; g.fillRect(0, 0, W, H);
+    if(V.ground) V.ground.paintInto(g);
+  } else g.clearRect(0, 0, W, H);
+  ground(g, view);
   g.globalCompositeOperation = "source-over";
   g.imageSmoothingEnabled = true;
 
@@ -652,7 +660,7 @@ function renderCount(){
   document.getElementById("count").textContent = n ? I18N.tn(n, "{n} drawing on the map", "{n} drawings on the map") : I18N.t("Pick a tool and draw on the map.");
 }
 const LAYERS = [
-  {k:"forest",   label:"forest → cleared", grad:true},
+  {k:"forest",   label:"trees & rocks", sw:"#4f7a3a"},
   {k:"builds",   label:"builds", sw:"#966c42"},
   {k:"names",    label:"place names", sw:"var(--portal-ink)"},
   {k:"portals",  label:"portals", icon:"portal"},
@@ -838,7 +846,6 @@ async function boot(){
   document.getElementById("buildstamp").textContent = I18N.t("build {v}", {v: BUILD});
   V.computeFit();
   if(!viewFromDoc) V.fitWorld();
-  RASTER.loadBase();
   try{ await MapCore.fetchConfig(API); }catch(e){}
   await tick();
   setInterval(() => { if(document.visibilityState === "visible") tick(); }, 10000);
@@ -850,7 +857,7 @@ async function start(){
   try{ shared = await decodeDoc(location.hash); }
   catch(e){ shared = null; }
   if(shared){
-    doc = shared; SCENE.invalidate();
+    doc = shared;
     setRO(true);
     const b = document.getElementById("roBanner");
     b.hidden = false;
@@ -861,7 +868,7 @@ async function start(){
   } else {
     const mine = storedPlan();
     if(mine && mine.v === 1){
-      doc = mine; SCENE.invalidate();
+      doc = mine;
       doc.layers = Object.assign({}, DEFAULT_LAYERS, doc.layers || {});
       doc.items = Array.isArray(doc.items) ? doc.items : [];
     }

@@ -1,5 +1,6 @@
-// ForgeMap's one picture of the whole world (/map, /map.jpg: the Portails, Plan and Monde pages draw
-// on it), made from Munin's map tiles so those pages look like the map (ticket map-jpg-depuis-tuiles).
+// ForgeMap's one picture of the whole world (/map, /map.jpg), made from Munin's map tiles so it looks
+// like the map (ticket map-jpg-depuis-tuiles). The pages no longer draw on it (they draw on the tiles
+// themselves, ticket pages-moteur-munin): it stays for whatever outside reads the world in one image.
 //
 // Munin's tiles cover WORLD_SIZE metres; ForgeMap's picture covers TEXTURE_SIZE x PIXEL_SIZE metres
 // (24 576 at the defaults), RENDER_SIZE pixels a side, north up. The zoom-4 tiles (8 m a pixel; 5 past

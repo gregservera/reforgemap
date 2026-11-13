@@ -1629,6 +1629,7 @@ I18N.add("fr", {
   "traders": "marchands",
   "tree felled": "arbre abattu",
   "trees": "arbres",
+  "trees & rocks": "arbres et rochers",
   "trees felled": "arbres abattus",
   "troll caves": "grottes de troll",
   "under": "moins de",

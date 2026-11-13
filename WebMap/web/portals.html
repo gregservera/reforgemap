@@ -8,7 +8,9 @@
 <meta property="og:title" content="Valheim WebMap">
 <meta property="og:description" content="A live map of a Valheim server: builds, forest, portals, boats and players.">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🪓</text></svg>">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="site.css">
+<script src="vendor/leaflet/leaflet.js"></script>
 <script src="js/i18n.js"></script>
 <script src="js/lang/fr.js"></script>
 <script src="js/lang/noms.js"></script>
@@ -72,8 +74,8 @@
   /* Screen-space canvas, HTML nodes placed by left/top: nothing crisp ever sits
      under a CSS transform, which is the map's own rule. */
   .stage{background:var(--chart)}
-  #cv{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .net{position:absolute;inset:0;pointer-events:none}
+  #cv{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
+  .net{position:absolute;inset:0;z-index:2;pointer-events:none}
   .node{position:absolute;width:0;height:0;pointer-events:none;color:var(--ink);text-decoration:none}
   .node .ic,.node .lb,.node .panel{pointer-events:auto}
   .node .ic{position:absolute;left:-11px;top:-11px;width:22px;height:22px;overflow:visible;
@@ -114,7 +116,7 @@
   /* out of the picked hub's reach: still there, but faint */
   .node.dim{opacity:.35}
   .node.dim .panel{opacity:.55}
-  .rose,.sbar{position:absolute;left:.65rem;color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-shadow:var(--halo-text)}
+  .rose,.sbar{position:absolute;z-index:3;left:.65rem;color:var(--muted);font-size:.68rem;letter-spacing:.06em;text-shadow:var(--halo-text)}
   .rose{top:.5rem;font-weight:600}
   .sbar{bottom:.5rem;display:flex;align-items:flex-end;gap:.35rem}
   .sline{display:block;height:5px;border:1px solid var(--muted);border-top:0}
@@ -128,8 +130,8 @@
   .inside .ground{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;touch-action:none;cursor:grab;
     background:var(--well);border:1px solid var(--line);border-radius:var(--r)}
   .inside .ground.dragging{cursor:grabbing}
-  .inside .ground canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-  .inside .marks{position:absolute;inset:0;pointer-events:none}
+  .inside .ground canvas{position:absolute;inset:0;z-index:1;width:100%;height:100%;display:block}
+  .inside .marks{position:absolute;inset:0;z-index:2;pointer-events:none}
   .inside .mk{position:absolute;left:0;top:0;width:0;height:0}
   .inside .mk .ic{position:absolute;left:-11px;top:-11px;width:22px;height:22px;overflow:visible;pointer-events:auto;filter:var(--shadow-ink)}
   .inside .mk .lb{position:absolute;left:0;top:12px;z-index:1;transform:translateX(-50%);white-space:nowrap;font-size:.72rem;font-weight:600;color:var(--bright);text-shadow:var(--halo-text);pointer-events:auto}
@@ -280,48 +282,25 @@ function siteName(portals){
 }
 
 // ---------- the diagram ----------
-// The world as a reference chart with the network over it: the same screen-space
-// view maths as the map and the planning board, so a pan is a pan everywhere.
+// The world as a reference chart with the network over it: Munin's map, matte and cool (the
+// view's ground, look 'chart'), with the same screen-space view maths as the planning board, so
+// a pan is a pan everywhere.
 const stage = document.getElementById("stage");
 const cv = document.getElementById("cv");
 const ctx = cv.getContext("2d");
 const net = document.getElementById("net");
-const LAY = MapCore.layers(API, () => draw());
-let scratch = null, sctx = null;
 let NODES = [], SPOKES = [], SPOKE = new Map(), BBOX = null, HOVER = new Set(), FITTED = false;
 // the window onto the chart; a touch is the only hover a phone has, so a press sets it
-const V = MapCore.view(stage, {paint, max: ZMAX, min: .4, guard: ".mapctl, .inside", capture: false,
+const V = MapCore.view(stage, {paint, max: ZMAX, min: .4, guard: ".mapctl, .inside", capture: false, ground: {look: "chart"},
   down: e => { setHover(keysOf(e.target)); }, resize: () => { if(NODES.length) measure(); }});
 function draw(){ V.request(); }
 
-// the chart's canvas, and the scratch the map's render is filtered through, at one size
-function sizeCanvas(){
-  const dpr = MapCore.fitCanvas(cv, stage), W = cv.width, H = cv.height;
-  if(!scratch){ scratch = document.createElement("canvas"); sctx = scratch.getContext("2d"); }
-  if(scratch.width !== W || scratch.height !== H){ scratch.width = W; scratch.height = H; }
-  return dpr;
-}
-// The server's chart -- each pixel its biome's flat colour, water one blue -- with
-// the fog over it, so the network sits on matte ground. Until the server has a
-// chart, the map's own render is filtered grey and cool instead.
+// The network over the ground: the canvas clear but for the spokes and the leads.
 function paint(){
-  const pix = sizeCanvas(), W = stage.clientWidth, H = stage.clientHeight;
+  const pix = MapCore.fitCanvas(cv, stage), W = stage.clientWidth, H = stage.clientHeight;
   const v = {scale: V.scale, tx: V.tx, ty: V.ty, w: W, h: H, pix};
-  if(LAY.ready("chart")){
-    MapCore.drawRasters(ctx, v, {base: LAY.imgs.chart, fog: LAY.imgs.fog}, {bg: "#05070a"});
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-  }else{
-    MapCore.drawRasters(sctx, v, LAY.imgs, {bg: "#05070a"});
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
-    ctx.filter = "grayscale(.85) contrast(1.45) brightness(.74)";
-    ctx.drawImage(scratch, 0, 0);
-    ctx.filter = "none";
-    ctx.globalCompositeOperation = "color";        // the land keeps its light, not its hue
-    ctx.globalAlpha = .6;
-    ctx.fillStyle = "#4b7ea8";
-    ctx.fillRect(0, 0, cv.width, cv.height);
-  }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.clearRect(0, 0, cv.width, cv.height);
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
   layout(v);
   drawSpokes(v);
@@ -482,16 +461,14 @@ const inside = document.getElementById("inside"), inField = document.getElementB
 const inCv = document.getElementById("inCv"), inCtx = inCv.getContext("2d"), inMarks = document.getElementById("inMarks");
 let IN = null;                                                   // {key, at} while one is open
 let PIECES = null, PIECES_REV = null, PIECE_REV = null, PIECES_LOADING = null;
-const HV = MapCore.view(inField, {paint: paintInside, max: MapCore.MAX_ZOOM, min: 8, guard: ".ic, .lb"});
-const INSCENE = MapCore.viewCache((g, v) => {
-  MapCore.drawRasters(g, v, LAY.imgs, {bg: "#05070a"});
-  if(PIECES) MapCore.drawPieces(g, v, PIECES, {plan: v.scale >= MapCore.PLAN_ZOOM});
-}, () => HV.request());
+const HV = MapCore.view(inField, {paint: paintInside, max: MapCore.MAX_ZOOM, min: 8, guard: ".ic, .lb", ground: {veg: true}});
 function paintInside(){
   const W = inField.clientWidth, H = inField.clientHeight;
   if(!W || !H) return;
   const dpr = MapCore.fitCanvas(inCv, inField);
-  INSCENE.draw(inCtx, {scale: HV.scale, tx: HV.tx, ty: HV.ty, w: W, h: H, pix: dpr}, "#05070a");
+  inCtx.setTransform(1, 0, 0, 1, 0, 0);
+  inCtx.clearRect(0, 0, inCv.width, inCv.height);
+  if(PIECES) MapCore.drawPieces(inCtx, {scale: HV.scale, tx: HV.tx, ty: HV.ty, w: W, h: H, pix: dpr}, PIECES, {plan: HV.scale >= MapCore.PLAN_ZOOM});
   inCtx.setTransform(1, 0, 0, 1, 0, 0);
   // gates in a ring stand a few metres apart: a label that would sit on another
   // gives way, the lit gate's first and then in the strip's order
@@ -510,7 +487,7 @@ function loadPieces(){
   if(PIECE_REV == null || (PIECES && PIECES_REV === PIECE_REV) || PIECES_LOADING) return;
   const rev = PIECE_REV;
   PIECES_LOADING = MapCore.fetchJSON(API, "/pieces?v=" + rev)
-    .then(pj => { if(pj && pj.pieces){ PIECES = MapCore.parsePieces(pj); PIECES_REV = rev; INSCENE.invalidate(); HV.request(); } })
+    .then(pj => { if(pj && pj.pieces){ PIECES = MapCore.parsePieces(pj); PIECES_REV = rev; HV.request(); } })
     .catch(() => {}).finally(() => { PIECES_LOADING = null; });
 }
 function openInside(key, at){
@@ -859,20 +836,12 @@ function render(list){
   if(IN){ const s = SITES.find(x => siteKey(x) === IN.key); if(s) fillInside(s); else closeInside(); }
 }
 
-// One /state carries the portals, the pins and the fog's revision; the fog itself
-// is megabytes, so it is refetched only when the server says it moved.
-let FOG_REV = null, CHART_REV = null;
+// One /state carries the portals, the pins and the pieces' revision.
 async function load(){
   try{
     const s = await MapCore.fetchState(API);
     PINS = MapCore.parsePins(s.pins);
     NAMED = ((s.portals || {}).named) || [];
-    if(s.rev && s.rev.fog !== FOG_REV){ FOG_REV = s.rev.fog; LAY.load("fog", "/fog", FOG_REV); }
-    if(s.rev) LAY.baseRev(s.rev.map);           // the world render, made again as the map's tiles change
-    // the chart is one image per world; its revision arrives with the state like the others
-    // a server that does not yet say which chart it has still has one: ask for it by the old name
-    const cr = (s.rev && s.rev.chart) || "1";
-    if(cr !== CHART_REV){ CHART_REV = cr; LAY.load("chart", "/chart", CHART_REV); }
     PIECE_REV = (s.rev && s.rev.pieces) || "0";
     if(IN) loadPieces();
     render(((s.portals || {}).portals) || []);
@@ -886,7 +855,6 @@ async function load(){
 
 (async () => {
   V.fitWorld();                           // the whole world until the portals say otherwise
-  LAY.loadBase();
   try{ WORLD = (await MapCore.fetchConfig(API)).world || ""; }catch(e){}
   await load();
   const h = new URLSearchParams(location.hash.slice(1));

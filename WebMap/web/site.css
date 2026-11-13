@@ -354,3 +354,18 @@ body:not(.side-open) .sidebar{display:none}
 .viking.big figcaption{display:block}
 html.vk-open,html.vk-open body{overflow:hidden}
 .viking{position:relative}   /* ForgeMap: room for the enlarge button */
+
+/* ---------- Munin's map under a page's own drawing (munin/js/pageground.js) ---------- */
+.fm-ground{position:absolute;inset:0;z-index:0;pointer-events:none;background:#05070a}
+.fm-ground.leaflet-container{background:#05070a;outline:none}
+.fm-ground *{pointer-events:none!important}
+.fm-ground .tile-wrap{overflow:hidden}
+.fm-ground .tile-wrap img{position:absolute;left:0;top:0;display:block}
+/* between two zoom levels the tiles land on fractions of a pixel, and a hairline of the dark
+   showed between them: each overlaps the next by a pixel */
+.fm-ground .maptiles .tile-wrap{width:257px!important;height:257px!important}
+.fm-ground .maptiles .tile-wrap img{transform:scale(1.0039);transform-origin:0 0}
+/* the portal network's chart: the land keeps its light, cooled and dimmed under the lines */
+.fm-ground-chart{--fm-chart-filter:grayscale(.85) contrast(1.45) brightness(.74)}
+.fm-ground-chart .leaflet-tile-pane{filter:var(--fm-chart-filter)}
+.fm-ground-chart::after{content:"";position:absolute;inset:0;z-index:500;background:#4b7ea8;opacity:.6;mix-blend-mode:color}

@@ -97,7 +97,6 @@ too), and each page holds only its own. The map keeps what it knows of the world
 object, `WORLD`, which its five-second tick and its layer loads write and everything else
 reads; its own files sit beside it, one global each, handed what they read by `init`:
 
-* `js/layers.js` — the Layers card: legend, presets, details, names and ground, kept per browser
 * `js/street.js` — the 3D mode: in and out, the pegman, the View row and `#3d=` links
 * `js/tour.js` — the cinematic: its places, moves, prefetch, caption and player card
 
