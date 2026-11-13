@@ -397,6 +397,14 @@ namespace WebMap
                         if (staticGz.TryGetValue(requestedFile, out var kept) && kept.Item1 == stamp) gz = kept.Item2;
                         else staticGz[requestedFile] = Tuple.Create(stamp, gz = Gzip(requestedFileBytes));
                     }
+                    if (fileExt == "html")
+                    {
+                        // the link preview's tags, for this server and the address it was reached at
+                        byte[] page = requestedFileBytes;
+                        try { page = Encoding.UTF8.GetBytes(Preview.Page(req, Encoding.UTF8.GetString(requestedFileBytes))); } catch { }
+                        gz = page != requestedFileBytes && TakesGzip(req, page) ? Gzip(page) : gz;
+                        requestedFileBytes = page;
+                    }
                     Send(res, requestedFileBytes, gz, contentTypes[fileExt]);
                 }
                 else
@@ -437,6 +445,17 @@ namespace WebMap
             {
                 StructureMap.LastRead = Environment.TickCount;
                 ServeData(req, res, rawRequestPath.Substring("/data/".Length));
+                return true;
+            }
+
+            if (rawRequestPath.StartsWith("/preview-image.", StringComparison.Ordinal) && req.HttpMethod == "GET")
+            {
+                // the link preview's picture (preview_image), at the extension it was announced with
+                byte[] img = Preview.Image(out string ictype);
+                if (img == null || Path.GetExtension(rawRequestPath).ToLowerInvariant() != Path.GetExtension(Preview.FilePath() ?? "").ToLowerInvariant())
+                { res.StatusCode = 404; res.Close(); return true; }
+                res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=3600");
+                SendBytes(req, res, img, ictype);
                 return true;
             }
 

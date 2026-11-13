@@ -4,7 +4,7 @@ import globals from "globals";
 import html from "eslint-plugin-html";
 
 // The classic scripts, each defining one global the pages and the others read.
-const MODULES = {MapCore: "map-core.js", PlayerCard: "js/card.js", Layers: "js/layers.js", Spot: "js/spot.js", Street: "js/street.js", Tour: "js/tour.js"};
+const MODULES = {MapCore: "map-core.js", PlayerCard: "js/card.js", Layers: "js/layers.js", Spot: "js/spot.js", Street: "js/street.js", Tour: "js/tour.js", WorldKeys: "js/worldkeys.js"};
 // The 3D view's ES modules, loaded on first use through the pages' import map.
 const ES_MODULES = ["WebMap/web/js/rig.js", "WebMap/web/js/sky.js", "WebMap/web/js/view3d.js"];
 // Munin Map's page (MIT), ES modules and workers under munin/, with Leaflet's global L.

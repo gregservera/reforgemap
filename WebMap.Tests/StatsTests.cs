@@ -107,6 +107,17 @@ namespace WebMap.Tests
                          Doc().GetProperty("bosses").EnumerateArray().Select(b => b.Str("key")));
         }
 
+        // The Monde page names the world's modifiers and Hildir's quests from these: every key, as the
+        // game has it, the latest set only.
+        [Fact]
+        public void TheWorldsKeysAreAllThereAsTheGameHasThem()
+        {
+            Stats.ObserveKeys(new[] { "resourcerate 200", "nomap", "Hildir1" });
+            Stats.ObserveKeys(new[] { "resourcerate 200", "Hildir1", "defeated_eikthyr" });
+            Assert.Equal(new[] { "defeated_eikthyr", "Hildir1", "resourcerate 200" },
+                         Doc().GetProperty("globalKeys").EnumerateArray().Select(k => k.GetString()));
+        }
+
         [Fact]
         public void EverythingTalliedSurvivesASaveAndALoad()
         {

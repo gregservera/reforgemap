@@ -160,6 +160,12 @@ namespace WebMap
             if (keys == null) return;
             lock (gate)
             {
+                // every world key as the game has it (modifiers like "deathpenalty veryeasy", Hildir's
+                // quests, progress like "KilledTroll"): the Monde page names the ones it knows
+                var all = new List<string>();
+                foreach (var k in keys) if (!string.IsNullOrEmpty(k)) all.Add(k);
+                all.Sort(StringComparer.OrdinalIgnoreCase);
+                if (string.Join("\n", all) != string.Join("\n", globalKeys)) { globalKeys = all; jsonStale = true; }
                 foreach (var k in keys)
                 {
                     if (k == null || !k.StartsWith("defeated_")) continue;
@@ -172,6 +178,8 @@ namespace WebMap
                 }
             }
         }
+
+        private static List<string> globalKeys = new List<string>();
 
         // where `name` last died, when the map knew where they were (for the Events panel)
         public static bool LastDeath(string name, out float x, out float z)
@@ -543,6 +551,8 @@ namespace WebMap
                     if (i > 0) sb.Append(',');
                     sb.Append(FormattableString.Invariant($"{{\"key\":\"{Esc(bosses[i].key)}\",\"t\":{bosses[i].t}}}"));
                 }
+                sb.Append("],\"globalKeys\":[");
+                for (int i = 0; i < globalKeys.Count; i++) sb.Append(i > 0 ? ",\"" : "\"").Append(Esc(globalKeys[i])).Append('"');
                 sb.Append("],\"kitchen\":{"); Made(sb, madeAll);
                 sb.Append(",\"stations\":[");
                 var busiest = new List<Kit>(kits.Values);

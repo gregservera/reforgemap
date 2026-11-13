@@ -13,6 +13,7 @@
 <script src="site-config.js"></script>
 <script src="map-core.js"></script>
 <script src="js/spot.js"></script>
+<script src="js/worldkeys.js"></script>
 <style>
   body{min-height:100%}
   /* the world at a glance: small figures, four to a row */
@@ -70,6 +71,17 @@
     </div>
     <div class="card spot" id="spot" hidden title="Next"></div>
   </div>
+
+  <section class="section" id="keys-box" hidden>
+    <h2 class="eyebrow">World modifiers <small>the settings this world runs with</small></h2>
+    <div class="chips" id="mods"></div>
+    <h2 class="eyebrow section">Hildir's quests <small>her sisters beaten, her chests brought back</small></h2>
+    <div class="chips" id="hildir"></div>
+    <div id="progress-box" hidden>
+      <h2 class="eyebrow section">World progress <small>unlocked by first kills</small></h2>
+      <div class="chips" id="progress"></div>
+    </div>
+  </section>
 
   <section class="section">
     <h2 class="eyebrow">Danger by biome <small>everyone together</small></h2>
@@ -229,6 +241,20 @@ function glance(){
 }
 function bosses(){
   document.getElementById("bosses").innerHTML = MapCore.BOSSES.board(STATS && Array.isArray(STATS.bosses) ? STATS.bosses : null);
+  worldKeys();
+}
+// the world's modifiers, Hildir's quests and progress, from its keys (js/worldkeys.js)
+function worldKeys(){
+  const box = document.getElementById("keys-box");
+  if(!STATS || !Array.isArray(STATS.globalKeys)){ box.hidden = true; return; }
+  const k = WorldKeys.read(STATS.globalKeys), chip = (t, tip, on) => `<span class="chip${on ? " on" : ""}" title="${esc(tip)}">${esc(t)}</span>`;
+  document.getElementById("mods").innerHTML = k.mods.length ? k.mods.map(([t, tip]) => chip(t, tip)).join("") : `<p class="empty">${I18N.t("Normal world: no modifiers.")}</p>`;
+  document.getElementById("hildir").innerHTML = k.minis.map(([n, where, down]) => chip((down ? "✓ " : "") + n, where + " · " + I18N.t(down ? "beaten" : "not yet"), down)).join("")
+    + k.quests.map(([t, tip]) => chip("✓ " + t, tip, true)).join("");
+  const prog = k.progress.concat(k.kills.map(n => [n, I18N.t("A world key the game (or a mod) set when this was beaten")]));
+  document.getElementById("progress").innerHTML = prog.map(([t, tip]) => chip(t, tip, true)).join("");
+  document.getElementById("progress-box").hidden = !prog.length;
+  box.hidden = false;
 }
 let RECORDS = [];
 function renderRecords(){

@@ -52,6 +52,9 @@ namespace WebMap
         public static long SIGN_OUT_BEFORE = 0;           // unix seconds: sessions issued earlier are refused
 
         public static string URL = "";
+        // the link preview card (Preview.cs): a picture (a file, relative to BepInEx, or a URL) and the text
+        public static string PREVIEW_IMAGE = "";
+        public static string PREVIEW_DESCRIPTION = "";
 
         // The 3D view's model library. The host rewrites the .cfg on every restart,
         // so these defaults are what a server actually runs with.
@@ -178,6 +181,15 @@ namespace WebMap
                 WebMapConfig.PUBLIC_URL,
                 "The map's address when visitors reach it through a proxy or a name (https://map.example.com). "
                 + "Empty: whatever address it is visited at.").Value;
+
+            PREVIEW_IMAGE = config.Bind("Server", "preview_image",
+                WebMapConfig.PREVIEW_IMAGE,
+                "The picture on the card Discord and other apps show when the map's address is posted: a PNG, JPEG, "
+                + "WebP or GIF file (a path relative to BepInEx, or absolute) or an https:// address. Empty: no picture.").Value;
+
+            PREVIEW_DESCRIPTION = config.Bind("Server", "preview_description",
+                WebMapConfig.PREVIEW_DESCRIPTION,
+                "The text on that card. Empty: \"Carte en direct de <server name> : ...\".").Value;
 
             AUTH_URL = config.Bind("Server", "auth_url",
                 WebMapConfig.AUTH_URL,
