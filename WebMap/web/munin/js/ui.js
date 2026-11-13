@@ -126,6 +126,10 @@ export class Sidebar {
       return r;
     };
     const ico = (name, color) => iconSvg(name, color || colors[name]);
+    // ForgeMap (controles-par-mode): what only one view draws shows only in it (data-only, hidden by
+    // the body's mode-3d class, forgemap.css); the rest (mist, buildings, players, pins, names,
+    // markers) both views follow
+    const only = (mode, ...els) => { for (const e of els) e.dataset.only = mode; return els; };
 
     // ---- the world
     const world = card('The world');
@@ -137,7 +141,7 @@ export class Sidebar {
       const apply = () => { const on = sel.value === 'biomes'; this.app.biomes.setOn(on); this.app.setHeightStyle(sel.value === 'height'); keyEl.hidden = !on; S.set('mapStyle', sel.value); };
       this.app.biomes.onColours = (cols) => { keyEl.replaceChildren(...Object.entries(cols).map(([n, c]) => el(`<span><i style="background:${c}"></i>${escape(n)}</span>`))); };
       sel.addEventListener('change', apply);
-      world.append(style, keyEl);
+      world.append(...only('2d', style, keyEl));
       if (S.mapStyle !== 'terrain') apply();
     }
     if (this.app.altBiomes) {
@@ -145,7 +149,7 @@ export class Sidebar {
       const keyEl = el('<div class="biome-key" hidden></div>');
       const A = this.app.altBiomes;
       A.onKey = (k) => { keyEl.replaceChildren(...k.map(([n, c]) => el(`<span><i style="background:${c}"></i>${escape(n)}</span>`))); };
-      world.append(row(BIOME_SVG, 'Alt biomes', 'Variants like Ruin Black Forest', S.altBiomes, (v) => { A.setOn(v); keyEl.hidden = !v; S.set('altBiomes', v); }), keyEl);
+      world.append(...only('2d', row(BIOME_SVG, 'Alt biomes', 'Variants like Ruin Black Forest', S.altBiomes, (v) => { A.setOn(v); keyEl.hidden = !v; S.set('altBiomes', v); }), keyEl));
       if (S.altBiomes) { A.setOn(true); keyEl.hidden = false; }
     }
     if (this.app.mist) {
@@ -153,10 +157,10 @@ export class Sidebar {
       this.app.mist.setOn(S.mist);
     }
     // ForgeMap: the names of the land (islands, ranges, lakes, bays, rivers), drawn by ForgeMap
-    if (L.names) world.append(row(LABEL_SVG, 'Place names', 'Islands, ranges, lakes, bays and rivers; click one for its card', true, (v) => L.names.setOn(v)));
+    if (L.names) world.append(...only('2d', row(LABEL_SVG, 'Place names', 'Islands, ranges, lakes, bays and rivers; click one for its card', true, (v) => L.names.setOn(v))));
     world.append(row(ico('house', '#c9a26b'), 'Buildings', 'Player builds, coloured by material', S.buildings, (v) => { if (v) L.structures.addTo(this.app.map); else L.structures.remove(); S.set('buildings', v); }));
     // ForgeMap: torches, fires and hearths, lit or burnt out (layers/plan.js); off until asked for
-    if (L.plan) world.append(row(ico('fire', '#ff9d3c'), 'Lights & fires', 'Torches, fires and hearths: a glow while they burn', false, (v) => L.plan.setLights(v)));
+    if (L.plan) world.append(...only('2d', row(ico('fire', '#ff9d3c'), 'Lights & fires', 'Torches, fires and hearths: a glow while they burn', false, (v) => L.plan.setLights(v))));
     // a row with a switch, and under its arrow a checklist ([[id, name, swatch]]) of what can be hidden one by one
     const groupRow = (icon, label, desc, on, onToggle, kinds, hidden, key) => {
       const list = el(`<div class="vkinds${on ? '' : ' off'}" hidden></div>`);
@@ -172,7 +176,7 @@ export class Sidebar {
       return [r, list];
     };
     const ruinKinds = RUIN_SITES.map((n, i) => [i, n]).slice(1).concat([[0, 'Other']]);
-    world.append(...groupRow(ico('ruin'), 'World structures', 'Ruins, villages, wrecks', S.ruins, (v) => { if (v) L.ruins.addTo(this.app.map); else L.ruins.remove(); S.set('ruins', v); }, ruinKinds, S.ruinHidden, 'ruinHidden'));
+    world.append(...only('2d', ...groupRow(ico('ruin'), 'World structures', 'Ruins, villages, wrecks', S.ruins, (v) => { if (v) L.ruins.addTo(this.app.map); else L.ruins.remove(); S.set('ruins', v); }, ruinKinds, S.ruinHidden, 'ruinHidden')));
     if (this.app.gl) {
       // a switch per group (the WebGL map draws them from data; the plain map's tree tiles come
       // baked in one), and under the arrow the group's kinds to hide one by one
@@ -180,10 +184,10 @@ export class Sidebar {
       const icons = { vegTrees: TREE_SVG, vegBushes: SHRUB_SVG, vegBerries: BUSH_SVG, vegRocks: ROCK_SVG, vegOre: ORE_SVG, vegMushrooms: MUSHROOM_SVG, vegPlants: PLANT_SVG };
       for (const g of VEG_GROUPS) {
         const kinds = g.kinds.map(([k, name]) => [k, name, `<i class="${VEG[k][2] ? 'rock' : 'round'}" style="background:${VEG[k][1]}"></i>`]);
-        world.append(...groupRow(icons[g.key], g.label, g.desc, S[g.key] !== false, (v) => { S.set(g.key, v); vegOn(); }, kinds, S.vegHidden, 'vegHidden'));
+        world.append(...only('2d', ...groupRow(icons[g.key], g.label, g.desc, S[g.key] !== false, (v) => { S.set(g.key, v); vegOn(); }, kinds, S.vegHidden, 'vegHidden')));
       }
     } else {
-      world.append(row(TREE_SVG, 'Trees & rocks', 'Every tree, bush and boulder', S.veg, (v) => { if (v) L.veg.addTo(this.app.map); else L.veg.remove(); S.set('veg', v); }));
+      world.append(...only('2d', row(TREE_SVG, 'Trees & rocks', 'Every tree, bush and boulder', S.veg, (v) => { if (v) L.veg.addTo(this.app.map); else L.veg.remove(); S.set('veg', v); })));
     }
 
     // ---- people and places
@@ -191,22 +195,22 @@ export class Sidebar {
     people.append(row(ico('player', '#6fb7ff'), 'Players', 'Where everyone online is right now', S.players, (v) => { L.players.setVisible(v); S.set('players', v); }));
     people.append(row(ico('pin'), 'Pins', 'Pins placed on the map', S.pins, (v) => { L.markers.setVisible('pins', v); S.set('pins', v); }));
     people.append(row(LABEL_SVG, 'Names', 'Labels under the markers', S.labels, (v) => { document.body.classList.toggle('no-labels', !v); S.set('labels', v); }));
-    people.append(row(ico('dot', '#9aa5b5'), 'Dots', 'Plain dots instead of icons', S.iconDots, (v) => S.set('iconDots', v)));
+    people.append(...only('2d', row(ico('dot', '#9aa5b5'), 'Dots', 'Plain dots instead of icons', S.iconDots, (v) => S.set('iconDots', v))));
     const size = el(`<div class="lrow"><span class="lico">${ico('poi', '#9aa5b5')}</span><span class="ltext"><b>Marker size</b></span><input class="lrange" type="range" min="0.5" max="2" step="0.1" value="${S.iconScale}"></div>`);
     size.querySelector('input').addEventListener('input', (e) => S.set('iconScale', +e.target.value));
-    people.append(size);
+    people.append(...only('2d', size));
     this.markerSetRows = el('<div class="lsets"></div>');
     people.append(el('<div class="lsub">Markers</div>'), this.markerSetRows);
 
     // ---- guides drawn over the map
-    const guides = card('Map guides');
+    const guides = card('Map guides'); only('2d', guides);
     guides.append(row(GRID_SVG, 'Grid', this.app.gl ? '64 m game zones, numbered' : '256 m squares with coordinates', S.grid, (v) => { this.app.setGrid(v); S.set('grid', v); }));
     guides.append(row(RINGS_SVG, 'Distance rings', 'Every 500 m out from the spawn', S.rings, (v) => { this.app.setRings(v); S.set('rings', v); }));
     if (this.app.gl && (this.app.config?.height_max_zoom ?? -1) >= 0)   // (drawn in the WebGL map)
       guides.append(row(CONTOUR_SVG, 'Contour lines', 'Height lines, metres above sea', false, (v) => this.app.setContours(v)));
 
     // ---- where players go, and what weighs on their frame rate (all off at first: data on demand)
-    const act = card('Activity', '2D map');
+    const act = card('Activity'); only('2d', act);
     const A = L.activity;
     // trails: the last 3 or 24 hours, and whose
     const trailOpts = el(`<div class="act-opts" hidden>
@@ -255,7 +259,7 @@ export class Sidebar {
 
     // ---- the 3D map (left out when the server has enable_3d = false)
     if (this.app.config?.enable_3d !== false) {
-      const d3 = card('3D map');
+      const d3 = card('3D map'); only('3d', d3);
       d3.append(el('<div class="lsub">Show</div>'));
       const objs = el('<div class="filters lchips"></div>');
       for (const [cat, label] of OBJECT_CATS) {
@@ -277,7 +281,7 @@ export class Sidebar {
     const legend = foldable(el('<details class="lcard llegend"><summary><h4>Map key</h4><i class="chev"></i></summary><div class="lsub">Buildings</div><div class="legend lb"></div><div class="lsub">Trees &amp; rocks</div><div class="legend lv"></div></details>'), 'Map key', false);
     materialNames.forEach((n, i) => legend.querySelector('.lb').append(el(`<span><i style="background:${materialColors[i]}"></i>${n}</span>`)));
     for (const [kind, name] of VEG_KEY) if (VEG[kind]) legend.querySelector('.lv').append(el(`<span><i class="${VEG[kind][2] ? 'rock' : 'round'}" style="background:${VEG[kind][1]}"></i>${name}</span>`));
-    p.append(legend);
+    p.append(...only('2d', legend));
 
     this.setAt = {};   // marker set id -> the marker its name's clicks last went to
     const setIcon = { spawn: 'spawn', bosses: 'boss', minibosses: 'miniboss', dungeons: 'dungeon', landmarks: 'forge', peaks: 'peak', camps: 'fulingcamp', signs: 'sign', traders: 'trader', portals: 'portal', tablepins: 'maptable', tombstones: 'tombstone', wards: 'ward', runestones: 'runestone', vegvisirs: 'vegvisir', beds: 'bed', bases: 'house', vehicles: 'boat', invasions: 'invasion', locations: 'poi' };

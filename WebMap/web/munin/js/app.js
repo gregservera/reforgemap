@@ -633,6 +633,7 @@ class App {
         await this.ensureView3D();
         const c = fromLatLng(this.map.getCenter());
         $('#view3d').hidden = false;
+        document.body.classList.add('mode-3d'); this.measure?.stop?.();   // ForgeMap: only the 3D's controls (controles-par-mode)
         $('#map').style.visibility = 'hidden';
         this.view3d.show(this.pendingPose || { x: c.x, z: c.z, zoom: this.map.getZoom() });
         this.help3d(false);
@@ -650,6 +651,7 @@ class App {
       const c = this.view3d ? this.view3d.center() : null;
       this.view3d?.hide();
       $('#view3d').hidden = true;
+      document.body.classList.remove('mode-3d');
       $('#map').style.visibility = '';
       this.mode = '2d';
       this.root.dataset.mode = '2d';

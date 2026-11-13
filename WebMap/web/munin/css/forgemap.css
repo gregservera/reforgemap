@@ -150,3 +150,6 @@
 .fm-tour-btn.on { color: var(--accent); }
 body.tour .leaflet-control-container, body.tour #wind, body.tour .coords { opacity: .3; transition: opacity .6s; }
 body.tour #view3d .v3d-help { display: none; }
+
+/* ForgeMap (controles-par-mode): a control for one view only shows in it (ui.js only(), app.js setMode) */
+body.mode-3d [data-only="2d"], body:not(.mode-3d) [data-only="3d"] { display: none !important; }
