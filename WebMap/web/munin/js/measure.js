@@ -115,7 +115,7 @@ export class MeasureTool {
         <span class="mp-chips">${MINUTES.map((m) => `<button data-min="${m}" class="${m === this.minutes ? 'on' : ''}">${m} min</button>`).join('')}</span></div>`;
       const r = this.reach;
       body += r ? (r.busy || r.none ? `<div class="mp-hint">${r.busy ? 'Working it out…' : 'No way to travel like that from there.'}</div>` : `<div class="mp-hint">${this.travelInfo().label} from ${escape(r.label || `${Math.round(r.x)}, ${Math.round(r.z)}`)}, ${this.travelInfo().kind === 'water' ? 'over water' : 'over land'}:</div>
-          <div class="mp-key">${reachBands(this.minutes).map((b) => `<span><i style="background:rgb(${b.colour.join(',')})"></i>${b.from ? fmtMin(b.from).replace(' min', '') + '–' : 'under '}${fmtMin(b.to)}</span>`).join('')}</div>`)
+          <div class="mp-key">${reachBands(this.minutes).map((b) => `<span><i style="background:rgb(${b.colour.join(',')})"></i>${b.from ? fmtMin(b.from).replace(' min', '') + '–' : (window.I18N ? window.I18N.t('under') : 'under') + ' '}${fmtMin(b.to)}</span>`).join('')}</div>`)
         : '<div class="mp-hint">Click the map where you start.</div>';
     }
     p.innerHTML = `<div class="mp-head"><span class="mp-seg">${seg('measure', 'Measure')}${seg('reach', 'Reach')}</span><button class="icon-btn" data-act="close" title="Close (Esc)"><svg><use href="#i-close"/></svg></button></div>${body}`;

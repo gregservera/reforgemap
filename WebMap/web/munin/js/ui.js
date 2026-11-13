@@ -397,10 +397,11 @@ export class Sidebar {
 
   whereText(x, z) {
     const s = this.app.spawn || { x: 0, z: 0 }, dx = x - s.x, dz = z - s.z, d = Math.hypot(dx, dz);
-    if (d < 60) return 'at the spawn';
+    if (d < 60) return T('at the spawn');
     const dirs = ['E', 'NE', 'N', 'NW', 'W', 'SW', 'S', 'SE'];
     const dir = dirs[(Math.round(Math.atan2(dz, dx) / (Math.PI / 4)) + 8) % 8];
-    return `${d < 1000 ? Math.round(d / 10) * 10 + ' m' : (d / 1000).toFixed(1) + ' km'} ${dir} of spawn`;
+    const dirT = T('dir:' + dir) === 'dir:' + dir ? dir : T('dir:' + dir);
+    return T('{d} {dir} of spawn', { d: d < 1000 ? Math.round(d / 10) * 10 + ' m' : (d / 1000).toLocaleString(document.documentElement.lang || undefined, { maximumFractionDigits: 1 }) + ' km', dir: dirT });
   }
 
   // ---------------------------------------------------------------- markers
@@ -475,7 +476,7 @@ export class Sidebar {
           const where = this.whereText(m.x, m.z);
           let meta = where, side = '';
           if (s.id === 'tombstones' && m.when) side = `<span class="mside">${new Date(m.when / 10000 - 62135596800000).toLocaleDateString([], { month: 'short', day: 'numeric' })}</span>`;
-          if (s.id === 'bases' && m.pieces) side = `<span class="mside">${m.pieces.toLocaleString()} pieces</span>`;
+          if (s.id === 'bases' && m.pieces) side = `<span class="mside">${escape(window.I18N ? window.I18N.tn(m.pieces, '{n} piece', '{n} pieces') : m.pieces + ' pieces')}</span>`;
           if (s.id === 'spawn') meta = `${m.x}, ${m.z}`;
           if (m.invasion) side = `<span class="mside">${m.raid ? RaidLayer.raidStatus(m.invasion) : RaidLayer.invasionStatus(m.invasion)}</span>`;
           list.append(row(m, escape(m.label || (m.cat === 'tablepin' ? 'Map pin' : '')), meta, side));
@@ -763,7 +764,7 @@ export class Sidebar {
   // the server's admin key (announce.token beside the plugin), kept in this browser once entered.
   buildLog() {
     const box = el(`<div class="serverlog">
-      <div class="log-key" hidden><p>The server log is for admins. Enter the admin key (the text in <code>announce.token</code> beside the plugin on the server):</p>
+      <div class="log-key" hidden><p>${T('The server log is for admins. Enter the admin key (the text in {file} beside the plugin on the server):', { file: '<code>announce.token</code>' })}</p>
         <div class="row-in"><input type="text" placeholder="Admin key" autocomplete="off" spellcheck="false"><button class="btn">Open</button></div><div class="err" hidden>That key was not accepted.</div></div>
       <div class="log-tools" hidden><input type="search" placeholder="Search the log"><div class="log-opts"><label><input type="checkbox" checked> Hide routine lines</label><button class="btn" title="Forget the admin key in this browser">Lock</button></div></div>
       <div class="log-lines"></div></div>`);

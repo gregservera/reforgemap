@@ -377,7 +377,9 @@ class App {
     const from = names[Math.round(((deg + 180) % 360) / 45) % 8];   // a wind is named for where it comes from
     if (!w.firstChild) w.innerHTML = '<svg viewBox="0 0 24 24"><path d="M12 2l6 14h-5v6h-2v-6H6z" fill="currentColor"/></svg><span></span>';
     w.querySelector('svg').style.transform = `rotate(${Math.round(deg)}deg)`;
-    w.querySelector('span').textContent = `${from} wind`;
+    // ForgeMap: in the page's language (the compass letters too: SW is SO in French)
+    const T = (s, v) => (window.I18N ? window.I18N.t(s, v) : s);
+    w.querySelector('span').textContent = T('{dir} wind', { dir: T('dir:' + from) === 'dir:' + from ? from : T('dir:' + from) });
   }
 
   toggleSidebar(show) {
@@ -636,7 +638,7 @@ class App {
         mark('3d');
       } catch (e) {
         console.error(e);
-        this.toast('3D view could not start: ' + e.message);
+        this.toast(window.I18N ? window.I18N.t('3D view could not start: {e}', { e: e.message }) : '3D view could not start: ' + e.message);
       }
       sw.classList.remove('busy');
     } else {
@@ -771,14 +773,14 @@ class App {
     }
     try {
       const r = await fetch('api/ping', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ x: Math.round(x * 10) / 10, z: Math.round(z * 10) / 10, name }) });
-      if (r.status === 429) { const j = await r.json().catch(() => ({})); this.toast(`Wait ${j.wait || 10} s to ping again`); }
+      if (r.status === 429) { const j = await r.json().catch(() => ({})); this.toast(window.I18N ? window.I18N.t('Wait {n} s to ping again', { n: j.wait || 10 }) : `Wait ${j.wait || 10} s to ping again`); }
       else if (!r.ok) this.toast('Could not ping');
     } catch (e) { this.toast('Could not ping'); }
   }
 
   toast(msg) {
     const t = $('#toast');
-    t.textContent = msg; t.hidden = false;
+    t.textContent = window.I18N ? window.I18N.t(msg) : msg; t.hidden = false;   // ForgeMap: a whole message through the page's table
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => { t.hidden = true; }, 3500);
   }

@@ -270,6 +270,16 @@ class ObjectStore {
 }
 export const objects = new ObjectStore();
 
+// ForgeMap: a marker's label in the page's language, the ones made of a name by pattern
+function trLabel(s) {
+  const T = (k, v) => window.I18N.t(k, v);
+  let m = /^Vegvisir: (.+)$/.exec(s);
+  if (m) return T('Vegvisir: {name}', { name: T(m[1]) });
+  m = /^(.+)'s bed$/.exec(s);
+  if (m) return T("{name}'s bed", { name: m[1] });
+  return T(s);
+}
+
 // Markers (locations, portals, tombstones, vehicles, custom sets)
 export const markers = {
   sets: [], rev: -1, listeners: new Set(),
@@ -281,7 +291,7 @@ export const markers = {
       this.rev = m.rev; this.sets = m.sets || [];
       // ForgeMap: the labels through the page's table (the map draws them on a canvas, out of the
       // page's own translation's reach)
-      const t = window.I18N ? (s) => (s ? window.I18N.t(s) : s) : (s) => s;
+      const t = window.I18N ? (s) => (s ? trLabel(s) : s) : (s) => s;
       for (const set of this.sets) { set.label = t(set.label); for (const mk of set.markers || []) { mk.label = t(mk.label); if (mk.description) mk.description = t(mk.description); } }
       for (const fn of this.listeners) fn(this.sets);
     } catch (e) { console.warn('markers', e); }
