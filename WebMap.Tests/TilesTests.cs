@@ -100,6 +100,7 @@ namespace WebMap.Tests
         public void TheLiveFrameCarriesTheServersTimeAndThePlayers()
         {
             Assert.Equal("live\n{\"ts\":1700000000000,\"players\":[]}", MapDataServer.LiveFrame("[]", 1700000000000));
+            Assert.Equal("live\n{\"ts\":1,\"players\":[],\"windDeg\":270}", MapDataServer.LiveFrame("[]", 1, 270));
         }
 
         // A painted road or field with no digging is still changed ground: the map shows it.

@@ -307,6 +307,16 @@ namespace WebMap
                     sb.Append(FormattableString.Invariant($",\"x\":{pos.x:0.##},\"z\":{pos.z:0.##}"));
                     // the 3D view draws them as the game does: facing their way, in what they wear
                     sb.Append(",\"yaw\":").Append(yaw);
+                    // their biome and the weather they have there (Weather: the game's own draw for the spot)
+                    try
+                    {
+                        if (WorldGenerator.instance != null)
+                            sb.Append(",\"biome\":\"").Append(JsonEscape(Tiles.Palette.BiomeName((int)WorldGenerator.instance.GetBiome(pos)))).Append('"');
+                        if (Weather.At(pos, out var w))
+                            sb.Append(",\"weather\":\"").Append(JsonEscape(w.name)).Append('"')
+                              .Append(FormattableString.Invariant($",\"windDeg\":{w.windDeg:0},\"wind\":{w.wind:0.##}"));
+                    }
+                    catch { }
                 }
                 string common = sb.ToString(mark, sb.Length - mark);
                 live.Add("{\"id\":" + player.m_uid.ToString(CultureInfo.InvariantCulture) + ",\"name\":\"" + JsonEscape(player.m_playerName) + "\""
@@ -1101,7 +1111,8 @@ namespace WebMap
                 // the 3D view: ForgeMap's objects and model library, at Munin's paths and in its numbering
                 case "objects/index.json": json = WorldObjects.MuninIndexJson(MuninChunkShift); break;
                 case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
-                case "environments.json": json = "{}"; break;
+                case "environments.json": json = Weather.EnvironmentsJson(); break;   // each weather's light, for the 3D sky
+                case "stats.json": json = Weather.StatsJson; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;   // the world's clock and forecast
                 case "pins.json": json = PinsMuninJson(); break;
                 case "markers.json": json = Tiles.Markers.Json; break;   // Munin's marker sets (Tiles/Markers)
                 case "mistclear.json": json = Tiles.Demisters.Json(); break;   // where Dvergr lanterns clear the mist
@@ -1377,6 +1388,10 @@ namespace WebMap
         private static string PinText(string[] f) => f.Length > 6 ? string.Join(",", f, 6, f.Length - 6) : "";
 
         // Game thread only. Rebuilds what every other thread serves.
+        private volatile int worldWindDeg = -1;         // degrees, -1 while unknown (read on the broadcast's thread)
+        private float weatherAt = -10f;
+        private static bool weatherWarned;
+
         public void RefreshPlayerSnapshot()
         {
             try
@@ -1385,6 +1400,9 @@ namespace WebMap
                 foreach (var player in players) Ping.Sample(player, now);   // before the JSON that carries it
                 playersWs = BuildPlayerResponse();
                 playersJson = BuildPlayersJson(now);
+                // the wind blows the same way everywhere (the page's arrow); the clock and forecast now and then
+                try { worldWindDeg = Weather.At(Vector3.zero, out var ww) ? Mathf.RoundToInt(ww.windDeg) % 360 : -1; } catch { }
+                if (now - weatherAt > 5f) { weatherAt = now; try { Weather.Refresh(); } catch (Exception e) { WarnOnce(ref weatherWarned, "the weather could not be read", e); } }
                 foreach (var player in players)
                 {
                     ZDO z = null;
@@ -1500,7 +1518,7 @@ namespace WebMap
             }
             // the players for Munin's map, every tick, stamped with the server's time: the page plays
             // them back smoothly from one to the next (munin/js/layers/players.js)
-            webSocketHandler.Sessions.Broadcast(LiveFrame(playersLive, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()));
+            webSocketHandler.Sessions.Broadcast(LiveFrame(playersLive, DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), worldWindDeg));
             // the tiles drawn again since the last tick, "z/x/y" each, for open maps to fetch anew
             string tiles = TilesFrame(Tiles.TileStore.DrainNotifications(), Tiles.TileStore.OnDisk, Tiles.TileStore.QueueLength);
             if (tiles != null) webSocketHandler.Sessions.Broadcast(tiles);
@@ -1527,8 +1545,10 @@ namespace WebMap
         internal static string MarkersFrame(int rev) => "markers\n" + rev.ToString(CultureInfo.InvariantCulture);
 
         // live\n{"ts":<unix ms>,"players":[...]}: the players as Munin's map reads them
-        internal static string LiveFrame(string players, long ts) =>
-            "live\n{\"ts\":" + ts.ToString(CultureInfo.InvariantCulture) + ",\"players\":" + players + "}";
+        // (windDeg: where the wind blows towards, 0 = north; left out below 0, unknown)
+        internal static string LiveFrame(string players, long ts, int windDeg = -1) =>
+            "live\n{\"ts\":" + ts.ToString(CultureInfo.InvariantCulture) + ",\"players\":" + players
+            + (windDeg >= 0 ? ",\"windDeg\":" + windDeg.ToString(CultureInfo.InvariantCulture) : "") + "}";
 
         // tiles\n{"keys":["z/x/y",...],"status":"<on disk>/<queued>"}; null with nothing drawn
         internal static string TilesFrame(List<string> keys, int onDisk, int queued)

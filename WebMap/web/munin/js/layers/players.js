@@ -75,8 +75,8 @@ export class PlayersLayer {
       if (!tr.length || ts > tr[tr.length - 1].t) tr.push({ t: ts, x: p.x, z: p.z, yaw: p.yaw || 0 });
       if (tr.length > 6) tr.shift();
       // ForgeMap: the ping beside the name (js/card.js's badge), the words through the page's table
-      const t = window.I18N ? (s) => window.I18N.t(s) : (s) => s, pingBadge = typeof PlayerCard !== 'undefined' ? PlayerCard.ping(p.ping) : '';
-      mk.setTooltipContent(`<b>${escape(p.name)}</b>${pingBadge}<br>${p.health}/${p.maxHealth} ${t('hp')}${p.biome ? ' · ' + escape(p.biome) : ''}${p.weather ? ` · ${escape(p.weather)}` : ''}<br>${p.x}, ${p.z}${p.dead ? ' · ' + t('dead') : ''}${p.pvp ? ' · PvP' : ''}${p.inBed ? ' · ' + t('sleeping') : ''}`);
+      const t = window.I18N ? (s) => window.I18N.t(s) : (s) => s, weatherWord = (w) => { const k = 'weather:' + w, x = t(k); return x !== k ? x : t(w); }, pingBadge = typeof PlayerCard !== 'undefined' ? PlayerCard.ping(p.ping) : '';
+      mk.setTooltipContent(`<b>${escape(p.name)}</b>${pingBadge}<br>${p.health}/${p.maxHealth} ${t('hp')}${p.biome ? ' · ' + escape(t(p.biome)) : ''}${p.weather ? ` · ${escape(weatherWord(p.weather))}` : ''}<br>${p.x}, ${p.z}${p.dead ? ' · ' + t('dead') : ''}${p.pvp ? ' · PvP' : ''}${p.inBed ? ' · ' + t('sleeping') : ''}`);
     }
     for (const id of [...this.markers.keys()]) if (!seen.has(id)) this.remove(id);
     this.animate();

@@ -9,6 +9,11 @@
 const MC = MapCore, PC = PlayerCard, T = (s, v) => window.I18N.t(s, v);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+// a weather's name: its own keys ("weather:Clear"), as the bare words mean other things elsewhere
+const weatherWord = (w) => { const k = 'weather:' + w, t = T(k); return t !== k ? t : T(w); };
+// the wind's strength (0 to 1, as the game has it) in words
+const windWord = (w) => T(w < 0.2 ? 'calm wind' : w < 0.45 ? 'light wind' : w < 0.7 ? 'fresh wind' : 'strong wind');
+
 export class ForgeCard {
   constructor(app) {
     this.app = app;
@@ -57,7 +62,8 @@ export class ForgeCard {
     const state = p ? [p.dead ? T('dead') : '', p.inBed ? T('sleeping') : '', p.pvp ? 'PvP' : ''].filter(Boolean) : [];
     const head = `<div class="fm-card-head"><span class="dot${p ? ' ok' : ''}"></span><b>${esc(name)}</b>${PC.pill(cls)}</div>`
       + `<div class="fm-card-state">${p ? T('online now') + PC.ping(p.ping) : esc(PC.seen(st && +st.last_seen))}${state.length ? ' · ' + esc(state.join(' · ')) : ''}`
-      + `${p && p.x === undefined ? ' · ' + esc(T('Position hidden')) : ''}${cls ? ` <i>· ${esc(cls.why)}</i>` : ''}</div>`;
+      + `${p && p.x === undefined ? ' · ' + esc(T('Position hidden')) : ''}${cls ? ` <i>· ${esc(cls.why)}</i>` : ''}</div>`
+      + (p && p.x !== undefined && (p.biome || p.weather) ? `<div class="fm-card-state">${esc([p.biome && T(p.biome), p.weather && weatherWord(p.weather), p.wind !== undefined ? windWord(p.wind) : ''].filter(Boolean).join(' · '))}</div>` : '');
     const hp = p && p.maxHealth > 0
       ? `<div class="pc-bar"><span>${T('Health')}</span><div class="hp"><i class="${p.health / p.maxHealth < 0.3 ? 'low' : ''}" style="width:${Math.round(100 * Math.max(0, Math.min(1, p.health / p.maxHealth)))}%"></i></div><b>${Math.round(p.health)} / ${Math.round(p.maxHealth)}</b></div>` : '';
     const body = st ? `<div class="fm-card-body">${PC.figures(st)}${PC.radar(st, 150, true)}</div>` : '';

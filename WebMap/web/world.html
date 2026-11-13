@@ -41,6 +41,10 @@
   .lands td a{color:var(--bright);font-weight:600}
   .lands td .kind{color:var(--faint);font-size:.66rem;margin-left:.35rem;font-weight:400}
   .lands tr.nil td{color:var(--faint)}
+  /* the weather to come: a column a period, the same weather again dimmed */
+  .forecast th,.forecast td{text-align:left;cursor:default}
+  .forecast td.same{color:var(--faint)}
+  .scroll{overflow-x:auto}
   .more{margin-top:.5rem}
   @media (max-width:700px){
     .row2{grid-template-columns:1fr}
@@ -71,6 +75,11 @@
     </div>
     <div class="card spot" id="spot" hidden title="Next"></div>
   </div>
+
+  <section class="section" id="weather-box" hidden>
+    <h2 class="eyebrow">Weather to come <small>in each biome, on game time: sleeping through the night skips ahead</small></h2>
+    <div class="scroll"><table class="lands forecast" id="weather"></table></div>
+  </section>
 
   <section class="section" id="keys-box" hidden>
     <h2 class="eyebrow">World modifiers <small>the settings this world runs with</small></h2>
@@ -296,11 +305,25 @@ document.getElementById("more").addEventListener("click", e => { if(e.target.id 
 Spot.init({id: "spot", every: 7000, entries: () => RECORDS.filter(r => r.rows && r.rows.length)
   .map(r => ({k: I18N.t(r.k), v: esc(r.title), c: esc(r.figure), svg: pic.bars(r.rows)}))});
 
+// ---------- the weather to come in each biome: the game draws it by time alone, so it holds for everyone
+let CLOCK = null;
+// a weather's name: its own keys ("weather:Clear"), as the bare words mean other things elsewhere
+const wx = w => { const k = "weather:" + w, t = I18N.t(k); return t !== k ? t : I18N.t(w); };
+function weather(){
+  const box = document.getElementById("weather-box"), fc = CLOCK && CLOCK.forecast, sv = CLOCK && CLOCK.server;
+  if(!fc || !fc.biomes || !fc.biomes.length || !sv || sv.worldTime === undefined){ box.hidden = true; return; }
+  const cols = 4, when = [];
+  for(let k = 0; k < cols; k++){ const m = Math.max(1, Math.round((fc.start + k * fc.period - sv.worldTime) / 60)); when.push(k === 0 ? I18N.t("Now") : I18N.t("in {n} min", {n: m})); }
+  document.getElementById("weather").innerHTML = `<thead><tr><th></th>${when.map(w => `<th>${esc(w)}</th>`).join("")}</tr></thead><tbody>`
+    + fc.biomes.map(b => `<tr><td>${esc(I18N.t(b.biome))}</td>${b.weather.slice(0, cols).map((w, k) => `<td class="${k > 0 && w === b.weather[k - 1] ? "same" : ""}">${esc(wx(w))}</td>`).join("")}</tr>`).join("") + "</tbody>";
+  box.hidden = false;
+}
+
 let KNOWN_FOG = null, KNOWN_OF = null;
 function render(){
   // what is known moves only with the fog or the features, not with the minute
   if(KNOWN_FOG !== FOG || KNOWN_OF !== FEATURES){ KNOWN.clear(); KNOWN_FOG = FOG; KNOWN_OF = FEATURES; }
-  glance(); bosses(); renderRecords(); biomes(); lands(); Spot.render();
+  glance(); bosses(); weather(); renderRecords(); biomes(); lands(); Spot.render();
   document.getElementById("stamp").textContent = I18N.t("read {time}", {time: I18N.time()});
 }
 async function load(){
@@ -311,6 +334,7 @@ async function load(){
     if(rev.features !== REVS.features){ REVS.features = rev.features; const j = await MapCore.fetchJSON(API, "/features?v=" + rev.features); if(j && j.features) FEATURES = j.features; }
     if(rev.pieces !== REVS.pieces){ REVS.pieces = rev.pieces; const pj = await MapCore.fetchJSON(API, "/pieces?v=" + rev.pieces); if(pj && pj.pieces) PIECES = MapCore.parsePieces(pj); }
     try{ STATS = await MapCore.fetchJSON(API, "/stats/players"); }catch(e){}
+    try{ CLOCK = await MapCore.fetchJSON(API, "/data/stats.json"); }catch(e){}
     document.getElementById("note").textContent = "";
     render();
   }catch(e){

@@ -226,7 +226,8 @@ class App {
     on('connection', (ok) => { $('#conn').hidden = ok; });
     on('players', (f) => this.showWind(f.data && f.data.windDeg));
     on('tiles', (f) => { $('#render-status').textContent = f.status ? `tiles ${f.status}` : ''; });
-    setInterval(() => { if (this.sidebar.active === 'stats') stats.refresh(); }, 30000);
+    // ForgeMap: data/stats.json is the world's clock and forecast only (the 3D view's sky), each minute
+    setInterval(() => stats.refresh(), 60000);
     if (matchMedia('(max-width: 720px)').matches) this.toggleSidebar(false);
   }
 
