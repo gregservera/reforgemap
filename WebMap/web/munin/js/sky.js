@@ -44,6 +44,14 @@ const DUSK = { zenith: c(0x3a4f8e), horizon: c(0xf3a457) };
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
+// a colour most of the way (TAME) to the grey of its own brightness (Rec. 709 luma, on the linear values)
+const TAME = 0.8;
+function tame(c) {
+  const y = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
+  c.r += (y - c.r) * TAME; c.g += (y - c.g) * TAME; c.b += (y - c.b) * TAME;
+  return c;
+}
+
 export class Lighting {
   constructor(scene, renderer) {
     this.scene = scene;
@@ -142,6 +150,11 @@ export class Lighting {
     const sunCol = col(env.sun, d > 0), fog = col(env.fog, true), fogSun = col(env.fogSun, d > 0);
     fog.lerp(fogSun, c01(Math.max(n, d) * 3));
     const amb = new THREE.Color().setRGB(lerp(env.ambNight[0], env.ambDay[0], d), lerp(env.ambNight[1], env.ambDay[1], d), lerp(env.ambNight[2], env.ambDay[2], d), THREE.SRGBColorSpace);
+    // ForgeMap: the light that falls on things most of the way to grey (TAME), at its own brightness: taken
+    // whole, the game's warm sun and ambient made the buildings' wood a vivid orange (ForgeMap
+    // 1.4's is a plain brown); a storm still darkens, a morning still gilds. The sky and the fog
+    // keep the game's colours.
+    tame(sunCol); tame(amb);
     const K = 2.6 / 1.2;   // (the map's sun at the game's usual 1.2)
     this.sun.color.copy(sunCol); this.sun.intensity = K * env.lightDay * d * (dir.y > -0.02 ? 1 : 0);
     this.moon.color.copy(sunCol); this.moon.intensity = K * env.lightNight * n;
