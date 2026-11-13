@@ -71,6 +71,8 @@ export class MarkerLayers {
     on('pin', (f) => this.addPin(f));
     on('rmpin', (f) => this.removePin(f.id));
     this.loadPins();
+    this.loadHubs();
+    setInterval(() => this.loadHubs(), 120000);
     // the game's own map icons, when the server could get them (World/MapIcons)
     this.gameIcons = {};
     getJSON('data/icons.json').then((m) => { this.gameIcons = m.icons || {}; this.list = null; this.canvas.draw(); for (const fn of this.listeners) fn(this.sets); }).catch(() => {});   // (lists show the icons too)
@@ -152,6 +154,12 @@ export class MarkerLayers {
     return out;
   }
 
+  // ForgeMap: the portal hubs players named on the Portals page (/portals' named: hub@x,z), for a
+  // portal's popup; a hub counts within HUB_R of the portal, as that page counts it
+  async loadHubs() {
+    try { const r = await fetch('portals', { cache: 'no-cache' }); if (r.ok) hubNames = (await r.json()).named || []; } catch (e) { /* none */ }
+  }
+
   async loadPins() {
     try {
       // the server marks this browser's own pins "mine" (it never sends who owns the others)
@@ -214,7 +222,8 @@ export class MarkerLayers {
       const far = Math.hypot(o.x - m.x, o.z - m.z);
       const b = document.createElement('button');
       b.className = 'btn small'; b.type = 'button';
-      b.textContent = `Go to the other end (${far < 1000 ? Math.round(far) + ' m' : (far / 1000).toFixed(1) + ' km'})`;
+      const dist = far < 1000 ? Math.round(far) + ' m' : (far / 1000).toFixed(1) + ' km';
+      b.textContent = window.I18N ? window.I18N.t('Go to the other end ({d})', { d: dist }) : `Go to the other end (${dist})`;
       b.addEventListener('click', () => {
         // there first, then its popup: opened before a glide, the popup was left off-screen
         window.app?.goTo(o.x, o.z, Math.max(this.map.getZoom(), 6), true);
@@ -317,10 +326,25 @@ function dungeonHtml(m) {
   return `<div class="dungeon-state${d.visited ? ' visited' : ''}">${state}</div><table class="dungeon-info">${rows.join('')}</table>`;
 }
 
+// ForgeMap: the named hub a portal stands in, and the way to the Portals page (its atlas)
+const HUB_R = 150;
+let hubNames = [];
+function hubOf(m) {
+  let best = null, d = HUB_R;
+  for (const h of hubNames) { const e = Math.hypot(h.x - m.x, h.z - m.z); if (e <= d) { d = e; best = h; } }
+  return best;
+}
+function portalHtml(m) {
+  const t = window.I18N ? (s, v) => window.I18N.t(s, v) : (s) => s, hub = hubOf(m);
+  return `<small>${escape(t('Portal tag: {tag}', { tag: m.tag || t('(none)') }))}</small>`
+    + (hub ? `<br><small>${escape(t('In the hub “{name}”', { name: hub.name }))}</small>` : '')
+    + `<br><a class="fm-atlas" href="portals.html">${escape(t('Open the portal atlas'))}</a>`;
+}
+
 function popupHtml(m, set) {
   let extra = '';
   if (m.cat === 'dungeon') extra = dungeonHtml(m);
-  else if (m.cat === 'portal') extra = `<small>Portal tag: ${escape(m.tag || '(none)')}</small>`;
+  else if (m.cat === 'portal') extra = portalHtml(m);   // ForgeMap: with its hub and the atlas
   else if (m.cat === 'base') extra = `<small>${m.pieces} pieces</small>`;
   else if (m.cat === 'tablepin') extra = m.checked ? '<small>Crossed out on the map</small>' : '';
   else if (m.cat === 'sign') extra = m.author ? `<small>Written by ${escape(m.author)}</small>` : '';
