@@ -345,10 +345,13 @@ namespace WebMap.Tiles
             }
         }
 
-        private static bool TileTouchesExplored(int zoom, int x, int y)
+        // with the margin the soft edge of the walked ground reaches past it (FogMask: about two
+        // cells), so a tile just beside the walked ground is drawn too and the fade is not cut
+        internal static bool TileTouchesExplored(int zoom, int x, int y)
         {
             TileMath.TileBounds(zoom, x, y, out float minX, out float minZ, out float maxX, out float maxZ);
-            return MapFog.AnyExplored(minX, minZ, maxX, maxZ);
+            float m = 3 * WebMapConfig.PIXEL_SIZE;
+            return MapFog.AnyExplored(minX - m, minZ - m, maxX + m, maxZ + m);
         }
 
         // ---------------------------------------------------------------- rendering

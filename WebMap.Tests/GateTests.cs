@@ -82,13 +82,15 @@ namespace WebMap.Tests
             Assert.Equal(400, Post("/api/rerender?zoom=9", "{}", Bearer(owner: true)));
         }
 
-        // A tile not drawn yet is a pending 404 the page waits out; a path that is no tile is nothing.
+        // A tile not drawn yet is a pending 404 the page waits out, unless no walked ground is near
+        // it (none here: no fog): that one goes out empty. A path that is no tile is nothing.
         [Fact]
         public void ATileNotDrawnYetIsPendingAndAPathThatIsNoTileIsNotFound()
         {
-            var r = http.Send(new HttpRequestMessage(HttpMethod.Get, "/tiles/map/0/0/0.png"));
+            var r = http.Send(new HttpRequestMessage(HttpMethod.Get, "/tiles/height/0/0/0.png"));
             Assert.Equal(HttpStatusCode.NotFound, r.StatusCode);
             Assert.Equal("pending", string.Join(",", r.Headers.GetValues("X-Munin-Tile")));
+            Assert.Equal(200, Get("/tiles/map/0/0/0.png"));     // unwalked: empty, not a 404
             Assert.Equal(404, Get("/tiles/fog/0/0/0.png"));
             Assert.Equal(200, Get("/api/status"));
         }

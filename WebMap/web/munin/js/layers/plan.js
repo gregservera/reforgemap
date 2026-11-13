@@ -53,6 +53,24 @@ export class PlanLayer extends ForgeCanvas {
     this.view_ = v;
     if (plan) MC.drawPieces(g, v, this.shown, { plan: true });
     if (this.lights) MC.drawFires(g, v, this.shown);
+    if (plan || this.lights) this.clearUnderMarkers(g, v);
+  }
+  // The markers stay on top of the plan: this canvas is over the whole WebGL map, markers too, so
+  // the plan is cut away under each icon shown (a portal's piece covered the portal's icon).
+  clearUnderMarkers(g, v) {
+    const mc = this.o.markers?.()?.canvas;
+    if (!mc || !mc._map || !mc.src) return;
+    const r = Math.max(16, Math.min(26, 16 + (this.map.getZoom() - 2) * 4)) * layerState.iconScale / 2 + 2;
+    g.save();
+    g.setTransform(v.pix, 0, 0, v.pix, 0, 0);
+    g.globalCompositeOperation = 'destination-out';
+    g.beginPath();
+    for (const { it, p } of mc.placed()) {
+      const y = it.pin ? p.y - 9 * layerState.iconScale : p.y, rr = it.pin ? 11 * layerState.iconScale : r;
+      g.moveTo(p.x + rr, y); g.arc(p.x, y, rr, 0, Math.PI * 2);
+    }
+    g.fill();
+    g.restore();
   }
   fogChanged() { this.shownOf = null; super.fogChanged(); }
 

@@ -189,7 +189,7 @@ class App {
     this.pegman = new Pegman(this);   // ForgeMap: Street View, the figure dropped on the map (pegman.js)
     this.layers.paths = new PathsLayer().addTo(this.map);
     this.layers.deaths = new DeathsLayer().addTo(this.map);   // ForgeMap: each death where it happened (layers/deaths.js)   // ForgeMap: the frequented paths (layers/paths.js)
-    this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names }).addTo(this.map);
+    this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names, markers: () => this.layers.markers }).addTo(this.map);
     this.layers.activity = new ActivityLayers(this.map, this.gl);
     // right click (long press on a phone) places a pin, unless the server turned web pins off
     this.map.on('contextmenu', (e) => { if (this.measure?.active) { this.measure.undo(); return; } if (this.config?.web_pins !== false) this.layers.markers.openPinEditor(e.latlng); });

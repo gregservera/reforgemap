@@ -1040,6 +1040,18 @@ namespace WebMap
         {
             if (!ParseTile(path, out string layer, out int z, out int x, out int y)) { Answer(res, 404, "{\"error\":\"no such tile\"}"); return; }
             byte[] data = Tiles.TileStore.Get(layer, z, x, y, out string etag);
+            // a tile with no walked ground near is never drawn: it goes out empty, not as a 404 the
+            // page would ask about again (the fog lifting there sends it for the tile anew)
+            if (data == null && Tiles.FogMask.Masks(layer) && !Tiles.TileStore.TileTouchesExplored(z, x, y))
+            {
+                data = Tiles.FogMask.Empty(); etag = "\"e\"";
+                res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=60");
+                res.Headers.Add(HttpResponseHeader.ETag, etag);
+                if (req.Headers["If-None-Match"] == etag) { res.StatusCode = 304; res.Close(); return; }
+                res.ContentType = "image/png"; res.StatusCode = 200; res.ContentLength64 = data.Length;
+                res.Close(data, true);
+                return;
+            }
             if (data == null)
             {
                 res.Headers.Add("X-Munin-Tile", "pending");
