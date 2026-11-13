@@ -219,5 +219,26 @@ namespace WebMap.Tests
             }
             finally { FogMask.Walked = was; }
         }
+
+        [Fact]
+        public void TheWalkedEdgeIsSoftAndKeepsToTheWalkedCells()
+        {
+            var was = FogMask.Walked;
+            try
+            {
+                float c = WebMapConfig.PIXEL_SIZE;
+                // cells centred on multiples of c; walked: those with x <= 0
+                FogMask.Walked = (x, z) => Math.Round(x / c) <= 0;
+                Assert.Equal(255, FogMask.Shown(0, 5));              // a walked cell's centre
+                Assert.Equal(0, FogMask.Shown(c / 2, 5));            // the edge between the cells
+                Assert.Equal(0, FogMask.Shown(c * 0.9f, 5));         // inside the unwalked cell
+                byte mid = FogMask.Shown(c / 4, 5);
+                Assert.InRange(mid, (byte)60, (byte)200);            // fading over the last half cell
+                // a diagonal edge reads as a line, not stairs: along it the same at every step
+                FogMask.Walked = (x, z) => Math.Round(x / c) + Math.Round(z / c) <= 0;
+                Assert.Equal(FogMask.Shown(c * 0.1f, c * 0.1f), FogMask.Shown(c * 1.1f, -c * 0.9f));
+            }
+            finally { FogMask.Walked = was; }
+        }
     }
 }
