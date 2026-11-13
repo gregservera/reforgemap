@@ -1054,9 +1054,12 @@ namespace WebMap
             }
             if (data == null)
             {
+                // not drawn yet: 204, no body. A success, so the browser logs nothing (a 404 filled
+                // the console); the pages take it as missing and fall back as before, and the tile
+                // comes once the websocket says it is drawn
                 res.Headers.Add("X-Munin-Tile", "pending");
                 res.Headers.Add(HttpResponseHeader.CacheControl, "no-store");
-                Answer(res, 404, "{\"error\":\"not drawn yet\"}");
+                res.StatusCode = 204; res.Close();
                 return;
             }
             // nothing of unwalked ground leaves: those pixels go out transparent (Tiles/FogMask)
@@ -1227,8 +1230,14 @@ namespace WebMap
             }
             if (!ParseChunk(rest.Substring(0, rest.Length - 4), out int cx, out int cz)) { Answer(res, 404, "{\"error\":\"no such chunk\"}"); return; }
             float minX = Tiles.TileMath.ChunkMin(cx), minZ = Tiles.TileMath.ChunkMin(cz);
+            // nobody walked there: an empty chunk (the 3D view asks for every chunk round it, and a
+            // 404 for each filled the console); nothing of it is worked out
             if (!MapFog.AnyExplored(minX, minZ, minX + Tiles.TileMath.CHUNK_SIZE, minZ + Tiles.TileMath.CHUNK_SIZE))
-            { Answer(res, 404, "{\"error\":\"nothing walked there\"}"); return; }
+            {
+                res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=60");
+                SendBytes(req, res, new byte[] { (byte)'V', (byte)'E', (byte)'G', (byte)'1', 0, 0, 0, 0 }, "application/octet-stream");
+                return;
+            }
             res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=600");
             SendBytes(req, res, Tiles.Vegetation.Chunk(cx, cz), "application/octet-stream");
         }

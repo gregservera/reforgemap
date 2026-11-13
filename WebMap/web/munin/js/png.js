@@ -6,7 +6,7 @@
 // Terrarium RGB -> Float32Array of heights (row-major, north first)
 export async function fetchTerrarium(url) {
   const res = await fetch(url);
-  if (!res.ok) throw new Error('missing ' + url);
+  if (!res.ok || res.status === 204) throw new Error('missing ' + url);   // (204: not drawn yet)
   const { width, height, channels, data } = await decodePng(new Uint8Array(await res.arrayBuffer()));
   const n = width * height, out = new Float32Array(n);
   for (let i = 0, j = 0; j < n; i += channels, j++) out[j] = data[i] * 256 + data[i + 1] + data[i + 2] / 256 - 32768;

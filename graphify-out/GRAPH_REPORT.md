@@ -1,17 +1,17 @@
 # Graph Report - forgemap  (2026-11-13)
 
 ## Corpus Check
-- 232 files · ~734,235 words
+- 232 files · ~734,562 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: .css 4, (none) 2, .targets 1)
 
 ## Summary
-- 6989 nodes · 17003 edges · 223 communities (149 shown, 74 thin omitted)
+- 6989 nodes · 17006 edges · 223 communities (149 shown, 74 thin omitted)
 - Extraction: 95% EXTRACTED · 5% INFERRED · 0% AMBIGUOUS · INFERRED: 869 edges (avg confidence: 0.86)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `8e767e4b`
+- Built from commit: `93308073`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -864,7 +864,7 @@ Nodes (3): Live, Stats, WorldEvents
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `What a regression would do on the live server, worst first` connect `Stats` to `Kitchen`, `Changelog`, `JsonElement`, `Trails`, `ForestMap`, `.Observe`, `ChatRelay`, `WorldObjects`, `View3D`, `Features`, `List`, `AuthTests`, `Func`, `EventDispatcher`, `MapDataServer`, `Chart`, `WebMap`, `MapFog`, `TerrainPatches`?**
-  _High betweenness centrality (0.378) - this node is a cross-community bridge._
+  _High betweenness centrality (0.377) - this node is a cross-community bridge._
 - **What connects `Plugins`, `Configs`, `NewCfg` to the rest of the system?**
   _246 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `three.core.js` be split into smaller, more focused modules?**

@@ -241,11 +241,19 @@ namespace WebMap.Tiles
             if (count > 0) ZLog.Log($"WebMap: {count} overview tiles to render");
         }
 
-        // A browser wants this tile and it does not exist yet.
-        public static void RequestMissing(int zoom, int x, int y)
+        // A browser wants this tile and it does not exist yet. Past the overview zooms only near
+        // walked ground; for the 3D view's relief (height: shown unwalked too, ticket 3d-brouillard)
+        // as far round it as that view loads the zoom (view3d.js RINGS, a tile more), or the
+        // relief past the walked edge was asked for again and again and never drawn.
+        // The tile is the browser's to name: whatever it asks, no more is drawn than the server's
+        // own limits (its render zoom, a bounded queue: past it a request waits for the next ask).
+        private const int MaxAsked = 1500;
+        public static void RequestMissing(int zoom, int x, int y, bool height = false)
         {
-            if (!TileMath.Valid(zoom, x, y)) return;
-            if (zoom > WebMapConfig.PRERENDER_ZOOM && !TileTouchesExplored(zoom, x, y)) return;
+            if (!TileMath.Valid(zoom, x, y) || zoom > WebMapConfig.MAX_RENDER_ZOOM) return;
+            lock (queueLock) if (queue.Count >= MaxAsked) return;
+            float margin = !height ? 3 * WebMapConfig.PIXEL_SIZE : zoom >= 7 ? 900f : 2100f;
+            if (zoom > WebMapConfig.PRERENDER_ZOOM && !TileTouchesExplored(zoom, x, y, margin)) return;
             Enqueue(zoom, x, y, 5, onlyIfMissing: true);
         }
 
@@ -347,10 +355,10 @@ namespace WebMap.Tiles
 
         // with the margin the soft edge of the walked ground reaches past it (FogMask: about two
         // cells), so a tile just beside the walked ground is drawn too and the fade is not cut
-        internal static bool TileTouchesExplored(int zoom, int x, int y)
+        internal static bool TileTouchesExplored(int zoom, int x, int y, float m = -1)
         {
             TileMath.TileBounds(zoom, x, y, out float minX, out float minZ, out float maxX, out float maxZ);
-            float m = 3 * WebMapConfig.PIXEL_SIZE;
+            if (m < 0) m = 3 * WebMapConfig.PIXEL_SIZE;
             return MapFog.AnyExplored(minX - m, minZ - m, maxX + m, maxZ + m);
         }
 
@@ -646,7 +654,7 @@ namespace WebMap.Tiles
             }
             if (!have)
             {
-                if (!height || zoom <= WebMapConfig.HeightMaxZoom) RequestMissing(zoom, x, y);
+                if (!height || zoom <= WebMapConfig.HeightMaxZoom) RequestMissing(zoom, x, y, height);
                 return null;
             }
             bool color = !height && !vegL && !terraL;

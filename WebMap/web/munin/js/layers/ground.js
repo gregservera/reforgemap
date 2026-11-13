@@ -161,7 +161,7 @@ export class GroundGL extends L.Layer {
     try {
       // ask for WebP like an <img> does (fetch says */* and would get the PNG)
       const r = await fetch(this.url(key), { headers: { Accept: 'image/webp,image/png' }, priority: replace ? 'low' : 'auto' });
-      if (r.status === 404) { this.missing.add(key); return; }
+      if (r.status === 404 || r.status === 204) { this.missing.add(key); return; }   // (204: not drawn yet)
       if (!r.ok) throw new Error(r.status);
       const bmp = await createImageBitmap(await r.blob());   // decoded off the main thread
       if (!this.sc) { bmp.close(); return; }

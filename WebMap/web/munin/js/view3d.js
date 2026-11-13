@@ -19,6 +19,7 @@ import { materialColors, colors as iconColors } from './icons.js';
 import { layerState } from './layerstate.js';
 import { WORLD_HALF, MAX_ZOOM, TILE, metersPerPixel, chunkOf, worldTile, WORLD_SIZE, CHUNKS } from './crs.js';
 import { fetchTerrarium } from './png.js';
+import { on } from './net.js';
 import { fetchMist, mistIn } from './mist.js';
 
 const RINGS = [                   // zoom -> load within this distance of the target (metres)
@@ -131,6 +132,13 @@ export class View3D {
     this.scene.add(water);
 
     this.terrain = new Map();     // key -> {mesh, ready, z, x, y, heights}
+    // ForgeMap: a relief tile not drawn yet (204) is left to the coarser ring; once the server says
+    // it is drawn (websocket 'tiles'), it is forgotten here and asked for again
+    on('tiles', (f) => {
+      let again = false;
+      for (const k of f.keys || []) { const t = this.terrain.get(k); if (t && !t.mesh) { this.terrain.delete(k); again = true; } }
+      if (again && this.running) this.scheduleUpdate();
+    });
     this.mist = this.mistMaterial();   // the Mistlands mist over the ground (attachMist)
     this.structures = new Map();  // chunk key -> group   (fallback path: footprint boxes)
     this.veg = new Map();         // chunk key -> group   (fallback path: shapes)
