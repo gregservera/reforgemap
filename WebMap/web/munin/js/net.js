@@ -28,7 +28,7 @@ export function connect() {
   const url = `${proto}//${location.host}${location.pathname.replace(/[^/]*$/, '')}`;
   try { ws = new WebSocket(url); } catch (e) { scheduleReconnect(); return; }
   // 'reconnected': open again after a gap (not the first time: the page has just fetched everything)
-  ws.onopen = () => { state.connected = true; backoff = 1000; emit('connection', true); if (state.wasOpen) emit('reconnected'); state.wasOpen = true; };
+  ws.onopen = () => { state.connected = true; backoff = 1000; emit('connection', true); if (state.wasOpen) emit('reconnected'); state.wasOpen = true; hello(); };
   ws.onclose = () => { state.connected = false; emit('connection', false); if (!closedByUs) scheduleReconnect(); };
   ws.onerror = () => { try { ws.close(); } catch {} };
   ws.onmessage = (m) => {
@@ -39,8 +39,29 @@ export function connect() {
   };
 }
 
+// ForgeMap: what Munin's server said on each connection (its hello and the latest events), fetched
+// instead: the raid and invasions on now, and the Events panel's lines the page does not have yet
+// (all of them the first time; back after a gap, those it missed)
+const seenEvents = new Set();
+const evKey = (e) => `${e.ts}|${e.type}|${e.name}|${e.text}`;
+let helloed = false;
+export async function hello() {
+  try {
+    const h = await getJSON('data/hello.json');
+    emit('hello', { raid: h.raid, invasions: h.invasions });
+    const first = !helloed;
+    helloed = true;
+    const evs = (h.events || []).filter((e) => !seenEvents.has(evKey(e)));
+    if (evs.length) emit('events', { t: 'events', data: evs, initial: first });
+  } catch (e) { /* the frames bring the rest */ }
+}
+on('events', (f) => {
+  for (const e of f.data || []) seenEvents.add(evKey(e));
+  if (seenEvents.size > 2000) { const keep = [...seenEvents].slice(-1000); seenEvents.clear(); for (const k of keep) seenEvents.add(k); }
+});
+
 // one ForgeMap frame as Munin's: live (the players, {ts, players}) as players {data}, tiles {keys,
-// status}, markers {rev}, pin, rmpin, reload; the others are not used yet
+// status}, markers {rev}, events {data}, raid {data}, invasions {data}, pin, rmpin, reload; the others are not used yet
 export function frame(text) {
   const nl = text.indexOf('\n'), type = nl < 0 ? text : text.slice(0, nl), body = nl < 0 ? '' : text.slice(nl + 1);
   if (type === 'reload') return { t: 'reload' };
@@ -57,6 +78,8 @@ export function frame(text) {
     return f.length >= 3 && isFinite(x) && isFinite(z) ? { t: 'ping', id: f[0], name: f[1], x, z } : null;
   }
   if (type === 'live') { try { return { t: 'players', data: JSON.parse(body) }; } catch { return null; } }
+  // events: the Events panel's new lines; raid: the raid on now (null: none); invasions: those on now
+  if (type === 'events' || type === 'raid' || type === 'invasions') { try { return { t: type, data: JSON.parse(body) }; } catch { return null; } }
   if (type === 'markers') return { t: 'markers', rev: +body };
   if (type === 'tiles') { try { return Object.assign({ t: 'tiles' }, JSON.parse(body)); } catch { return null; } }
   return null;

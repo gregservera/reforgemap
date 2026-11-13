@@ -173,6 +173,16 @@ namespace WebMap
             }
         }
 
+        // where `name` last died, when the map knew where they were (for the Events panel)
+        public static bool LastDeath(string name, out float x, out float z)
+        {
+            x = z = 0f;
+            lock (gate)
+                for (int i = deaths.Count - 1; i >= 0; i--)
+                    if (deaths[i].name == name && Now() - deaths[i].t < 120) { x = deaths[i].x; z = deaths[i].z; return true; }
+            return false;
+        }
+
         public static string DeathsJson()
         {
             if (!deathsStale) return deathsJson;

@@ -122,8 +122,8 @@ namespace WebMap
             }
 
             ZLog.Log($"WebMap: player {name} died");
+            Stats.Death(name);              // first: the feed's line takes the spot from it
             server.AddMessage(peerID, (int)Talker.Type.Normal, "Server", $"player _{name}_ died", true);
-            Stats.Death(name);
         }
 
         private static bool ShouldAnnounce(long key)

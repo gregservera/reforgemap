@@ -15,6 +15,14 @@ test("a markers frame carries the server's markers rev", () => {
   assert.deepEqual(frame("markers\n42"), {t: "markers", rev: 42});
 });
 
+// The Events panel, the raid circle and the invasions only hear of the world through these.
+test("events, raid and invasions frames carry their JSON", () => {
+  assert.deepEqual(frame('events\n[{"type":"join","name":"W"}]'), {t: "events", data: [{type: "join", name: "W"}]});
+  assert.deepEqual(frame("raid\nnull"), {t: "raid", data: null});
+  assert.deepEqual(frame('invasions\n[{"id":1}]'), {t: "invasions", data: [{id: 1}]});
+  assert.equal(frame("events\nnot json"), null);
+});
+
 test("reload is reload, and what the map does not use yet is nothing", () => {
   assert.deepEqual(frame("reload\n"), {t: "reload"});
   assert.equal(frame('players\n{"players":[]}'), null);

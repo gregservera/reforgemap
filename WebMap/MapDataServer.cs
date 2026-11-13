@@ -479,6 +479,18 @@ namespace WebMap
                         SendBytes(req, res, bytes, "application/octet-stream");
                         return true;
                     }
+                case "/api/serverlog":
+                    // the game's console lines after number `after` (-1: the latest `limit`): an admin's,
+                    // a signed-in admin or the holder of the announce token
+                    {
+                        bool tokenHolder = Auth.Same(Announce.Token, req.Headers["X-Announce-Token"] ?? "");
+                        if (!tokenHolder && (!Caller(req, out _, out bool logAdmin) || !logAdmin)) { Answer(res, 403, "{\"error\":\"forbidden\"}"); return true; }
+                        long after = long.TryParse(req.QueryString["after"] ?? "-1", NumberStyles.Integer, CultureInfo.InvariantCulture, out long a) ? a : -1;
+                        int limit = int.TryParse(req.QueryString["limit"] ?? "1000", NumberStyles.Integer, CultureInfo.InvariantCulture, out int l) ? Math.Max(1, Math.Min(4000, l)) : 1000;
+                        res.Headers.Add(HttpResponseHeader.CacheControl, "no-store");
+                        Answer(res, 200, ServerLog.Json(after, limit));
+                        return true;
+                    }
                 case "/api/bases/reset":
                     // every base back to its own name and shown again: an admin's
                     {
@@ -1074,6 +1086,15 @@ namespace WebMap
                 case "pins.json": json = PinsMuninJson(); break;
                 case "markers.json": json = Tiles.Markers.Json; break;   // Munin's marker sets (Tiles/Markers)
                 case "mistclear.json": json = Tiles.Demisters.Json(); break;   // where Dvergr lanterns clear the mist
+                // the Events panel: what a page opening (or back after a gap) needs, then older history
+                case "hello.json": json = HelloJson(WorldEvents.RaidJson, WorldEvents.InvasionsJson, Feed.RecentJson); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;
+                case "events/older.json":
+                    {
+                        if (!int.TryParse(req.QueryString["limit"] ?? "100", NumberStyles.Integer, CultureInfo.InvariantCulture, out int limit)) limit = 100;
+                        json = Feed.OlderJson(req.QueryString["before"] ?? DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture), Math.Max(1, Math.Min(500, limit)));
+                        res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                        break;
+                    }
             }
             if (json == null && bin == null && rest.StartsWith("objects/", StringComparison.Ordinal) && rest.EndsWith(".bin", StringComparison.Ordinal))
             {
@@ -1295,6 +1316,8 @@ namespace WebMap
             catch (Exception e) { if (WebMapConfig.DEBUG) ZLog.LogWarning("WebMap: pin not broadcast: " + e.Message); }
 
             if (op == "add")
+                try { Feed.Add("pin", now[3], "placed a pin" + (PinText(now).Length > 0 ? ": " + PinText(now) : ""), (float)x, (float)z); } catch { }
+            if (op == "add")
                 log = $"{who} pinned a {now[2]} '{PinText(now)}' at {sx}, {sz}";
             else if (op == "delete")
                 log = $"{who} took up {was[3]}'s {was[2]} pin '{PinText(was)}'";
@@ -1465,8 +1488,21 @@ namespace WebMap
             // the markers changed (a sweep, a boat moved, a base renamed): open maps fetch them again
             int markersRev = Tiles.Markers.Rev;
             if (markersRev != sentMarkersRev) { sentMarkersRev = markersRev; webSocketHandler.Sessions.Broadcast(MarkersFrame(markersRev)); }
+            // the Events panel's new lines, and the raid and invasions on now when they change
+            string events = Feed.DrainPendingJson();
+            if (events != null) webSocketHandler.Sessions.Broadcast("events\n" + events);
+            string raid = WorldEvents.RaidJson;
+            if (raid != sentRaid) { sentRaid = raid; webSocketHandler.Sessions.Broadcast("raid\n" + raid); }
+            string inv = WorldEvents.InvasionsJson, invKey = InvasionKey(inv);   // ("left" counts down: the page counts itself)
+            if (invKey != sentInvasions) { sentInvasions = invKey; webSocketHandler.Sessions.Broadcast("invasions\n" + inv); }
         }
+        private string sentRaid = "null", sentInvasions = "[]";
+        internal static string InvasionKey(string json) => System.Text.RegularExpressions.Regex.Replace(json, ",\"(left|age)\":[0-9.]+", "");
         private int sentMarkersRev = int.MinValue;
+
+        // /data/hello.json: the raid and invasions on now and the Events panel's latest lines
+        internal static string HelloJson(string raid, string invasions, string events) =>
+            "{\"raid\":" + raid + ",\"invasions\":" + invasions + ",\"events\":" + events + "}";
 
         // markers\n<rev>: /data/markers.json has changed
         internal static string MarkersFrame(int rev) => "markers\n" + rev.ToString(CultureInfo.InvariantCulture);
@@ -1489,6 +1525,7 @@ namespace WebMap
         public void BroadcastPing(long id, string name, Vector3 position)
         {
             webSocketHandler.Sessions.Broadcast($"ping\n{id}\n{name}\n{FixedValue(position.x)},{FixedValue(position.z)}");
+            Feed.Add("ping", name, "pinged the map", position.x, position.z);
         }
 
         // Pins by the character name in each CSV line, for the player tallies.
@@ -1511,6 +1548,7 @@ namespace WebMap
             lock (pins) pins.Add($"{id},{pinId},{type},{name},{FixedValue(position.x)},{FixedValue(position.z)},{pinText}");
             webSocketHandler.Sessions.Broadcast(
                 $"pin\n{id}\n{pinId}\n{type}\n{name}\n{FixedValue(position.x)},{FixedValue(position.z)}\n{pinText}");
+            Feed.Add("pin", name, "placed a pin" + (string.IsNullOrEmpty(pinText) ? "" : ": " + pinText), position.x, position.z);
         }
 
         public void RemovePin(int idx)
@@ -1538,6 +1576,7 @@ namespace WebMap
         public void AddMessage(long id, int type, string name, string message, bool ev = false)
         {
             lock (messageLock) newMessages.Add(new MapMessage(id, type, name, message, ev));
+            try { Feed.FromMessage(type, name, message, ev); } catch (Exception e) { ZLog.LogWarning("WebMap: feed: " + e.Message); }
         }
 
         private static string FixedValue(float f)

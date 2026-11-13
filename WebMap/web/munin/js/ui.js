@@ -9,6 +9,7 @@ import { RUIN_SITES } from './layers/shapes.js';
 import { on } from './net.js';
 import { RaidLayer } from './layers/raid.js';
 import { BiomeHover } from './biomehover.js';
+import { writeHeaders, setAdminKey } from './forgeauth.js';
 
 const $ = (s, r = document) => r.querySelector(s);
 const el = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
@@ -798,8 +799,10 @@ export class Sidebar {
   }
   setPlayerSort(k, dir) { this.pSort = [k, dir]; try { localStorage.setItem('munin-player-sort', JSON.stringify(this.pSort)); } catch (e) { /* this visit only */ } }
 
-  setLogKey(k) { try { if (k) localStorage.setItem('munin-admin-key', k); else localStorage.removeItem('munin-admin-key'); } catch (e) { /* this visit only */ } this.logKey = k; }
-  getLogKey() { if (this.logKey === undefined) { try { this.logKey = localStorage.getItem('munin-admin-key') || ''; } catch (e) { this.logKey = ''; } } return this.logKey; }
+  // ForgeMap: the admin key is ForgeMap's own (forgeauth.js, the same the pins take); a signed-in
+  // admin needs none
+  setLogKey(k) { setAdminKey(k); }
+  getLogKey() { return writeHeaders() ? 'yes' : ''; }
 
   // fetch new lines every few seconds while the view is open
   async pollLog(now) {
@@ -809,7 +812,7 @@ export class Sidebar {
     this.logKeyBox.hidden = !!key; this.logTools.hidden = !key;
     if (!key) return;
     try {
-      const r = await fetch(`api/serverlog?after=${this.logNext}&limit=${this.logNext < 0 ? 1500 : 1000}`, { cache: 'no-store', headers: { 'X-Munin-Token': key } });
+      const r = await fetch(`api/serverlog?after=${this.logNext}&limit=${this.logNext < 0 ? 1500 : 1000}`, { cache: 'no-store', headers: writeHeaders() || {} });
       if (r.status === 403) { this.setLogKey(''); this.logKeyBox.hidden = false; this.logTools.hidden = true; this.logKeyBox.querySelector('.err').hidden = false; return; }
       this.logKeyBox.querySelector('.err').hidden = true;
       const d = await r.json();
@@ -845,8 +848,8 @@ export class Sidebar {
   eventRow(e) {
     const said = e.type === 'chat' || e.type === 'shout' || e.type === 'whisper';
     // chat reads "Name: message", the name in a colour of its own so a conversation is easy to follow
-    const who = said ? `<b style="color:${nameColor(e.name)}">${escape(e.name)}:</b>` : `<b>${escape(e.name)}</b>`;
-    const row = el(`<div class="event${said ? ' said' : ''}${e.x !== undefined ? ' clickable' : ''}" data-type="${escape(e.type)}"><time${e.approx ? ' title="Worked out from the server log: to within a few minutes"' : ''}>${eventTime(e)}</time><div class="t">${who} <span class="msg">${escape(e.text)}</span></div></div>`);
+    const who = said ? `<b style="color:${nameColor(e.name)}">${escape(e.name)}:</b>` : `<b>${escape(eventName(e))}</b>`;
+    const row = el(`<div class="event${said ? ' said' : ''}${e.x !== undefined ? ' clickable' : ''}" data-type="${escape(e.type)}"><time${e.approx ? ' title="Worked out from the server log: to within a few minutes"' : ''}>${eventTime(e)}</time><div class="t">${who} <span class="msg">${escape(said ? e.text : eventText(e.text))}</span></div></div>`);
     if (e.x !== undefined) row.addEventListener('click', () => this.app.goTo(e.x, e.z, 6));
     row.hidden = !this.eventFilters.has(e.type);
     row.dataset.ts = e.ts;
@@ -878,7 +881,7 @@ export class Sidebar {
     if (!this.olderLoaded) while (this.eventList.children.length > 300) this.eventList.lastElementChild.remove();   // trimmed unless older history was asked for
     this.applyEventFilter();
     this.badge();
-    if (!initial) for (const e of list) if (e.type === 'death' || e.type === 'join' || e.type === 'leave' || e.type === 'server' || e.type === 'boss' || e.type === 'raid' || e.type === 'invasion' || e.type === 'found' || e.type === 'biome') this.app.toast(`${e.name} ${e.text}`);
+    if (!initial) for (const e of list) if (e.type === 'death' || e.type === 'join' || e.type === 'leave' || e.type === 'server' || e.type === 'boss' || e.type === 'raid' || e.type === 'invasion' || e.type === 'found' || e.type === 'biome') this.app.toast(`${eventName(e)} ${eventText(e.text)}`);
   }
 }
 
@@ -1007,6 +1010,30 @@ const EVENT_KINDS = [
 // the server's chatter that says nothing new: connection counts, object clean-up, save steps,
 // socket housekeeping (shown again with "Hide routine lines" off)
 const ROUTINE = /^\s*Connections \d|ZDOS:|^Destroying abandoned|^World save \([1-4]\/5\)|^ZPlayFabSocket|^Disposing socket|^Considering autobackup|^SaveSystem\.|^No autobackup|^PrepareSave|^GetSaveClone|^Available space|^Update PlayFab|^Sending message to save|^Checking for any blocked|^ZRpc timeout|^Muted PlayFab|^Placed location|^Found location of type|^Dungeon loaded|^DungeonDB|^Loaded \d+ locations/;
+
+// ForgeMap: the server writes its events in English; the page says them in its own language. Whole
+// texts through the table, the ones with a name or a number in them by pattern; the rest as they are.
+const T = (s, v) => (window.I18N ? window.I18N.t(s, v) : s);
+const EVENT_TEXTS = [
+  [/^was defeated by (.+)$/, 'was defeated by {who}', 'who'],
+  [/^found by (.+)$/, 'found by {who}', 'who'],
+  [/^has begun \(near (.+)\)$/, 'has begun (near {who})', 'who'],
+  [/^placed a pin: (.+)$/, 'placed a pin: {text}', 'text'],
+  [/^entered the (.+) for the first time$/, 'entered the {biome} for the first time', 'biome'],
+  [/^through the night, day (\d+) begins$/, 'through the night, day {n} begins', 'n'],
+];
+function eventText(text) {
+  for (const [re, key, v] of EVENT_TEXTS) {
+    const m = re.exec(text || '');
+    if (m) return T(key, { [v]: v === 'biome' ? T(m[1]) : m[1] });
+  }
+  return T(text);
+}
+function eventName(e) {
+  const m = /^(.+)'s (altar|camp)$/.exec(e.name || '');
+  if (m) return T(m[2] === 'altar' ? "{name}'s altar" : "{name}'s camp", { name: T(m[1]) });
+  return e.type === 'join' || e.type === 'leave' || e.type === 'death' || e.type === 'biome' || e.type === 'ping' || e.type === 'pin' ? e.name : T(e.name);
+}
 
 // left out of the feed: the in-game announcement of a leave, already listed as the leave itself
 // (older logs have both), and the game's "I have arrived!" shout on every spawn (the join says it)

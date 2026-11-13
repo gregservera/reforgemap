@@ -69,6 +69,7 @@ namespace WebMap
             foreach (string line in WebMapConfig.ApplyLightMode()) ZLog.Log("ForgeMap: light mode: " + line);
 
             discordWebHook = new DiscordWebHook(WebMapConfig.DISCORD_WEBHOOK);
+            ServerLog.Listen();                               // from the start: the game's startup lines too
         }
 
         public void OnDestroy()
@@ -95,6 +96,9 @@ namespace WebMap
             Tiles.BiomeMap.Start(worldDataPath);          // the biomes map and grid, once per world, on a worker
             StaticCoroutine.Start(Tiles.Runestones.PrepareRoutine(mapDataPath));   // what each runestone says, once
             StaticCoroutine.Start(Tiles.Markers.LiveLoop());                        // portals and boats between sweeps
+            StaticCoroutine.Start(WorldEvents.RaidLoop());                          // raids and invasions, for the Events panel and the map
+            StaticCoroutine.Start(WorldEvents.DiscoveryLoop());                     // altars and traders found, first steps in a biome
+            Feed.Add("server", "Server", "online");
             int stride = Math.Max(1, (int)(Tiles.TileMath.TileSpanMeters(WebMapConfig.PRERENDER_ZOOM + 1) / WebMapConfig.PIXEL_SIZE / 2));
             MapFog.ForEachExplored(Tiles.TileStore.OnExplored, stride);
             NotifyOnline();
@@ -153,6 +157,8 @@ namespace WebMap
             Trails.Load(worldDataPath);
             Chart.Load(worldDataPath);
             Features.Load(worldDataPath);
+            Feed.Load(worldDataPath);                     // the map's Events panel: the end of its log
+            ServerLog.Open(worldDataPath);                // the game's console lines, for admins
             Portals.Load(worldDataPath);
             Locations.Load(worldDataPath);
             // Munin's map tiles: the trees the last sweep saw, then what is drawn already
@@ -567,6 +573,7 @@ namespace WebMap
                 Stats.Save();
                 Trails.Save();
                 Tiles.TileStore.Stop();
+                ServerLog.Stop();
                 mapDataServer.Stop();
                 WebMap.instance.NotifyOffline();
             }
@@ -688,6 +695,7 @@ namespace WebMap
                 // NullReferenceException each time the sender was not a live peer.
                 int hash = data?.m_methodHash ?? 0;
                 if (hash == 0) return;          // no data: must not match the caches, which start at 0
+                if (hash == WorldEvents.SetGlobalKeyHash) { WorldEvents.OnGlobalKey(data); return; }   // a boss down
                 bool isSay = hash == sayMethodHash || hash == "Say".GetStableHashCode();
                 bool isChat = hash == chatMessageMethodHash || hash == "ChatMessage".GetStableHashCode();
                 if (!isSay && !isChat)
