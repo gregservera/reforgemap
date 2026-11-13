@@ -71,6 +71,7 @@ namespace WebMap
         public static int RENDER_THREADS = 1;
         public static int PRERENDER_ZOOM = 5;
         public static int MAX_RENDER_ZOOM = 7;
+        public static bool DETAIL_TILES = true;          // the terra/ and veg/ overlay tiles (off in light mode)
         public static int HEIGHT_MAX_ZOOM = 7;
         public static int MAIN_THREAD_ROWS_PER_FRAME = 24;
         public static bool TILE_WEBP = true;
@@ -287,11 +288,13 @@ namespace WebMap
                 "FR : mode léger pour les petits serveurs (2 à 4 Go). Coupe l'export des modèles 3D et la lecture "
                 + "des textures et maillages du jeu, n'envoie à la vue 3D que les constructions et les lieux (ni arbres, "
                 + "ni rochers, ni buissons), garde moins de terrain 3D en mémoire, limite render_size à texture_size et "
-                + "ne balaie le monde que toutes les 5 minutes. La carte 2D reste complète. "
+                + "ne balaie le monde que toutes les 5 minutes. Tuiles de la carte : zoom 6 au plus proche (2 m par pixel), "
+                + "un seul fil de rendu, ni tuiles de sol modifié ni de végétation. "
                 + "EN: light mode for small servers (2-4 GB). Turns off the 3D model export and reading the game's "
                 + "textures and meshes, sends the 3D view buildings and locations only (no trees, rocks or bushes), keeps "
                 + "less 3D ground in memory, caps render_size at texture_size and sweeps the world every 5 minutes "
-                + "instead of every minute. The 2D map stays complete.").Value;
+                + "instead of every minute. Map tiles: zoom 6 at the closest (2 m a pixel), one render thread, no changed-ground "
+                + "or vegetation tiles.").Value;
         }
 
         // Light mode, applied over the config and the site's settings alike: what it changed,
@@ -314,6 +317,12 @@ namespace WebMap
             if (kept.Count == 0) kept.Add("piece");
             string cats = string.Join(",", kept);
             if (cats != OBJECT_CATEGORIES) { did.Add($"3D objects: {cats} only (was {OBJECT_CATEGORIES})"); OBJECT_CATEGORIES = cats; }
+            // Munin's map tiles: the closest zoom 6 (2 m a pixel, a quarter of the disk), one render
+            // thread, no overlay tiles (changed ground, vegetation); Munin's model and icon extraction
+            // follow EXPORT_MODELS and EXTRACT_TEXTURES above
+            if (MAX_RENDER_ZOOM > 6) { did.Add($"map tiles down to zoom 6, 2 m a pixel (max_render_zoom was {MAX_RENDER_ZOOM})"); MAX_RENDER_ZOOM = 6; }
+            if (RENDER_THREADS > 1) { did.Add($"one map tile thread (render_threads was {RENDER_THREADS})"); RENDER_THREADS = 1; }
+            if (DETAIL_TILES) { DETAIL_TILES = false; did.Add("no changed-ground or vegetation overlay tiles"); }
             if (RENDER_SIZE > TEXTURE_SIZE) { did.Add($"render_size {TEXTURE_SIZE} (was {RENDER_SIZE})"); RENDER_SIZE = TEXTURE_SIZE; }
             did.Add("3D ground cache 12 chunks (48 normally), world sweep every 5 minutes (every minute normally)");
             return did;

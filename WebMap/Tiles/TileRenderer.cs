@@ -391,6 +391,7 @@ namespace WebMap.Tiles
             // to make, so a new tile shows up straight away. TileStore turns it into lossless WebP
             // in the background for everyone after. The overlay compresses best unfiltered.
             ColorImage = Png.Encode(rgb, T, T, Png.Format.RGB);
+            if (!WebMapConfig.DETAIL_TILES) veg = terra = null;   // light mode: no overlay tiles
             if (veg != null) { VegImage = Png.Encode(veg, T, T, Png.Format.RGBA, filter: false); veg = null; }
             if (terra != null) { TerraImage = Png.Encode(terra, T, T, Png.Format.RGBA, filter: false); terra = null; }
             if (wantHeight)

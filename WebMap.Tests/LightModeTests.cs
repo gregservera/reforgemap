@@ -12,11 +12,13 @@ namespace WebMap.Tests
         readonly (bool light, bool export, bool tex, bool mesh, string cats, int render, int texture) was =
             (WebMapConfig.LIGHT_MODE, WebMapConfig.EXPORT_MODELS, WebMapConfig.EXTRACT_TEXTURES, WebMapConfig.EXTRACT_MESHES,
              WebMapConfig.OBJECT_CATEGORIES, WebMapConfig.RENDER_SIZE, WebMapConfig.TEXTURE_SIZE);
+        readonly (int zoom, int threads, bool detail) tiles = (WebMapConfig.MAX_RENDER_ZOOM, WebMapConfig.RENDER_THREADS, WebMapConfig.DETAIL_TILES);
 
         public override void Dispose()
         {
             (WebMapConfig.LIGHT_MODE, WebMapConfig.EXPORT_MODELS, WebMapConfig.EXTRACT_TEXTURES, WebMapConfig.EXTRACT_MESHES,
              WebMapConfig.OBJECT_CATEGORIES, WebMapConfig.RENDER_SIZE, WebMapConfig.TEXTURE_SIZE) = was;
+            (WebMapConfig.MAX_RENDER_ZOOM, WebMapConfig.RENDER_THREADS, WebMapConfig.DETAIL_TILES) = tiles;
             base.Dispose();
         }
 
@@ -37,6 +39,7 @@ namespace WebMap.Tests
             Assert.Equal("piece,other,rock,bush,tree", WebMapConfig.OBJECT_CATEGORIES);
             Assert.Equal(48L * Heights.N * Heights.N, Heights.KeepSamples);
             Assert.Equal(60_000, StructureMap.Floor);
+            Assert.True(WebMapConfig.DETAIL_TILES);
         }
 
         [Fact]
@@ -53,6 +56,10 @@ namespace WebMap.Tests
             Assert.Equal(WebMapConfig.TEXTURE_SIZE, WebMapConfig.RENDER_SIZE);
             Assert.Equal(12L * Heights.N * Heights.N, Heights.KeepSamples);
             Assert.Equal(300_000, StructureMap.Floor);
+            // and Munin's map tiles: 2 m a pixel at the closest, one thread, no overlay tiles
+            Assert.Equal(6, WebMapConfig.MAX_RENDER_ZOOM);
+            Assert.True(WebMapConfig.RENDER_THREADS <= 1);
+            Assert.False(WebMapConfig.DETAIL_TILES);
         }
 
         [Fact]

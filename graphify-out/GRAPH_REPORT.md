@@ -1,7 +1,7 @@
 # Graph Report - forgemap  (2026-11-13)
 
 ## Corpus Check
-- 230 files · ~731,421 words
+- 230 files · ~731,634 words
 - Verdict: corpus is large enough that graph structure adds value.
 - Unclassified: 10 file(s) not represented in the graph (top: .css 4, (none) 2, .targets 1)
 
@@ -11,7 +11,7 @@
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `9272be91`
+- Built from commit: `4789749e`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
