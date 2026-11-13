@@ -75,8 +75,53 @@ namespace WebMap
             }
             sb.Append("],\"boats\":").Append(boats).Append(",\"carts\":").Append(carts).Append("}");
             json = sb.ToString();
+            markersJson = MarkersFrom(found);
         }
 
         public static string GetJson() => json;
+
+        // ---------- Munin's map: the vehicles as its marker set (Tiles/Markers) ----------
+        private static volatile string markersJson = "[]";
+        public static string GetMarkersJson() => markersJson;
+        public static bool Refresh() => false;   // (Munin moves them between sweeps; ForgeMap at each sweep)
+        private static string MarkersFrom(List<Entry> list)
+        {
+            var mk = new StringBuilder("[");
+            foreach (var e in list)
+            {
+                if (!WebMapConfig.SHOW_VEHICLES || !e.explored) continue;
+                string kind = e.kind == Kind.Boat ? "boat" : "cart";
+                if (mk.Length > 1) mk.Append(',');
+                mk.Append(System.FormattableString.Invariant($"{{\"x\":{e.x:0.#},\"z\":{e.z:0.#},\"cat\":\"{kind}\",\"icon\":\"{IconOf(kind, e.name)}\",\"label\":\"{PrettyName(e.name).Replace("\"", "")}\"}}"));
+            }
+            return mk.Append(']').ToString();
+        }
+        // each kind of boat its own icon (Munin's web/js/icons.js)
+        private static string IconOf(string kind, string prefab)
+        {
+            if (kind != "boat") return kind;
+            switch ((prefab ?? "").ToLowerInvariant())
+            {
+                case "raft": return "raft";
+                case "karve": return "karve";
+                case "vikingship": return "longship";
+                case "vikingship_ashlands": return "drakkar";
+                case "trailership": return "trailership";
+                default: return "boat";
+            }
+        }
+        private static string PrettyName(string prefab)
+        {
+            switch ((prefab ?? "").ToLowerInvariant())
+            {
+                case "raft": return "Raft";
+                case "karve": return "Karve";
+                case "vikingship": return "Longship";
+                case "vikingship_ashlands": return "Drakkar";
+                case "trailership": return "Trailer ship";
+                case "cart": return "Cart";
+                default: return (prefab ?? "").Replace("_", " ");
+            }
+        }
     }
 }

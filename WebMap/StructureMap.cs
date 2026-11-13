@@ -159,6 +159,10 @@ namespace WebMap
             Vegetation.Begin();                               // the map tiles' trees and rocks
             Structures.Begin();                               // Munin's 2D map: player-built pieces per chunk
             Ruins.Begin();                                    // and the world's own ruins
+            Markers.Begin();                                  // Munin's marker sets: wards, beds, signs, runestones...
+            Dungeons.Begin(Markers.IsDungeon);
+            Demisters.Begin();
+            var mapTables = new List<ZDO>();
             LocationTerrain.Begin();                          // and the ground the game shapes round its locations
             Stats.BeginSweep();
             try { Stats.ObserveKeys(ZoneSystem.instance != null ? ZoneSystem.instance.GetGlobalKeys() : null); } catch { }
@@ -192,9 +196,15 @@ namespace WebMap
                         if (pref == TerrainPatches.CompilerHash) TerrainPatches.Observe(zdo, p);
                         else WorldObjects.Observe(zdo, pref, p, creator);
                         if (LocationTerrain.Is(pref)) LocationTerrain.Observe(zdo, p);
+                        // Munin's markers: the table pins read after the walk, runestones by their proxy,
+                        // what each dungeon still holds, the lanterns that clear the mist
+                        if (pref == MapTableHash) mapTables.Add(zdo);
+                        if (Runestones.IsProxy(pref)) { try { Markers.ObserveProxy(zdo, p); } catch { } }
+                        try { Dungeons.Observe(zdo, pref, p, creator); Demisters.Observe(pref, p); } catch { }
                         if (Graves.IsGrave(pref))
                         {
                             Graves.Observe(zdo, p);   // spawned by the game, so no creator
+                            try { Markers.Observe(zdo, pref, p); } catch { }   // and Munin's tombstones
                         }
                         else if (creator != 0L)
                         {
@@ -210,7 +220,10 @@ namespace WebMap
                                 bool portal = Portals.IsPortal(pref);
                                 if (portal) Portals.Observe(zdo, p);
                                 Pieces.Observe(pref, zdo, p, creator);   // the same piece, as a footprint, and whose
-                                Structures.Observe(zdo, pref, p, creator);  // and again for Munin's buildings layer
+                                // and again for Munin: a portal, ward, bed or sign as its marker, else a building
+                                bool marker = false;
+                                try { marker = Markers.Observe(zdo, pref, p); } catch { }
+                                if (!marker) Structures.Observe(zdo, pref, p, creator);
                                 Kitchen.Found(zdo, pref, p);       // a station, for the kitchen's poll
                                 Stats.ObservePiece(creator, portal, false);
                                 var mat = MaterialOf(pref);
@@ -227,7 +240,9 @@ namespace WebMap
                             ForestMap.Observe(pref, idx);     // trees and stumps aren't placed by anyone
                             // and the same again, each where it stands, for the tiles; what is not a plant
                             // and has no builder is the world's own: a ruin
-                            if (!Vegetation.Observe(pref, p, zdo)) Ruins.Observe(zdo, pref, p);
+                            bool marker = false;
+                            try { marker = Markers.Observe(zdo, pref, p); } catch { }   // Munin's: a runestone, a sign...
+                            if (!marker && !Vegetation.Observe(pref, p, zdo)) Ruins.Observe(zdo, pref, p);
                         }
                     }
                 }
@@ -244,7 +259,9 @@ namespace WebMap
             // the trees, buildings and ruins are published in slices (Tiles.WorldSweep.Due). Each is
             // stepped by hand, so a throw ends that step and not the sweep.
             var changedZones = new HashSet<long>();
-            foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones), Structures.Finish(), Ruins.Finish() })
+            Dungeons.Finish(); Demisters.Finish();
+            foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones), Structures.Finish(), Ruins.Finish(),
+                                         MapTables(mapTables), Markers.Finish() })
                 while (true)
                 {
                     try { if (!step.MoveNext()) break; }
@@ -300,6 +317,26 @@ namespace WebMap
             {
                 sweeps++;
                 sweeping = false;
+            }
+        }
+
+        private static readonly int MapTableHash = "piece_cartographytable".GetStableHashCode();
+
+        // Munin's: the pins shared at each cartography table, each table unpacked only when it changed,
+        // the unpacking on a worker thread (a table's map is megabytes)
+        private static IEnumerator MapTables(List<ZDO> tables)
+        {
+            foreach (var zdo in tables)
+            {
+                if (Tiles.WorldSweep.Due) yield return null;
+                byte[] raw;
+                try { raw = zdo.GetByteArray(ZDOVars.s_data); } catch { continue; }
+                if (!Markers.ObserveMapTable(zdo, raw)) continue;
+                var unpack = System.Threading.Tasks.Task.Run(() => Utils.Decompress(raw));
+                while (!unpack.IsCompleted) yield return null;
+                byte[] data;
+                try { data = unpack.Result; } catch (Exception e) { ZLog.LogWarning("WebMap: map table not readable: " + (e.InnerException ?? e).Message); continue; }
+                try { Markers.ReadTablePins(zdo, data); } catch { }
             }
         }
 

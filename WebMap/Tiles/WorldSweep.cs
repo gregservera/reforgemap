@@ -24,6 +24,17 @@ namespace WebMap.Tiles
             slice.Restart();
         }
 
+        // a prefab's name from its hash, asked of the game once (game thread)
+        private static readonly System.Collections.Generic.Dictionary<int, string> nameCache = new System.Collections.Generic.Dictionary<int, string>();
+        public static string NameOf(int prefabHash)
+        {
+            if (nameCache.TryGetValue(prefabHash, out string n)) return n;
+            n = null;
+            try { var go = ZNetScene.instance != null ? ZNetScene.instance.GetPrefab(prefabHash) : null; if (go != null) n = go.name; } catch { }
+            nameCache[prefabHash] = n;
+            return n;
+        }
+
         // order-independent content hashes: sum the mixed items, then fold with the count
         public static long Mix(int v)
         {

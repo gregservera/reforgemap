@@ -74,6 +74,9 @@ namespace WebMap
         public static int HeightMaxZoom => HEIGHT_MAX_ZOOM;
         // Munin's switch to show the whole world through the fog: never on in ForgeMap (no spoilers)
         public static readonly bool REVEAL_ALL = false;
+        // Munin's player bases: a cluster of at least BASE_MIN_PIECES pieces, cells of BASE_MIN_PER_CELL
+        public static int BASE_MIN_PIECES = 30;
+        public static int BASE_MIN_PER_CELL = 6;
 
         // One switch for small servers (2-4 GB): ApplyLightMode says what it turns down.
         public static bool LIGHT_MODE = false;

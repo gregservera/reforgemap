@@ -93,6 +93,8 @@ namespace WebMap
             StaticCoroutine.Start(Tiles.TileStore.MainThreadPump());
             Tiles.TileStore.Start();
             Tiles.BiomeMap.Start(worldDataPath);          // the biomes map and grid, once per world, on a worker
+            StaticCoroutine.Start(Tiles.Runestones.PrepareRoutine(mapDataPath));   // what each runestone says, once
+            StaticCoroutine.Start(Tiles.Markers.LiveLoop());                        // portals and boats between sweeps
             int stride = Math.Max(1, (int)(Tiles.TileMath.TileSpanMeters(WebMapConfig.PRERENDER_ZOOM + 1) / WebMapConfig.PIXEL_SIZE / 2));
             MapFog.ForEachExplored(Tiles.TileStore.OnExplored, stride);
             NotifyOnline();
@@ -157,6 +159,9 @@ namespace WebMap
             Tiles.Vegetation.LoadCache(worldDataPath);
             Tiles.Structures.LoadCache(worldDataPath);
             Tiles.Ruins.LoadCache(worldDataPath);
+            Tiles.Markers.LoadOverrides(worldDataPath);    // Munin's markers: base names, and what the last sweep published
+            Tiles.Markers.LoadCache(worldDataPath);
+            Tiles.Peaks.Start(worldDataPath);
             Tiles.TileStore.Init(worldDataPath);
             // prefabs are the same in every world, so the model library sits beside the worlds
             if (Models.ModelStore.Root == null) Models.ModelStore.Init(mapDataPath);
