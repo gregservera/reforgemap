@@ -1050,11 +1050,14 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
       if (this.objChunks.get(key) !== group) return;
       const cat = info ? info.c : 'other';
       if (parts) {
-        for (const part of parts) {
-          const im = new THREE.InstancedMesh(part.geometry, cat === 'piece' ? this.pieceMaterial(part) : part.material, list.length);
+        for (const [p, part] of parts.entries()) {
+          // ForgeMap: a part the mining took off stands on none of the rocks it is gone from
+          const on = info && info.pa ? list.filter((o) => partShows(info, p, o)) : list;
+          if (!on.length) continue;
+          const im = new THREE.InstancedMesh(part.geometry, cat === 'piece' ? this.pieceMaterial(part) : part.material, on.length);
           im.castShadow = true; im.receiveShadow = true;
           im.userData.cat = cat;
-          list.forEach((o, i) => im.setMatrixAt(i, place(o)));
+          on.forEach((o, i) => im.setMatrixAt(i, place(o)));
           im.instanceMatrix.needsUpdate = true;
           im.computeBoundingSphere();
           group.add(im);
@@ -1443,4 +1446,16 @@ function roundRect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
   ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
   ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+}
+
+// ForgeMap (from its 1.4 view): does this part of the model stand on this object? A mined rock's
+// broken-off areas do not (o.gone: OBJ2's table, data.js); MineRock (rk 1) with a whole-rock model
+// (area -2) shows that until the first piece falls, and its pieces only after.
+function partShows(info, part, o) {
+  const a = info && info.pa ? info.pa[part] ?? -1 : -1;
+  if (a === -1) return true;
+  const gone = o.gone;
+  if (a === -2) return !gone;
+  if (info.rk === 1 && !gone && (info.whole ??= info.pa.includes(-2))) return false;
+  return !(gone && (gone[a >> 3] >> (a & 7)) & 1);
 }

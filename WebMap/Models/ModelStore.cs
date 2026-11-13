@@ -515,6 +515,7 @@ namespace WebMap.Models
             return true;
         }
         internal static System.Collections.Generic.ICollection<int> Hashes => index.Keys;
+        internal static int RockKindOf(int hash) => index.TryGetValue(hash, out var i) ? i.rockKind : 0;
         internal static void WriteEntry(JsonWriter j, int hash) { if (index.TryGetValue(hash, out var i)) WriteInfo(j, i, full: false); }
 
         private static void WriteInfo(JsonWriter j, Info i, bool full)

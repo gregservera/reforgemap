@@ -237,7 +237,8 @@ class ObjectStore {
     const p = getBuffer(`data/objects/${k}.bin`).then((buf) => {
       const dv = new DataView(buf);
       const objs = [];
-      // ForgeMap serves OBJ2: OBJ1's layout, then a table of mined rocks after the objects (not read here)
+      // ForgeMap serves OBJ2: OBJ1's layout, then the mined rocks: u32 count, and per rock u32 object
+      // index, u16 bits and bits/8 bytes, bit i set when hit area i is broken off (o.gone)
       const magic = buf.byteLength >= 12 ? String.fromCharCode(dv.getUint8(0), dv.getUint8(1), dv.getUint8(2), dv.getUint8(3)) : '';
       if (magic === 'OBJ1' || magic === 'OBJ2') {
         const n = dv.getUint32(4, true), np = dv.getUint32(8, true);
@@ -248,6 +249,14 @@ class ObjectStore {
           const pi = dv.getUint16(o, true), flags = dv.getUint8(o + 2); o += 4;
           const f = new Float32Array(buf.slice(o, o + 40)); o += 40;
           objs.push({ prefab: table[pi], creator: (flags & 1) !== 0, x: f[0], y: f[1], z: f[2], qx: f[3], qy: f[4], qz: f[5], qw: f[6], sx: f[7], sy: f[8], sz: f[9] });
+        }
+        if (magic === 'OBJ2' && o + 4 <= buf.byteLength) {
+          const mined = dv.getUint32(o, true); o += 4;
+          for (let k = 0; k < mined && o + 6 <= buf.byteLength; k++) {
+            const i = dv.getUint32(o, true), bits = dv.getUint16(o + 4, true); o += 6;
+            if (objs[i]) objs[i].gone = new Uint8Array(buf.slice(o, o + bits / 8));
+            o += bits / 8;
+          }
         }
       }
       const res = { rev: e.rev, objs };

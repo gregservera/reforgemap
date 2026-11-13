@@ -192,7 +192,7 @@ namespace WebMap
                 else c = ClassifyName(n);
                 if (c == Cat.Other && (n.Contains("_ragdoll") || n.Contains("smoke") || n.Contains("cloud") || n.Contains("_proxy"))) c = Cat.Skip;
                 if (c != Cat.Skip && !Enabled(c)) c = Cat.Skip;
-                if (c != Cat.Skip && WebMapConfig.EXPORT_MODELS) Models.Libraries.Request(prefabHash, CatName(c));
+                if (c != Cat.Skip && WebMapConfig.EXPORT_MODELS) Models.Libraries.Request(prefabHash, CatName(c), r5 != null || r1 != null);
             }
             catCache[prefabHash] = c;
             return c;

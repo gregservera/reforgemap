@@ -14,17 +14,26 @@ namespace WebMap.Models
         // which library makes a prefab of this category
         public static bool IsForgeMaps(string cat) => cat == "piece" || cat == Rig.Cat;
 
-        public static void Request(int hash, string cat)
+        public static void Request(int hash, string cat, bool mineRock = false)
         {
-            if (IsForgeMaps(cat)) ModelStore.Request(hash, cat);
+            if (mineRock)
+            {
+                lock (mineRocks) if (mineRocks.Add(hash)) ZLog.Log($"WebMap: {cat} {hash}: a rock mined in pieces, ForgeMap's model");
+                ModelStore.Request(hash, cat);
+            }
+            else if (IsForgeMaps(cat)) ModelStore.Request(hash, cat);
             else MuninModels.ModelStore.Request(hash, cat);
         }
 
         // Munin's entry when it has a model; else ForgeMap's (its models from before 2.0 stand in
         // until Munin's export is done); buildings always ForgeMap's
+        // A rock mined in pieces stays ForgeMap's too: its export records each piece's hit area, which
+        // the 3D view needs to leave the mined ones out (Munin's records none). WorldObjects knows.
+        private static readonly System.Collections.Generic.HashSet<int> mineRocks = new System.Collections.Generic.HashSet<int>();
+
         internal static bool FromMunin(int hash)
         {
-            if (ModelStore.Has(hash, out string cat, out _) && IsForgeMaps(cat)) return false;
+            if (ModelStore.Has(hash, out string cat, out _) && (IsForgeMaps(cat) || ModelStore.RockKindOf(hash) > 0)) return false;
             if (MuninModels.ModelStore.Has(hash, out _, out bool ok) && ok) return true;
             return !ModelStore.Has(hash, out _, out _) && MuninModels.ModelStore.Has(hash, out _, out _);
         }
