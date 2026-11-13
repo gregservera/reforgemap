@@ -118,36 +118,143 @@ in vec2 a_corner;
 in vec2 a_center; in float a_r; in float a_seed; in vec4 a_color;   // a_color.a: flags (vegpack.js): rock 1, wet 2, kind << 2
 uniform uvec2 u_show;                                                // kinds shown, a bit each (kinds 0-31, 32-63: vegpack.js vegShowMask)
 out vec2 v_l; out float v_r; out float v_sh; out vec3 v_color; out float v_rock; out float v_seed; out float v_wet;
+out float v_tree; out float v_kind;
 ${VIEW_GLSL}
 out float v_cover;
+// ForgeMap: the trees proper (Palette.Veg 1-5, 11-14, 18: not bushes, stumps nor rocks) have a
+// crown TREE_GROW times as wide; they and the bushes (Bush, Berry, Raspberry, Blueberry, Cloudberry,
+// Lingonberry: BUSH_BITS) are drawn by TREE_FS each kind its own way, with the shadow its shape casts
+const uint TREE_BITS = 292926u, BUSH_BITS = 537101376u;
+const float TREE_GROW = 1.5;
 void main() {
-  float r0 = a_r * u_view.z;
+  int fl0 = int(a_color.a * 255.0 + 0.5);
+  uint kind0 = uint(fl0 >> 2);
+  bool tree = kind0 < 32u && ((TREE_BITS >> kind0) & 1u) == 1u;
+  bool bush = kind0 < 32u && ((BUSH_BITS >> kind0) & 1u) == 1u;
+  float r0 = a_r * u_view.z * (tree ? TREE_GROW : 1.0);
   // Zoomed out, where trees fade in, the screen holds the most of them (hundreds of thousands)
   // and a bush or plant is a tenth of a pixel: drawing each as a faint dot cost the GPU the most
   // right there, the zoom's hitch. One under a third of a pixel across isn't drawn.
   if (r0 < 0.17) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
   float r = max(r0, 0.8);                              // zoomed out a crown is under a pixel: draw a dot...
   v_cover = min(1.0, (r0 * r0) / (r * r));             // ...as faint as the crown's real area
-  float sh = min(r0 * 0.35, 3.0 * u_view.z);         // shadow offset to the south-east
-  float half_ = r + sh * 0.5 + 0.5;                  // the edges are smoothed over +-0.5 px
-  vec2 l = vec2(sh * 0.5) + a_corner * 2.0 * half_;   // relative to the crown centre
+  float sh = tree ? min(r0 * 0.5, 4.0 * u_view.z) : min(r0 * 0.35, 3.0 * u_view.z);   // shadow offset to the south-east
+  // the edges are smoothed over +-0.5 px; a tree's quad reaches the tip of its shadow, 1.9 r to the south-east
+  float half_ = tree || bush ? 1.4 * r + 0.5 : r + sh * 0.5 + 0.5;
+  vec2 l = vec2(tree || bush ? 0.35 * r : sh * 0.5) + a_corner * 2.0 * half_;   // relative to the crown centre
   int fl = int(a_color.a * 255.0 + 0.5);
   uint kind = uint(fl >> 2);
   if ((((kind < 32u ? u_show.x : u_show.y) >> (kind & 31u)) & 1u) == 0u) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }   // a hidden kind: off screen, nothing drawn
   v_rock = float(fl & 1); v_wet = float((fl >> 1) & 1);
   // each tree a shade lighter or darker than its neighbours, so a forest isn't one flat green
   float jit = v_rock > 0.5 ? 0.0 : (fract(sin(a_seed * 12.9898 + a_center.x * 0.37) * 43758.5453) - 0.5) * 0.18;
-  v_l = l; v_r = r; v_sh = sh; v_color = a_color.rgb * (1.0 + jit); v_seed = a_seed;
+  v_l = l; v_r = r; v_sh = sh; v_color = a_color.rgb * (1.0 + jit); v_seed = a_seed; v_tree = tree ? 1.0 : bush ? 2.0 : 0.0; v_kind = float(kind0);
   gl_Position = toClip(toPx(a_center) + l);
 }`;
 
 const TREE_FS = `#version 300 es
 precision mediump float;
-in vec2 v_l; in float v_r; in float v_sh; in vec3 v_color; in float v_rock; in float v_seed; in float v_cover; in float v_wet;
+in vec2 v_l; in float v_r; in float v_sh; in vec3 v_color; in float v_rock; in float v_seed; in float v_cover; in float v_wet; in float v_tree; in float v_kind;
 uniform float u_fade;
 out vec4 o;
+float hash(float x) { return fract(sin(x) * 43758.5453); }
 void main() {
   float r = v_r;
+  if (v_tree > 0.5 && r > 2.5) {
+    // ForgeMap: trees by kind, seen from above in the map's plain way, the sun in the north-west.
+    // Bottom to top: the shadow cast on the ground (the shape the tree throws: a cone's point for a
+    // fir, a round crown on its trunk for a leafy tree, the branches for a dead one), the trunk
+    // (white for a birch), then the crown at 90 %: its foliage, and over it at 40 % the crown's own
+    // shade (a leafy tree a dome, its south-east side in shade; a fir a pyramid, a facet each side
+    // of its ridges, those turned away from the sun dark). (Zoomed out, under 2.5 px, plain discs below.)
+    int kd = int(v_kind + 0.5);
+    vec2 p = v_l;
+    float f = v_cover * u_fade;
+    vec2 se = vec2(0.7071), sx = vec2(-se.y, se.x);
+    bool bush = v_tree > 1.5;   // a bush: crowned like a leafy tree, but on the ground: no trunk
+    bool conifer = !bush && (kd == 2 || kd == 14), birch = kd == 13 || kd == 18, dead = !bush && kd == 5;
+    float rt = max(0.13 * r, 0.6);
+    float t = dot(p, se), u = abs(dot(p, sx));
+    float aS;
+    if (conifer) {
+      // a cone's shadow: the disc of its foot drawn out to a point
+      float R = 0.8 * r, L = 2.1 * r;
+      float w = t <= 0.0 ? sqrt(max(R * R - t * t, 0.0)) : R * max(L - t, 0.0) / L;
+      aS = (1.0 - smoothstep(w - 0.5, w + 0.5, u)) * (1.0 - smoothstep(L - 1.5, L, t)) * smoothstep(-R, 1.5 - R, t);
+    } else if (!dead) {
+      // a round crown held up on its trunk: an oval a little off to the south-east, joined to the
+      // foot of the trunk by the trunk's own shadow
+      vec2 q = p - se * (bush ? 0.35 : 0.6) * r;
+      float e = length(vec2(dot(q, se) / 1.25, dot(q, sx)));
+      float aO = 1.0 - smoothstep(0.88 * r - 0.5, 0.88 * r + 0.5, e);
+      float aK = bush ? 0.0 : (1.0 - smoothstep(rt - 0.5, rt + 0.5, u)) * step(0.0, t) * step(t, 0.6 * r);
+      aS = max(aO, aK);
+    } else aS = 0.0;
+    aS *= v_wet > 0.5 ? 0.0 : 0.3;
+    if (dead) {   // five bare branches, and their shadow a little to the south-east
+      float aB = 0.0, aBs = 0.0;
+      vec2 ps = p - se * 0.35 * r;
+      for (int i = 0; i < 5; i++) {
+        float a = v_seed * 3.0 + float(i) * 1.2566 + 0.4 * sin(v_seed * 7.0 + float(i));
+        vec2 d = vec2(cos(a), sin(a));
+        float Lb = r * (0.55 + 0.35 * hash(v_seed * 13.0 + float(i)));
+        float wb0 = max(0.55, r * 0.07);
+        float tb = clamp(dot(p, d), 0.0, Lb);
+        aB = max(aB, 1.0 - smoothstep(wb0 - 0.5, wb0 + 0.5, length(p - d * tb) + 0.6 * r * 0.07 * tb / Lb));
+        float ts = clamp(dot(ps, d), 0.0, Lb);
+        aBs = max(aBs, 1.0 - smoothstep(wb0 - 0.5, wb0 + 0.5, length(ps - d * ts) + 0.6 * r * 0.07 * ts / Lb));
+      }
+      aBs *= v_wet > 0.5 ? 0.0 : 0.3;
+      if (aB + aBs <= 0.0) discard;
+      o = vec4(vec3(0.26, 0.20, 0.15) * aB * f, (aB + aBs * (1.0 - aB)) * f);
+      return;
+    }
+    float ang = atan(p.y, p.x), d = length(p), tri, rad, shade;
+    vec3 base = v_color * (conifer ? 0.82 : 1.0);
+    float k;
+    if (conifer) {
+      // a star of n ridges: rim at the ridges' tips; each half-sector a flat facet whose slope faces
+      // out between its ridge and its valley
+      float n = 9.0 + floor(hash(v_seed * 3.7) * 4.0);
+      float sct = ang * n / 6.2832 + v_seed, uu = fract(sct);
+      tri = 1.0 - abs(2.0 * uu - 1.0);
+      rad = r * (0.68 + 0.32 * tri);
+      float mid = (floor(sct) + (uu < 0.5 ? 0.25 : 0.75) - v_seed) * 6.2832 / n;
+      float nrm = mid + (uu < 0.5 ? -0.7 : 0.7);
+      float facing = cos(nrm + 2.3562);                  // 1 facing the north-west sun, -1 away
+      shade = facing > 0.35 ? 0.0 : facing > -0.35 ? 0.5 : 1.0;
+      k = 1.0;
+    } else {
+      // the rim in round scallops, 7 to 9 of them, reaching the crown's full radius
+      float n = 7.0 + floor(hash(v_seed * 5.3) * 3.0);
+      float sxx = 2.0 * fract(ang * n / 6.2832 + v_seed) - 1.0;
+      tri = sqrt(max(1.0 - sxx * sxx, 0.0));
+      rad = r * (0.86 + 0.12 * tri + 0.02 * sin(ang * 2.0 + v_seed * 11.0));
+      // a dome: the side turned from the sun in shade, the line between soft over a pixel or two
+      vec2 pn = p / rad;
+      vec3 nm = vec3(pn, sqrt(max(1.0 - dot(pn, pn), 0.0)));
+      float lam = dot(nm, normalize(vec3(-0.6, -0.6, 0.55)));
+      shade = 1.0 - smoothstep(-0.05, 0.12, lam);
+      // a faint grain of leaves, and the scallops' seams a shade darker at the rim
+      vec2 g = p / max(0.22 * r, 1.5) + v_seed * 7.0;
+      vec2 gi = floor(g), gf = fract(g); gf = gf * gf * (3.0 - 2.0 * gf);
+      float h00 = hash(dot(gi, vec2(12.7, 31.1))), h10 = hash(dot(gi + vec2(1, 0), vec2(12.7, 31.1)));
+      float h01 = hash(dot(gi + vec2(0, 1), vec2(12.7, 31.1))), h11 = hash(dot(gi + vec2(1, 1), vec2(12.7, 31.1)));
+      float nz = mix(mix(h00, h10, gf.x), mix(h01, h11, gf.x), gf.y);
+      k = (1.0 + 0.12 * (nz - 0.5)) * mix(1.0, mix(0.86, 1.0, tri), smoothstep(0.6 * r, 0.95 * r, d));
+    }
+    float aC = smoothstep(-0.5, 0.5, rad - d);
+    float aT = bush ? 0.0 : 1.0 - smoothstep(rt - 0.5, rt + 0.5, d);
+    if (aS + aC + aT <= 0.0) discard;
+    k *= mix(1.12, 0.96, clamp(length(p + 0.4 * r * vec2(1.0)) / (1.65 * r), 0.0, 1.0));   // a little light from the north-west
+    vec3 col = min(base * k, vec3(1.0)) * (1.0 - 0.4 * shade);
+    vec3 trunk = birch ? vec3(0.86, 0.85, 0.80) : vec3(0.30, 0.20, 0.12);
+    if (v_wet > 0.5) { col = mix(col, vec3(0.2, 0.35, 0.45), 0.35); aC *= 0.5; trunk *= 0.7; }
+    float aCc = aC * 0.9;
+    float aU = aT + aS * (1.0 - aT);
+    o = vec4((col * aCc + trunk * aT * (1.0 - aCc)) * f, (aCc + aU * (1.0 - aCc)) * f);
+    return;
+  }
   float aS = 0.24 * (1.0 - smoothstep(0.95 * r - 0.5, 0.95 * r + 0.5, length(v_l - vec2(v_sh))));
   bool rock = v_rock > 0.5;
   float aC = (rock ? 0.95 : 0.92) * (1.0 - smoothstep(r - 0.5, r + 0.5, length(v_l)));
@@ -166,6 +273,18 @@ void main() {
   // in shallow water: faded into the sea, and no shadow
   if (v_wet > 0.5) { col = mix(col, vec3(0.2, 0.35, 0.45), 0.35); aC *= 0.5; aS = 0.0; }
   float f = v_cover * u_fade;
+  if (v_tree > 0.5) {
+    // ForgeMap: a tree is its trunk, a narrow brown disc, under its crown at 80 % (premultiplied:
+    // crown over trunk over shadow)
+    float rt = max(0.15 * r, 0.6);
+    float aT = 1.0 - smoothstep(rt - 0.5, rt + 0.5, length(v_l));
+    vec3 trunk = vec3(0.30, 0.20, 0.12) * (v_wet > 0.5 ? 0.7 : 1.0);
+    float aCc = aC * 0.8;
+    vec3 under = trunk * aT;
+    float aU = aT + aS * (1.0 - aT);
+    o = vec4((col * aCc + under * (1.0 - aCc)) * f, (aCc + aU * (1.0 - aCc)) * f);
+    return;
+  }
   o = vec4(col * aC * f, (aC + aS * (1.0 - aC)) * f);   // crown over its own shadow, premultiplied
 }`;
 
