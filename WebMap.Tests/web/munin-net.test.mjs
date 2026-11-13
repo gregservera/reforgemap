@@ -33,3 +33,9 @@ test("pin and rmpin frames are Munin's, the text whole", () => {
   assert.deepEqual(frame("rmpin\nw17"), {t: "rmpin", id: "w17"});
   assert.equal(frame("pin\nweb\nw17"), null);
 });
+
+// A spot pinged on someone's map in game shows on every open map.
+test("an in-game ping is Munin's ping frame", () => {
+  assert.deepEqual(frame("ping\n76561198\nRurik\n12.5,-40"), {t: "ping", id: "76561198", name: "Rurik", x: 12.5, z: -40});
+  assert.equal(frame("ping\nx"), null);
+});

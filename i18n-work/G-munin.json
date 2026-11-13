@@ -516,7 +516,9 @@
  "Your pins can be removed from this browser only. To remove them from another one, copy this key there.": "Tes repères ne peuvent être retirés que depuis ce navigateur. Pour les retirer depuis un autre, copie cette clé là-bas.",
  "Zone grid": "Grille des zones",
  "dead": "mort",
+ "hp": "PV",
  "not allowed: sign in again": "refusé : reconnecte-toi",
  "online": "en ligne",
- "sleeping": "endormi"
+ "sleeping": "endormi",
+ "{name} pinged": "{name} a signalé"
 }

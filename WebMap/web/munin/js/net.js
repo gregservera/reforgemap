@@ -51,6 +51,11 @@ export function frame(text) {
     return { t: 'pin', id: f[1], type: f[2], name: f[3], x, z, text: f.slice(5).join('\n') };
   }
   if (type === 'rmpin') return body ? { t: 'rmpin', id: body.trim() } : null;
+  // ping: someone marked a spot on their map in game: id, name, "x,z"
+  if (type === 'ping') {
+    const f = body.split('\n'), [x, z] = (f[2] || '').split(',').map(Number);
+    return f.length >= 3 && isFinite(x) && isFinite(z) ? { t: 'ping', id: f[0], name: f[1], x, z } : null;
+  }
   if (type === 'live') { try { return { t: 'players', data: JSON.parse(body) }; } catch { return null; } }
   if (type === 'tiles') { try { return Object.assign({ t: 'tiles' }, JSON.parse(body)); } catch { return null; } }
   return null;
