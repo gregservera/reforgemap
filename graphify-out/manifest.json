@@ -654,9 +654,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/js/rig.js": {
-    "mtime": 1794481539.8885875,
-    "seen": 1794532016.1549356,
-    "ast_hash": "2653457a40f3e42c7ef5858ce8504e23",
+    "mtime": 1794578465.4714825,
+    "seen": 1794578807.6158855,
+    "ast_hash": "ade78f57613a2427eaa31c1ddd3f0c45",
     "semantic_hash": ""
   },
   "WebMap/web/js/sky.js": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/view3d.js": {
-    "mtime": 1794577743.4433124,
-    "seen": 1794578115.7523093,
-    "ast_hash": "6cb0fe737d83b3196d6cc03f09c4b4a9",
+    "mtime": 1794579251.4878285,
+    "seen": 1794579265.5346785,
+    "ast_hash": "86265083c0075e154d942920eeb1c687",
     "semantic_hash": ""
   },
   "WebMap/web/site-config.js": {

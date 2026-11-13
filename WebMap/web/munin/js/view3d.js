@@ -20,6 +20,7 @@ import { layerState } from './layerstate.js';
 import { WORLD_HALF, MAX_ZOOM, TILE, metersPerPixel, chunkOf, worldTile, WORLD_SIZE, CHUNKS } from './crs.js';
 import { fetchTerrarium } from './png.js';
 import { on } from './net.js';
+import { loadHd, dressMaterial } from '../../js/rig.js';
 import { fetchMist, mistIn } from './mist.js';
 
 const RINGS = [                   // zoom -> load within this distance of the target (metres)
@@ -145,6 +146,10 @@ export class View3D {
     this.objChunks = new Map();   // chunk key -> group   (model path: every world object, real meshes)
     this.models = new Map();      // prefab hash -> Promise<parts[] | null>
     this.gltf = new GLTFLoader();
+    // ForgeMap: the server's full-quality maps (tools/textures-hd.py, /models/hd/), on a computer
+    // only (rig.js wantsHd); the buildings come from ForgeMap's library, whose texture names they key
+    this.hdMaps = loadHd('.');
+    this.hdTex = new Map();
     this.markerSprites = new THREE.Group();
     this.scene.add(this.markerSprites);
     this.pinSprites = new THREE.Group();
@@ -1013,6 +1018,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
         for (const m of mats) { m.side = THREE.DoubleSide; if (m.map) { m.map.anisotropy = Math.min(4, this.maxAniso); } m.metalness = 0; m.roughness = Math.max(0.7, m.roughness); }
         parts.push({ geometry: geo, material: o.material });
       });
+      if (parts.length) this.dressHd(parts);
       return parts.length ? parts : null;
     }).catch((e) => { console.warn('model', file, e.message || e); return null; });
     this.models.set(hash, p);
@@ -1095,6 +1101,41 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
       }
     }));
     if (!layerState.buildings || layerState.buildingsOpacity < 0.999) this.applyBuildings();
+  }
+
+  // ForgeMap: a model's materials with the full-quality maps, once they have loaded (the model shows
+  // at once with its light textures); a building's own copy (pieceMaterial) gets them too
+  async dressHd(parts) {
+    const maps = await this.hdMaps;
+    if (!maps) return;
+    const mats = new Set();
+    for (const p of parts) for (const m of Array.isArray(p.material) ? p.material : [p.material]) mats.add(m);
+    let any = false;
+    await Promise.all([...mats].map(async (m) => {
+      if (!(await dressMaterial(THREE, maps, m, (f, v, srgb) => this.hdTexture(f, v, srgb)))) return;
+      any = true;
+      const copy = this.pieceMats.get(m);
+      if (copy) {
+        for (const k of ['map', 'normalMap', 'metalnessMap', 'roughnessMap', 'emissiveMap', 'metalness', 'roughness', 'emissiveIntensity']) copy[k] = m[k];
+        copy.normalScale.copy(m.normalScale); copy.emissive.copy(m.emissive);
+        copy.userData.hd = m.userData.hd;
+        copy.needsUpdate = true;
+      }
+    }));
+    if (any) this.invalidate(true);
+  }
+
+  // one map of the hd folder as a texture, loaded once (as rig.js RigBuilder.hdTexture)
+  hdTexture(file, v, srgb) {
+    const url = `models/hd/${file}?v=${v || 0}`;
+    if (!this.hdTex.has(url)) {
+      this.hdTex.set(url, this.loader.loadAsync(url).then((t) => {
+        t.flipY = false; t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = Math.min(8, this.maxAniso);
+        t.colorSpace = srgb ? THREE.SRGBColorSpace : THREE.NoColorSpace; t.needsUpdate = true;
+        return t;
+      }, () => null));
+    }
+    return this.hdTex.get(url);
   }
 
   // buildings fade and hide on their own (applyBuildings), so they get their own copy of a model's

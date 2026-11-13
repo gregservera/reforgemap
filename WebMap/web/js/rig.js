@@ -66,23 +66,7 @@ export class RigBuilder {
   // A material drawn with the game's own maps where the server has them (see hdFor): its normal
   // map, its metal and roughness (map or the material's numbers), its glow, a bigger base colour.
   // False when there are none for it, and the material is left as it was.
-  async dress(m) {
-    const T = this.THREE, h = hdFor(this.hd, m && m.map && m.map.name, m && m.name);
-    if (!h) return false;
-    const [c, n, mr, e] = await Promise.all([h.c && this.hdTexture(h.c, h.v, true), h.n && this.hdTexture(h.n, h.v, false),
-      h.mr && this.hdTexture(h.mr, h.v, false), h.e && this.hdTexture(h.e, h.v, true)]);
-    if (c) m.map = c;
-    if (n) {
-      // no tangents in the export: three works them out on screen, and a glTF's unflipped UVs turn its Y over
-      m.normalMap = n; m.normalScale = new T.Vector2(h.ns, -h.ns);
-    }
-    if (mr) { m.metalnessMap = m.roughnessMap = mr; m.metalness = MR_METAL; m.roughness = MR_ROUGH; }
-    else if (h.rf !== undefined) { m.metalness = h.mf; m.roughness = h.rf; }
-    if (e) { m.emissiveMap = e; m.emissive = new T.Color(0xffffff); m.emissiveIntensity = h.ei; }
-    m.userData.hd = { n: n ? n.image : null, mr: mr ? mr.image : null, rf: h.rf, mf: h.mf };
-    m.needsUpdate = true;
-    return !!(c || n || mr || e || h.rf !== undefined);
-  }
+  async dress(m) { return dressMaterial(this.THREE, this.hd, m, (f, v, srgb) => this.hdTexture(f, v, srgb)); }
 
   // The library's index (/prefabs' entries by hash). True when a rig part is new or
   // re-exported: the rigs drawn from the old index should be built again.
@@ -312,6 +296,28 @@ export function hdFor(maps, texFile, matName) {
   // a plain material no smoother than 0.5 (the tool's rule too): Valheim's shaders read their gloss their own way
   if (typeof e.rf === 'number') { h.rf = Math.min(1, Math.max(0.5, e.rf)); h.mf = typeof e.mf === 'number' ? Math.min(1, Math.max(0, e.mf)) : 0; }
   return h.c || h.n || h.mr || h.e || h.rf !== undefined ? h : null;
+}
+
+// A material drawn with the game's own maps where the server has them (hdFor): its normal map,
+// its metal and roughness (map or the material's numbers), its glow, a bigger base colour.
+// texture(file, v, srgb): a Promise of the hd file as a texture (or null). False when there is
+// nothing for it, and the material is left as it was. (RigBuilder.dress; the Munin 3D's buildings.)
+export async function dressMaterial(T, maps, m, texture) {
+  const h = hdFor(maps, m && m.map && m.map.name, m && m.name);
+  if (!h) return false;
+  const [c, n, mr, e] = await Promise.all([h.c && texture(h.c, h.v, true), h.n && texture(h.n, h.v, false),
+    h.mr && texture(h.mr, h.v, false), h.e && texture(h.e, h.v, true)]);
+  if (c) m.map = c;
+  if (n) {
+    // no tangents in the export: three works them out on screen, and a glTF's unflipped UVs turn its Y over
+    m.normalMap = n; m.normalScale = new T.Vector2(h.ns, -h.ns);
+  }
+  if (mr) { m.metalnessMap = m.roughnessMap = mr; m.metalness = MR_METAL; m.roughness = MR_ROUGH; }
+  else if (h.rf !== undefined) { m.metalness = h.mf; m.roughness = h.rf; }
+  if (e) { m.emissiveMap = e; m.emissive = new T.Color(0xffffff); m.emissiveIntensity = h.ei; }
+  m.userData.hd = { n: n ? n.image : null, mr: mr ? mr.image : null, rf: h.rf, mf: h.mf };
+  m.needsUpdate = true;
+  return !!(c || n || mr || e || h.rf !== undefined);
 }
 
 // Whether this device should load them: a computer or a tablet does; a phone (the screen's
