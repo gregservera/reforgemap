@@ -249,6 +249,21 @@ namespace WebMap.Tiles
             Enqueue(zoom, x, y, 5, onlyIfMissing: true);
         }
 
+        // The fog lifted over a spot (live, as a player walks): the tiles over it at every zoom go out
+        // masked differently now (FogMask), so open pages are told to fetch them again
+        private static readonly HashSet<string> fogKeys = new HashSet<string>();
+        public static void OnFogLifted(float wx, float wz)
+        {
+            lock (notify)
+                for (int z = 0; z <= TileMath.MAX_ZOOM; z++)
+                {
+                    TileMath.WorldToTile(z, wx, wz, out int tx, out int ty);
+                    if (!TileMath.Valid(z, tx, ty)) continue;
+                    string key = z + "/" + tx + "/" + ty;
+                    if (fogKeys.Add(key)) notify.Add(key);
+                }
+        }
+
         // Fog revealed a pixel: make sure the close-zoom tiles over it exist.
         public static void OnExplored(float wx, float wz)
         {
@@ -668,7 +683,7 @@ namespace WebMap.Tiles
             {
                 if (notify.Count == 0) return null;
                 var l = new List<string>(notify);
-                notify.Clear();
+                notify.Clear(); fogKeys.Clear();
                 return l;
             }
         }

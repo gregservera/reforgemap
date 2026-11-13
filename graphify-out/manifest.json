@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "WebMap.Tests/TilesTests.cs": {
-    "mtime": 1794555561.0145485,
-    "seen": 1794555594.768459,
-    "ast_hash": "5607e86bed38485b01688ce990c8fdee",
+    "mtime": 1794556722.1503572,
+    "seen": 1794556936.7402186,
+    "ast_hash": "b2635c810e8d51002c544993901f2584",
     "semantic_hash": ""
   },
   "WebMap.Tests/VersionTests.cs": {
@@ -210,9 +210,9 @@
     "semantic_hash": ""
   },
   "WebMap/Chart.cs": {
-    "mtime": 1794481539.8834896,
-    "seen": 1794532016.1548548,
-    "ast_hash": "4aa2f9bf79caa3c920f5a2a1f40faa9b",
+    "mtime": 1794556705.7818086,
+    "seen": 1794556936.740233,
+    "ast_hash": "3593776c3c829da489797b4751be3d53",
     "semantic_hash": ""
   },
   "WebMap/ChatCommands.cs": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "WebMap/MapDataServer.cs": {
-    "mtime": 1794555143.0081198,
-    "seen": 1794555594.7684941,
-    "ast_hash": "6cf588bbe4d3f81726e506b37c5bda30",
+    "mtime": 1794556705.783404,
+    "seen": 1794556936.7402549,
+    "ast_hash": "b83cf1f6c659d1a27611d52674ebf412",
     "semantic_hash": ""
   },
   "WebMap/MapFog.cs": {
@@ -546,9 +546,9 @@
     "semantic_hash": ""
   },
   "WebMap/Tiles/TileStore.cs": {
-    "mtime": 1794492657.6204436,
-    "seen": 1794532016.154916,
-    "ast_hash": "6a16bd4199a4afb01b507e0e7b4ee113",
+    "mtime": 1794556651.413729,
+    "seen": 1794556936.740329,
+    "ast_hash": "36ada6dc64ff9cbca9b4f550ec94b8f1",
     "semantic_hash": ""
   },
   "WebMap/Tiles/Vegetation.cs": {
@@ -600,9 +600,9 @@
     "semantic_hash": ""
   },
   "WebMap/WebMap.cs": {
-    "mtime": 1794555143.0091798,
-    "seen": 1794555594.7685828,
-    "ast_hash": "70a109719871b4a5f9e178ad2c565c27",
+    "mtime": 1794556651.4141653,
+    "seen": 1794556936.740342,
+    "ast_hash": "cae4e8c220fc0b87cd61895a0f69444b",
     "semantic_hash": ""
   },
   "WebMap/WebMap.csproj": {
@@ -1452,9 +1452,9 @@
     "semantic_hash": ""
   },
   "WebMap/Tiles/WorldPicture.cs": {
-    "mtime": 1794534109.589108,
-    "seen": 1794534307.5623865,
-    "ast_hash": "dce3e996fc173c491ffe33232da1d495",
+    "mtime": 1794556675.39266,
+    "seen": 1794556936.7403312,
+    "ast_hash": "bbd7151ac74cc421c19643323fc68015",
     "semantic_hash": ""
   },
   "WebMap/Models/Libraries.cs": {
@@ -1497,6 +1497,12 @@
     "mtime": 1794555070.9373024,
     "seen": 1794555594.7685223,
     "ast_hash": "8d45f4942145c56497c3e34cf30867e7",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/FogMask.cs": {
+    "mtime": 1794556634.891986,
+    "seen": 1794556936.7403102,
+    "ast_hash": "23cd2682c3889081b2a39d4b86142eff",
     "semantic_hash": ""
   }
 }

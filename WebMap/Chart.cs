@@ -121,5 +121,37 @@ namespace WebMap
         private static Heightmap.Biome BiomeAt(int index) => (Heightmap.Biome)(1 << index);
 
         public static byte[] GetPng() => png ?? new byte[0];
+
+        // What goes out (/chart): unwalked ground black (Tiles/FogMask), made again when the fog has
+        // moved, at most each minute; MaskedRev (/state's rev.chart) moves with each copy.
+        private static byte[] masked;
+        private static int maskedFog = int.MinValue, maskedOf = -1, maskedRev;
+        private static DateTime maskedAt;
+        private static readonly object maskGate = new object();
+        public static int MaskedRev { get { MaskedPng(); return maskedRev; } }
+        public static byte[] MaskedPng()
+        {
+            byte[] whole = png;
+            if (whole == null || whole.Length == 0) return new byte[0];
+            lock (maskGate)
+            {
+                bool due = masked == null || maskedOf != Rev || (MapFog.Revision != maskedFog && (DateTime.UtcNow - maskedAt).TotalSeconds > 60);
+                if (!due || WebMap.mapDataServer?.fogRgba == null) return masked ?? new byte[0];
+                try
+                {
+                    int fog = MapFog.Revision;
+                    using (var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(whole))
+                    using (var ms = new MemoryStream())
+                    {
+                        Tiles.FogMask.MaskPicture(img, WebMapConfig.TEXTURE_SIZE * WebMapConfig.PIXEL_SIZE);
+                        SixLabors.ImageSharp.ImageExtensions.SaveAsPng(img, ms);
+                        masked = ms.ToArray();
+                    }
+                    maskedFog = fog; maskedOf = Rev; maskedAt = DateTime.UtcNow; maskedRev++;
+                }
+                catch (Exception e) { ZLog.LogWarning("WebMap: chart mask failed: " + e.Message); }
+                return masked ?? new byte[0];
+            }
+        }
     }
 }

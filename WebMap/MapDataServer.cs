@@ -579,11 +579,11 @@ namespace WebMap
                     res.Close(fogBytes, true);
                     return true;
                 case "/chart":
-                    // one image per world, never changing: let the edge keep it
+                    // the world's biomes, unwalked ground black (pages ask with ?v=<rev.chart>)
                     res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=3600");
                     res.ContentType = "image/png";
                     res.StatusCode = 200;
-                    byte[] chartBytes = Chart.GetPng();
+                    byte[] chartBytes = Chart.MaskedPng();
                     if (chartBytes.Length == 0) { res.StatusCode = 503; res.Close(); return true; }   // not rendered yet: never a cacheable empty 200
                     res.ContentLength64 = chartBytes.Length;
                     res.Close(chartBytes, true);
@@ -685,7 +685,7 @@ namespace WebMap
                         string pinsJson = PinsJson();
                         string state = "{\"now\":" + DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                             + ",\"rev\":{\"fog\":" + fogRev + ",\"map\":" + Tiles.WorldPicture.Rev + ",\"pieces\":" + Pieces.Rev + ",\"forest\":" + ForestMap.Rev
-                            + ",\"structures\":" + StructureMap.Rev + ",\"chart\":" + Chart.Rev + ",\"trails\":" + Trails.Rev
+                            + ",\"structures\":" + StructureMap.Rev + ",\"chart\":" + Chart.MaskedRev + ",\"trails\":" + Trails.Rev
                             + ",\"features\":" + FeaturesRev() + ",\"objects\":" + WorldObjects.Rev + ",\"height\":" + TerrainPatches.Rev
                             + ",\"models\":" + Models.ModelStore.Rev + "}"
                             + ",\"time\":" + timeJson
@@ -1047,6 +1047,8 @@ namespace WebMap
                 Answer(res, 404, "{\"error\":\"not drawn yet\"}");
                 return;
             }
+            // nothing of unwalked ground leaves: those pixels go out transparent (Tiles/FogMask)
+            data = Tiles.FogMask.Apply(layer, z, x, y, data, ref etag);
             // tiles hardly ever change: reused for 10 minutes without asking, then shown from cache
             // while checked again; a re-render reaches open pages over the websocket
             res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=600, stale-while-revalidate=2592000");

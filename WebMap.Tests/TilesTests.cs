@@ -185,5 +185,39 @@ namespace WebMap.Tests
                 Assert.Equal(200, img[cx, cy - 170].G);                       // north is up
             }
         }
+            // Nothing of unwalked ground leaves the server (spec F3): a tile half walked goes out with the
+        // other half transparent and black, a tile wholly walked as it is, one wholly unwalked empty.
+        [Fact]
+        public void ATileLeavesWithOnlyItsWalkedGround()
+        {
+            var was = FogMask.Walked;
+            try
+            {
+                byte[] tile;
+                using (var t = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(256, 256, new SixLabors.ImageSharp.PixelFormats.Rgba32(200, 150, 100, 255)))
+                using (var ms = new MemoryStream()) { SixLabors.ImageSharp.ImageExtensions.SaveAsPng(t, ms); tile = ms.ToArray(); }
+                TileMath.TileBounds(7, 40, 40, out float x0, out _, out float x1, out _);
+                float mid = (x0 + x1) / 2;
+                FogMask.Walked = (x, z) => x < mid;                       // the west half walked
+                string etag = "\"m1\"";
+                byte[] got = FogMask.Apply("map", 7, 40, 40, tile, ref etag);
+                Assert.NotEqual("\"m1\"", etag);
+                using (var img = SixLabors.ImageSharp.Image.Load<SixLabors.ImageSharp.PixelFormats.Rgba32>(got))
+                {
+                    Assert.Equal(255, img[10, 100].A);
+                    Assert.Equal(200, img[10, 100].R);
+                    var east = img[240, 100];
+                    Assert.Equal(0, east.A); Assert.Equal(0, east.R); Assert.Equal(0, east.G);
+                }
+                FogMask.Walked = (x, z) => true;
+                etag = "\"m1\"";
+                Assert.Same(tile, FogMask.Apply("map", 7, 40, 40, tile, ref etag));
+                Assert.Equal("\"m1\"", etag);
+                FogMask.Walked = (x, z) => false;
+                Assert.Same(FogMask.Empty(), FogMask.Apply("veg", 7, 40, 40, tile, ref etag));
+                Assert.Same(tile, FogMask.Apply("height", 7, 40, 40, tile, ref etag));   // the 3D relief stays whole
+            }
+            finally { FogMask.Walked = was; }
+        }
     }
 }

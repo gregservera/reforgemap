@@ -308,6 +308,7 @@ namespace WebMap
                                             fog[o] = fog[o + 1] = fog[o + 2] = fog[o + 3] = 255;
                                             MapFog.MarkPixel(x, y);
                                             Tiles.TileStore.OnExplored((x - halfTextureSize) * WebMapConfig.PIXEL_SIZE, (y - halfTextureSize) * WebMapConfig.PIXEL_SIZE);
+                                            Tiles.TileStore.OnFogLifted((x - halfTextureSize) * WebMapConfig.PIXEL_SIZE, (y - halfTextureSize) * WebMapConfig.PIXEL_SIZE);
                                         }
                                     }
                                 }
