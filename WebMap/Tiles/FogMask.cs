@@ -6,10 +6,11 @@
 // fetch the tiles over that spot again (TileStore.OnFogLifted).
 //
 // The edge is soft, not the fog's 12 m stairs, and runs on under the page's blurred veil
-// (layers/fog.js) so the ground goes into the dark cleanly: a cell counts 1 walked, 1/2 next to a
-// walked one (of its eight), the fog is read between the cells' centres (bilinear, Cover), and the
-// ground fades out from the walked edge to about a cell past it (Cover 3/4 to 1/4), where the veil
-// is near black.
+// (layers/fog.js) so the ground goes into the dark cleanly: the walked cells are blurred (a 5x5
+// binomial, Blurred), read between their centres (bilinear, Cover), and the ground fades out from
+// the walked edge (Cover 1/2) to about a cell past it (Cover Lo), where the veil is near black.
+// The blur first makes the edge a curve: straight from the cells, the line still showed their
+// squares.
 //
 // Height tiles are left whole: the 3D view's relief of unwalked ground stays as decided on
 // 12/11/2026 (ticket 3d-brouillard).
@@ -34,50 +35,75 @@ namespace WebMap.Tiles
         // for the tests: what counts as walked (world x, z)
         internal static Func<float, float, bool> Walked = MapFog.IsExplored;
 
-        // a cell (centred on (i, j) cells from the world's middle): 1 walked, 1/2 next to a walked
-        // one, else 0 (in halves: 2, 1, 0)
-        internal static byte CellValue(int i, int j)
+        private const float Lo = 0.19f, Hi = 0.5f;
+        private static readonly float[] K = { 1 / 16f, 4 / 16f, 6 / 16f, 4 / 16f, 1 / 16f };
+
+        // a cell, centred on (i, j) cells from the world's middle: walked, 1 or 0
+        private static float Cell(int i, int j)
         {
             float c = WebMapConfig.PIXEL_SIZE;
-            if (Walked(i * c, j * c)) return 2;
-            for (int dj = -1; dj <= 1; dj++)
-                for (int di = -1; di <= 1; di++)
-                    if ((di != 0 || dj != 0) && Walked((i + di) * c, (j + dj) * c)) return 1;
-            return 0;
+            return Walked(i * c, j * c) ? 1f : 0f;
         }
 
-        // The cells over an area (world metres), read once: a tile's pixels ask each four times
-        internal static Func<int, int, byte> Cells(float minX, float minZ, float maxX, float maxZ)
+        // the cell (i, j) blurred with its neighbours, 0 to 1
+        internal static float Blurred(int i, int j)
+        {
+            float v = 0;
+            for (int dj = -2; dj <= 2; dj++)
+                for (int di = -2; di <= 2; di++) v += K[di + 2] * K[dj + 2] * Cell(i + di, j + dj);
+            return v;
+        }
+
+        // The blurred cells over an area (world metres), worked out once: a tile's pixels ask each
+        // four times
+        internal static Func<int, int, float> Cells(float minX, float minZ, float maxX, float maxZ)
         {
             float c = WebMapConfig.PIXEL_SIZE;
-            int i0 = (int)Math.Floor(minX / c) - 1, j0 = (int)Math.Floor(minZ / c) - 1;
-            int ni = (int)Math.Ceiling(maxX / c) + 2 - i0, nj = (int)Math.Ceiling(maxZ / c) + 2 - j0;
-            if ((long)ni * nj > 4_500_000) return CellValue;         // (never at the sizes asked)
-            var v = new byte[ni * nj];
+            int i0 = (int)Math.Floor(minX / c) - 3, j0 = (int)Math.Floor(minZ / c) - 3;
+            int ni = (int)Math.Ceiling(maxX / c) + 4 - i0, nj = (int)Math.Ceiling(maxZ / c) + 4 - j0;
+            if ((long)ni * nj > 4_500_000) return Blurred;            // (never at the sizes asked)
+            var raw = new float[ni * nj];
             for (int j = 0; j < nj; j++)
-                for (int i = 0; i < ni; i++) v[j * ni + i] = CellValue(i0 + i, j0 + j);
-            return (i, j) => { i -= i0; j -= j0; return i >= 0 && j >= 0 && i < ni && j < nj ? v[j * ni + i] : CellValue(i + i0, j + j0); };
+                for (int i = 0; i < ni; i++) raw[j * ni + i] = Cell(i0 + i, j0 + j);
+            var across = new float[ni * nj];
+            for (int j = 0; j < nj; j++)
+                for (int i = 2; i < ni - 2; i++)
+                {
+                    float v = 0; for (int d = -2; d <= 2; d++) v += K[d + 2] * raw[j * ni + i + d];
+                    across[j * ni + i] = v;
+                }
+            var v2 = new float[ni * nj];
+            for (int j = 2; j < nj - 2; j++)
+                for (int i = 2; i < ni - 2; i++)
+                {
+                    float v = 0; for (int d = -2; d <= 2; d++) v += K[d + 2] * across[(j + d) * ni + i];
+                    v2[j * ni + i] = v;
+                }
+            return (i, j) =>
+            {
+                int a = i - i0, b = j - j0;
+                return a >= 2 && b >= 2 && a < ni - 2 && b < nj - 2 ? v2[b * ni + a] : Blurred(i, j);
+            };
         }
 
-        // How walked (x, z) is, 0 to 1: the cells read bilinearly
-        internal static float Cover(float x, float z, Func<int, int, byte> cell = null)
+        // How walked (x, z) is, 0 to 1: the blurred cells read bilinearly
+        internal static float Cover(float x, float z, Func<int, int, float> cell = null)
         {
-            cell = cell ?? CellValue;
+            cell = cell ?? Blurred;
             float c = WebMapConfig.PIXEL_SIZE, fx = x / c, fz = z / c;
             int ix = (int)Math.Floor(fx), iz = (int)Math.Floor(fz);
             float tx = fx - ix, tz = fz - iz;
             float a = cell(ix, iz), b = cell(ix + 1, iz), d = cell(ix, iz + 1), e = cell(ix + 1, iz + 1);
-            return ((a * (1 - tx) + b * tx) * (1 - tz) + (d * (1 - tx) + e * tx) * tz) / 2f;
+            return (a * (1 - tx) + b * tx) * (1 - tz) + (d * (1 - tx) + e * tx) * tz;
         }
 
-        // what of the ground at (x, z) shows, 0 to 255: all up to the walked edge (Cover 3/4),
-        // none a cell past it (1/4)
-        internal static byte Shown(float x, float z, Func<int, int, byte> cell = null)
+        // what of the ground at (x, z) shows, 0 to 255: all up to the walked edge, none a cell past it
+        internal static byte Shown(float x, float z, Func<int, int, float> cell = null)
         {
             float v = Cover(x, z, cell);
-            if (v <= 0.25f) return 0;
-            if (v >= 0.75f) return 255;
-            float t = (v - 0.25f) * 2f;
+            if (v <= Lo) return 0;
+            if (v >= Hi) return 255;
+            float t = (v - Lo) / (Hi - Lo);
             return (byte)Math.Round(255f * t * t * (3f - 2f * t));
         }
 

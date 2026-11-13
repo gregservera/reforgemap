@@ -9,7 +9,7 @@ import { PlayerCard } from './playercard.js';
 import { FogLayer } from './layers/fog.js';
 import { StructuresLayer } from './layers/structures.js';
 import { RuinsLayer } from './layers/ruins.js';
-import { webgl2Available, TreesGL, RuinsGL, BuildingsGL, TREES_MIN } from './layers/shapes.js';
+import { webgl2Available, TreesGL, VegPartGL, VEG_PARTS, RuinsGL, BuildingsGL, TREES_MIN } from './layers/shapes.js';
 import { GroundGL, FogGL, WorldEdgeGL, GuideGL, BiomeGL, AltBiomeGL, MistGL } from './layers/ground.js';
 import { SmoothZoom, SmoothZoomControl } from './smoothzoom.js';
 import { MarkerLayers, escape, byName } from './layers/markers.js';
@@ -75,7 +75,8 @@ class App {
       : new FallbackTileLayer('tiles/terra/{z}/{x}/{y}.png', { zIndex: 100.5, minNative: 5, className: 'maptiles' })).addTo(this.map);
     // Tree crowns and rocks over the ground (the 3D view uses the clean ground tiles). Trees, buildings and world structures on the GPU when the browser can (see shapes.js): there
     // the trees at every zoom come from the vegetation data and no tree tiles are loaded at all.
-    if (this.gl) this.layers.veg = L.layerGroup([new TreesGL()]).addTo(this.map);
+    // (ForgeMap: rocks, then bushes, under the ruins and buildings; the trees over them: shapes.js)
+    if (this.gl) { const trees = new TreesGL(); this.layers.veg = L.layerGroup([new VegPartGL(trees, VEG_PARTS.rocks, 0.7), new VegPartGL(trees, VEG_PARTS.bushes, 0.8), trees]).addTo(this.map); }
     else {
       this.vegTiles = new FallbackTileLayer('tiles/veg/{z}/{x}/{y}.png', { zIndex: 101, minNative: 5, className: 'maptiles vegtiles', prefetchZoomOut: 2 });
       const vegShapes = new VegLayer();

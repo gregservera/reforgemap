@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/app.js": {
-    "mtime": 1794557944.2630334,
-    "seen": 1794558300.0176647,
-    "ast_hash": "294537663cfb1a5ef527a83e80a70edd",
+    "mtime": 1794575501.912861,
+    "seen": 1794575705.5393941,
+    "ast_hash": "5e2e919f55ef72ecc217e5289445ad70",
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/biomehover.js": {
@@ -840,9 +840,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/layers/shapes.js": {
-    "mtime": 1794500379.3094554,
-    "seen": 1794532016.1549685,
-    "ast_hash": "09407da2699887a2b49e3d40a4b3ba8f",
+    "mtime": 1794575501.912087,
+    "seen": 1794575705.5394273,
+    "ast_hash": "d9219552f9f830720f43714c5798570f",
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/layers/structures.js": {
@@ -1494,9 +1494,9 @@
     "semantic_hash": ""
   },
   "WebMap/Tiles/FogMask.cs": {
-    "mtime": 1794573900.2859793,
-    "seen": 1794574478.671763,
-    "ast_hash": "9cd2841296f0338e010541d452d9f466",
+    "mtime": 1794575393.0193489,
+    "seen": 1794575705.539336,
+    "ast_hash": "7ba1eaa6804def19551fdf817daa42ae",
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/tourstage.js": {

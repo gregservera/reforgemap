@@ -1633,9 +1633,18 @@ export class RuinsGL extends ChunkShapes {
 // Every tree and rock from zoom 5 up (the same range the baked tree tiles covered), so there is no
 // hand-off between two kinds of trees and no tree tiles to download: the whole explored world's
 // vegetation is ~2 MB, fetched by region and kept for good.
+// ForgeMap: the trees proper only, over the buildings (order 3.5); the rocks and the bushes under
+// them (VegPartGL, drawn from these same buffers): rocks, bushes, ruins, buildings, trees.
+const kindMask = (kinds) => { const m = [0, 0]; for (const k of kinds) m[k >> 5] |= 1 << (k & 31); return [m[0] >>> 0, m[1] >>> 0]; };
+const TREE_KINDS = [1, 2, 3, 4, 5, 11, 12, 13, 14, 18], ROCK_KINDS = [7, 8, 32, 33, 34, 35, 36, 37, 38];
+const BUSH_KINDS = [];
+for (let k = 1; k < 64; k++) if (!TREE_KINDS.includes(k) && !ROCK_KINDS.includes(k)) BUSH_KINDS.push(k);
+export const VEG_PARTS = { trees: kindMask(TREE_KINDS), rocks: kindMask(ROCK_KINDS), bushes: kindMask(BUSH_KINDS) };
+
 export class TreesGL extends ChunkShapes {
-  constructor() {
-    super(); this.order = 1; this.stride = TREE_STRIDE;
+  constructor(part = VEG_PARTS.trees, order = 3.5, owner = null) {
+    super(); this.order = order; this.stride = TREE_STRIDE; this.part = part;
+    if (owner) return;   // a part of another's (VegPartGL): its data is the owner's
     vegetation.onChange(() => this.refresh());
     layerState.onChange((k) => { if (/^veg[A-Z]/.test(k)) this.changed(); });   // a group or kind switched on or off
   }
@@ -1656,7 +1665,7 @@ export class TreesGL extends ChunkShapes {
   layout(gl) { return [['a_center', 2, gl.FLOAT, false], ['a_r', 1, gl.FLOAT, false], ['a_seed', 1, gl.FLOAT, false], ['a_color', 4, gl.UNSIGNED_BYTE, true]]; }
   // eases in between 4.5 and 5.25 (and over FADE_MS when a zoom crosses that)
   visibleAt(zoom) { return Math.min(1, Math.max(0, (zoom - TREES_MIN) / 0.75)); }
-  uniforms(gl, p) { const [lo, hi] = vegShowMask(layerState); gl.uniform2ui(p.u.u_show, lo, hi); }
+  uniforms(gl, p) { const [lo, hi] = vegShowMask(layerState); gl.uniform2ui(p.u.u_show, (lo & this.part[0]) >>> 0, (hi & this.part[1]) >>> 0); }
   // bushes, plants and small stones (over half the shapes) only from SMALL_FROM, where they
   // start to be more than a speck: below it they cost the GPU the most for next to nothing
   smallFade(zoom) { return Math.min(1, Math.max(0, (zoom - SMALL_FROM) / 0.5)); }
@@ -1677,4 +1686,20 @@ export class TreesGL extends ChunkShapes {
     }
     this.drawChunks(gl, area, 12, sc.tree, fade, this.smallFade(v.zoom));
   }
+}
+
+// The rocks or the bushes of a TreesGL, drawn at their own place in the order from its buffers:
+// it fetches and builds nothing itself.
+export class VegPartGL extends TreesGL {
+  constructor(trees, part, order) { super(part, order, trees); this.src = trees; }
+  get gpu() { return this.src ? this.src.gpu : new Map(); } set gpu(_v) {}
+  get blocks() { return this.src ? this.src.blocks : new Map(); } set blocks(_v) {}
+  get dirty() { return this.src ? this.src.dirty : new Set(); } set dirty(_v) {}
+  get loading() { return this.src ? this.src.loading : 0; } set loading(_v) {}
+  need() {}
+  prefetch() { return false; }
+  refresh() {}
+  rebuild(gl, n, quiet) { return this.src.rebuild(gl, n, quiet); }
+  showing() { return this.src.showing(); }
+  layerFade(v) { return this.src.shown === undefined ? this.src.visibleAt(v.zoom) : this.src.shown; }
 }
