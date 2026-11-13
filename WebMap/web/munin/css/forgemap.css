@@ -153,3 +153,15 @@ body.tour #view3d .v3d-help { display: none; }
 
 /* ForgeMap (controles-par-mode): a control for one view only shows in it (ui.js only(), app.js setMode) */
 body.mode-3d [data-only="2d"], body:not(.mode-3d) [data-only="3d"] { display: none !important; }
+
+/* ForgeMap (interrupteurs-forgemap): the switches in the site's colours. Dark menus: a fine warm
+   outline and a dull knob off, the ember with a dark knob on. Light menus: a grey track off, the
+   ember on, the knob white. The whole row is the switch's label. */
+:root { --sw-off: transparent; --sw-edge: #75685e; --sw-knob: #75685e; --sw-knob-on: #141110; }
+:root[data-theme=light] { --sw-off: #cfc7bf; --sw-edge: transparent; --sw-knob: #fff; --sw-knob-on: #fff; }
+label.lrow { cursor: pointer; }
+.switch { width: 30px; height: 18px; }
+.switch i { background: var(--sw-off); box-shadow: inset 0 0 0 1px var(--sw-edge); }
+.switch i::after { top: 2px; left: 2px; width: 14px; height: 14px; background: var(--sw-knob); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+.switch input:checked + i { background: var(--accent); box-shadow: none; }
+.switch input:checked + i::after { transform: translateX(12px); background: var(--sw-knob-on); }

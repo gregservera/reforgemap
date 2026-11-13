@@ -111,8 +111,9 @@ export class Sidebar {
       p.append(c);
       return c;
     };
-    // A row with a switch. Only the switch toggles (a click on the name did too, by accident). Each
-    // switch is remembered in this browser (key: the row's name) and put back when the page loads.
+    // A row with a switch. ForgeMap (interrupteurs-forgemap): the whole row is the switch's label, a click
+    // anywhere on it toggles (a name that goes somewhere, lgo, keeps its own click). Each switch is
+    // remembered in this browser (key: the row's name) and put back when the page loads.
     let toggles = {};
     try { toggles = JSON.parse(localStorage.getItem('munin-layer-toggles') || '{}') || {}; } catch (e) { /* none */ }
     const remember = (key, v) => { toggles[key] = v; try { localStorage.setItem('munin-layer-toggles', JSON.stringify(toggles)); } catch (e) { /* this visit only */ } };
@@ -120,7 +121,7 @@ export class Sidebar {
       key = key || label.replace(/<[^>]*>/g, '').trim();
       const saved = toggles[key];
       const on = typeof saved === 'boolean' ? saved : checked;
-      const r = el(`<div class="lrow"><span class="lico">${icon}</span><span class="ltext"><b>${label}</b>${desc ? `<small>${desc}</small>` : ''}</span><label class="switch"><input type="checkbox" ${on ? 'checked' : ''}><i></i></label></div>`);
+      const r = el(`<label class="lrow"><span class="lico">${icon}</span><span class="ltext"><b>${label}</b>${desc ? `<small>${desc}</small>` : ''}</span><span class="switch"><input type="checkbox" ${on ? 'checked' : ''}><i></i></span></label>`);
       r.querySelector('input').addEventListener('change', (e) => { remember(key, e.target.checked); onToggle(e.target.checked); });
       if (on !== checked) onToggle(on);   // as this browser left it
       return r;
@@ -295,7 +296,8 @@ export class Sidebar {
         if (n) {
           const name = r.querySelector('.ltext');
           name.classList.add('lgo'); name.title = 'Click: go to the next one';
-          name.addEventListener('click', () => {
+          name.addEventListener('click', (e) => {
+            e.preventDefault();   // (the row is the switch's label: this click goes to the markers, it doesn't toggle)
             const ms = s.markers || [];
             if (!ms.length) return;
             const sw = r.querySelector('input');
