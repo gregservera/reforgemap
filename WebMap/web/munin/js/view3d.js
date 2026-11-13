@@ -85,8 +85,9 @@ export class View3D {
     this.renderer.setPixelRatio(this.fullDpr);
     this.renderer.shadowMap.autoUpdate = false;   // redrawn only when what casts them, or the light, changes (see loop)
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    this.renderer.toneMappingExposure = 1.05;
+    // ForgeMap: Neutral rather than ACES, which greyed and darkened the colours (rendu-3d-jeu)
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
+    this.renderer.toneMappingExposure = 1.12;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(55, 1, 1, 30000);
     this.controls = new MapControls(this.camera, canvas);
@@ -501,9 +502,19 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
 }
 {
   vec2 dp = vec2(vGroundPos.x, -vGroundPos.z);
-  float d1 = texture2D(uDetail, dp / 24.0).r, d2 = texture2D(uDetail, dp / 7.0).g;
+  float d1 = texture2D(uDetail, dp / 24.0).r, d2 = texture2D(uDetail, dp / 7.0).g, d3 = texture2D(uDetail, dp / 1.6).g;
   float grain = (d1 - 0.5) * 0.26 + (d2 - 0.5) * 0.14;
   diffuseColor.rgb *= 1.0 + grain;
+  // ForgeMap (rendu-3d-jeu): the map's pastel made the game's ground: richer and more contrasted,
+  // the grass a true green (less red in it), and in the grass a mottling of lighter and darker tufts
+  vec3 c = diffuseColor.rgb;
+  float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+  c = max(mix(vec3(l), c, 1.05), 0.0);
+  float veg = smoothstep(0.0, 0.05, c.g - max(c.r * 0.9, c.b * 1.1));
+  c.r *= mix(1.0, 0.72, veg); c.b *= mix(1.0, 0.88, veg);
+  c *= mix(vec3(1.0), mix(vec3(0.62, 0.8, 0.6), vec3(1.15, 1.12, 0.85), d3) * mix(0.85, 1.12, d1), veg);
+  c = pow(c, vec3(1.05)) * 1.02;
+  diffuseColor.rgb = c;
 }` : '#include <map_fragment>')
         .replace('#include <dithering_fragment>', `#include <dithering_fragment>
 {

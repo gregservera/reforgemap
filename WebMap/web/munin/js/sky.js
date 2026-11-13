@@ -39,13 +39,13 @@ void main() {
 
 const c = (hex) => new THREE.Color(hex);
 const NIGHT = { zenith: c(0x05081a), horizon: c(0x0e1730) };
-const DAY = { zenith: c(0x3d7ad4), horizon: c(0xb9d3ee) };
+const DAY = { zenith: c(0x3d7ad4), horizon: c(0xa9cdf0) };
 const DUSK = { zenith: c(0x3a4f8e), horizon: c(0xf3a457) };
 const lerp = (a, b, t) => a + (b - a) * t;
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 // a colour most of the way (TAME) to the grey of its own brightness (Rec. 709 luma, on the linear values)
-const TAME = 0.8;
+const TAME = 0.5;
 function tame(c) {
   const y = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b;
   c.r += (y - c.r) * TAME; c.g += (y - c.g) * TAME; c.b += (y - c.b) * TAME;
@@ -155,14 +155,20 @@ export class Lighting {
     // 1.4's is a plain brown); a storm still darkens, a morning still gilds. The sky and the fog
     // keep the game's colours.
     tame(sunCol); tame(amb);
-    const K = 2.6 / 1.2;   // (the map's sun at the game's usual 1.2)
+    // ForgeMap (rendu-3d-jeu): a franker sun over a weaker ambient, for the game's contrast of lit
+    // faces and shade (the map's sun was 2.6 at the game's usual 1.2, the ambient 1.0)
+    const K = 3.2 / 1.2;
     this.sun.color.copy(sunCol); this.sun.intensity = K * env.lightDay * d * (dir.y > -0.02 ? 1 : 0);
     this.moon.color.copy(sunCol); this.moon.intensity = K * env.lightNight * n;
-    this.hemi.color.copy(amb); this.hemi.groundColor.copy(amb).multiplyScalar(0.45); this.hemi.intensity = 1.0;
-    const zenith = this.uniforms.uZenith.value.clone().lerp(fog, 0.35);
-    this.uniforms.uHorizon.value.copy(fog); this.uniforms.uZenith.value.copy(zenith);
+    this.hemi.color.copy(amb); this.hemi.groundColor.copy(amb).multiplyScalar(0.45); this.hemi.intensity = 0.95;
+    // the sky stays the sky's blue by day (the game draws a sky box, its fog only veils the distance):
+    // the fog's colour tints the horizon, a little the zenith; at night and in a storm, the fog's
+    const day = c01(d * 1.5) * (env.dark ? 0 : 1);
+    const zenith = this.uniforms.uZenith.value.clone().lerp(fog, lerp(0.35, 0.1, day));
+    const horizon = this.uniforms.uHorizon.value.clone().lerp(fog, lerp(1.0, 0.3, day));
+    this.uniforms.uHorizon.value.copy(horizon); this.uniforms.uZenith.value.copy(zenith);
     this.uniforms.uSunTint.value.copy(sunCol).multiplyScalar(c01(dir.y * 8 + 0.2));
-    this.scene.fog.color.copy(fog); this.scene.background.copy(fog);
+    this.scene.fog.color.copy(horizon); this.scene.background.copy(horizon);
     const fd = env.fogDensity || [0.01, 0.01, 0.01, 0.01];
     const dens = Math.max(1e-4, fd[0] * n + fd[1] * m + fd[2] * d + fd[3] * ev);
     const far = Math.min(14000, Math.max(1500, 9500 * Math.sqrt(0.01 / dens)));
