@@ -98,6 +98,7 @@ namespace WebMap
             StaticCoroutine.Start(Tiles.Markers.LiveLoop());                        // portals and boats between sweeps
             StaticCoroutine.Start(WorldEvents.RaidLoop());                          // raids and invasions, for the Events panel and the map
             StaticCoroutine.Start(WorldEvents.DiscoveryLoop());
+            StaticCoroutine.Start(Tiles.WorldPicture.Loop());                       // /map from the tiles, made again as they change
             Tiles.MapIcons.Start(mapDataPath);            // the game's own map icons and item icons, cut from its files once
             Tiles.ItemIcons.Start(mapDataPath);                     // altars and traders found, first steps in a biome
             Feed.Add("server", "Server", "online");
@@ -174,6 +175,7 @@ namespace WebMap
             Tiles.Markers.LoadCache(worldDataPath);
             Tiles.Peaks.Start(worldDataPath);
             Tiles.TileStore.Init(worldDataPath);
+            Tiles.WorldPicture.Load(worldDataPath);       // the one picture of the world (/map), as last made
             // prefabs are the same in every world, so the model library sits beside the worlds
             if (Models.ModelStore.Root == null) Models.ModelStore.Init(mapDataPath);
 
@@ -188,27 +190,6 @@ namespace WebMap
             }
 
             currentWorldName = worldName;
-
-            string mapImagePath = Path.Combine(worldDataPath, "map.png");
-            try
-            {
-                byte[] png = File.ReadAllBytes(mapImagePath);
-                // IHDR width sits at bytes 16..19; no need to decode to know the size.
-                int width = png.Length > 24 ? (png[16] << 24) | (png[17] << 16) | (png[18] << 8) | png[19] : 0;
-                if (width == WebMapConfig.RENDER_SIZE)
-                {
-                    mapDataServer.mapImageData = png;
-                    mapDataServer.BuildMapJpg();
-                }
-                else
-                {
-                    ZLog.Log($"WebMap: map.png is {width}px, render_size is {WebMapConfig.RENDER_SIZE}: rebuilding");
-                }
-            }
-            catch (Exception e)
-            {
-                ZLog.LogError("WebMap: Failed to read map image data from disk. " + e.Message);
-            }
 
             string fogImagePath = Path.Combine(worldDataPath, "fog.png");
             try
@@ -385,156 +366,12 @@ namespace WebMap
             }
         }
 
+        // The world is there: its data loads. (ForgeMap's own picture of it, map.png, is made from
+        // Munin's tiles since 2.0: Tiles/WorldPicture.)
         [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Start))]
         private class ZoneSystemPatch
         {
-            private static readonly Color DeepWaterColor = new Color(0.36105883f, 0.36105883f, 0.43137255f);
-            private static readonly Color ShallowWaterColor = new Color(0.574f, 0.50709206f, 0.47892025f);
-            private static readonly Color ShoreColor = new Color(0.1981132f, 0.12241901f, 0.1503943f);
-
-            private static Color GetPixelColor(Heightmap.Biome biome)
-            {
-                Color m_meadowsColor = new Color(0.573f, 0.655f, 0.361f);
-                Color m_swampColor = new Color(0.639f, 0.447f, 0.345f);
-                Color m_mountainColor = new Color(1f, 1f, 1f);
-                Color m_blackforestColor = new Color(0.420f, 0.455f, 0.247f);
-                Color m_heathColor = new Color(0.906f, 0.671f, 0.470f);
-                Color m_ashlandsColor = new Color(0.690f, 0.192f, 0.192f);
-                Color m_deepnorthColor = new Color(1f, 1f, 1f);
-                Color m_mistlandsColor = new Color(0.36f, 0.22f, 0.4f);
-
-                switch (biome)
-                {
-                    case Heightmap.Biome.Meadows:
-                        return m_meadowsColor;
-                    case Heightmap.Biome.Swamp:
-                        return m_swampColor;
-                    case Heightmap.Biome.Mountain:
-                        return m_mountainColor;
-                    case Heightmap.Biome.BlackForest:
-                        return m_blackforestColor;
-                    case Heightmap.Biome.Plains:
-                        return m_heathColor;
-                    case Heightmap.Biome.AshLands:
-                        return m_ashlandsColor;
-                    case Heightmap.Biome.DeepNorth:
-                        return m_deepnorthColor;
-                    case Heightmap.Biome.Ocean:
-                        return Color.white;
-                    case Heightmap.Biome.Mistlands:
-                        return m_mistlandsColor;
-                    default:
-                        return Color.white;
-                }
-            }
-
-            private static void Postfix(ZoneSystem __instance)
-            {
-                WebMap.instance.NewWorld();
-
-                if (mapDataServer.mapImageData != null)
-                {
-                    ZLog.Log("WebMap: MAP ALREADY BUILT!");
-                    return;
-                }
-
-                ZLog.Log("WebMap: BUILD MAP!");
-                StaticCoroutine.Start(BuildMap());
-            }
-
-            // The terrain picture. Sampled at RENDER_SIZE, which may be finer than the
-            // overlays' TEXTURE_SIZE; it covers the same area, so the pitch is scaled
-            // to match. Yields as it goes: at 4096 this is 16M samples and used to
-            // freeze the server for the duration.
-            private static IEnumerator BuildMap()
-            {
-                int R = WebMapConfig.RENDER_SIZE;
-                float rp = WebMapConfig.PIXEL_SIZE * (float)WebMapConfig.TEXTURE_SIZE / R;
-                float step = 2f * rp / WebMapConfig.PIXEL_SIZE;   // 2f at 2048: the original look
-
-                int num = R / 2;
-                float num2 = rp / 2f;
-                Color mask;
-                Color32[] colorArray = new Color32[R * R];
-                float[] heightArray = new float[R * R];
-                for (int i = 0; i < R; i++)
-                {
-                    yield return null;                       // one row per frame: never freeze the server for this
-                    for (int j = 0; j < R; j++)
-                    {
-                        float wx = (float)(j - num) * rp + num2;
-                        float wy = (float)(i - num) * rp + num2;
-                        Heightmap.Biome biome = WorldGenerator.instance.GetBiome(wx, wy);
-                        float biomeHeight = WorldGenerator.instance.GetBiomeHeight(biome, wx, wy, out mask);
-                        colorArray[i * R + j] = GetPixelColor(biome);
-                        heightArray[i * R + j] = biomeHeight;
-                    }
-                }
-
-                float waterLevel = ZoneSystem.instance.m_waterLevel;
-                Vector3 sunDir = new Vector3(-0.57735f, 0.57735f, 0.57735f);
-                // 4 bytes a pixel, what the RGBA32 texture holds anyway: a Color[] was 16, which
-                // at 2048 was 64 MB more at the peak of the render (256 MB at 4096)
-                Color32[] newColors = new Color32[colorArray.Length];
-
-                for (int t = 0; t < colorArray.Length; t++)
-                {
-                    if ((t & 0x3FFFF) == 0) yield return null;
-                    float h = heightArray[t];
-
-                    int tUp = t - R;
-                    if (tUp < 0) tUp = t;
-
-                    int tDown = t + R;
-                    if (tDown > colorArray.Length - 1) tDown = t;
-
-                    int tRight = t + 1;
-                    if (tRight > colorArray.Length - 1) tRight = t;
-
-                    int tLeft = t - 1;
-                    if (tLeft < 0) tLeft = t;
-
-                    float hUp = heightArray[tUp];
-                    float hRight = heightArray[tRight];
-                    float hLeft = heightArray[tLeft];
-                    float hDown = heightArray[tDown];
-
-                    Vector3 va = new Vector3(step, 0f, hRight - hLeft).normalized;
-                    Vector3 vb = new Vector3(0f, step, hUp - hDown).normalized;
-                    Vector3 normal = Vector3.Cross(va, vb);
-
-                    float surfaceLight = Vector3.Dot(normal, sunDir) * 0.25f + 0.75f;
-
-                    float shoreMask = Mathf.Clamp(h - waterLevel, 0, 1);
-                    float shallowRamp = Mathf.Clamp((h - waterLevel + 0.2f * 12.5f) * 0.5f, 0, 1);
-                    float deepRamp = Mathf.Clamp((h - waterLevel + 1f * 12.5f) * 0.1f, 0, 1);
-
-                    Color32 mapColor = colorArray[t];
-                    Color ans = Color.Lerp(ShoreColor, mapColor, shoreMask);
-                    ans = Color.Lerp(ShallowWaterColor, ans, shallowRamp);
-                    ans = Color.Lerp(DeepWaterColor, ans, deepRamp);
-
-                    newColors[t] = new Color(ans.r * surfaceLight, ans.g * surfaceLight, ans.b * surfaceLight, ans.a);
-                }
-
-                Texture2D newTexture = new Texture2D(R, R,
-                    TextureFormat.RGBA32, false);
-                newTexture.SetPixels32(newColors);
-                byte[] pngBytes = ImageConv.EncodeToPNG(newTexture);
-                UnityEngine.Object.Destroy(newTexture);     // its pixels are the PNG now: 16 MB at 2048, never let go before
-
-                mapDataServer.mapImageData = pngBytes;
-                    mapDataServer.BuildMapJpg();
-                try
-                {
-                    File.WriteAllBytes(Path.Combine(worldDataPath, "map.png"), pngBytes);
-                    ZLog.Log("WebMap: BUILDING MAP DONE!");
-                }
-                catch (Exception e)
-                {
-                    ZLog.LogError("WebMap: FAILED TO WRITE MAP FILE! " + e.Message);
-                }
-            }
+            private static void Postfix() => WebMap.instance.NewWorld();
         }
 
         [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Load))]

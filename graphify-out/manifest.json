@@ -42,9 +42,9 @@
     "semantic_hash": ""
   },
   "WebMap.Tests/GateTests.cs": {
-    "mtime": 1794516028.8676093,
-    "seen": 1794532016.1548238,
-    "ast_hash": "b9c7c155a4e4df555d02c82a07b40129",
+    "mtime": 1794533991.5476747,
+    "seen": 1794534307.5621934,
+    "ast_hash": "933120df7743995ae291d3952126a765",
     "semantic_hash": ""
   },
   "WebMap.Tests/GearTests.cs": {
@@ -150,9 +150,9 @@
     "semantic_hash": ""
   },
   "WebMap.Tests/TilesTests.cs": {
-    "mtime": 1794533020.666864,
-    "seen": 1794533333.3113418,
-    "ast_hash": "c95eeb21ca2ddba51fa3a5c1fce14494",
+    "mtime": 1794534163.4120944,
+    "seen": 1794534307.5622265,
+    "ast_hash": "b5cec6e95f41b53e8fba7fdfa6fcd1a9",
     "semantic_hash": ""
   },
   "WebMap.Tests/VersionTests.cs": {
@@ -312,9 +312,9 @@
     "semantic_hash": ""
   },
   "WebMap/MapDataServer.cs": {
-    "mtime": 1794533777.4169168,
-    "seen": 1794533945.724061,
-    "ast_hash": "ce439ada86182640d4d106a4a5f6ba87",
+    "mtime": 1794534123.6372268,
+    "seen": 1794534307.5622797,
+    "ast_hash": "45e8d4d83c6ee5748b4c7eec9b3909ef",
     "semantic_hash": ""
   },
   "WebMap/MapFog.cs": {
@@ -600,9 +600,9 @@
     "semantic_hash": ""
   },
   "WebMap/WebMap.cs": {
-    "mtime": 1794533771.3404772,
-    "seen": 1794533945.7241397,
-    "ast_hash": "c293849e8a89548e5fdaa29209078dba",
+    "mtime": 1794534123.6366687,
+    "seen": 1794534307.5624056,
+    "ast_hash": "999df4636df5b909d47a7b3c3b95e5c0",
     "semantic_hash": ""
   },
   "WebMap/WebMap.csproj": {
@@ -696,9 +696,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/map-core.js": {
-    "mtime": 1794517761.4459448,
-    "seen": 1794532016.154942,
-    "ast_hash": "4123395283db8dfd6f3570a4b365c4bf",
+    "mtime": 1794534152.3682783,
+    "seen": 1794534307.5624409,
+    "ast_hash": "dee63b491be1beba4d593408497eed8e",
     "semantic_hash": ""
   },
   "WebMap/web/munin/js/app.js": {
@@ -1236,9 +1236,9 @@
     "semantic_hash": ""
   },
   "WebMap/web/portals.html": {
-    "mtime": 1794481539.8899262,
-    "seen": 1794532016.1550374,
-    "ast_hash": "c7a9a235da1f5b33812a9291e96e6185",
+    "mtime": 1794534152.3689604,
+    "seen": 1794534307.5625932,
+    "ast_hash": "0e7f934116d1149ab1459b009ba36850",
     "semantic_hash": ""
   },
   "WebMap/web/settings.html": {
@@ -1449,6 +1449,12 @@
     "mtime": 1794533771.3400815,
     "seen": 1794533945.724113,
     "ast_hash": "a47fed58a1806b287f79d6b39a8cdb72",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/WorldPicture.cs": {
+    "mtime": 1794534109.589108,
+    "seen": 1794534307.5623865,
+    "ast_hash": "dce3e996fc173c491ffe33232da1d495",
     "semantic_hash": ""
   }
 }

@@ -149,5 +149,30 @@ namespace WebMap.Tests
             Assert.StartsWith("Grant hid the base", log);
             Assert.Equal(1, Markers.ClearOverrides());
         }
+            // ForgeMap's one picture of the world, made from the tiles: the world in the middle where it
+        // belongs, north up, and the margin past Munin's square the sea of its far corner.
+        [Fact]
+        public void TheWorldPictureIsTheTilesInTheirPlace()
+        {
+            int zoom = 4, n = TileMath.TilesPerSide(zoom);
+            byte[] Solid(byte r, byte g, byte b)
+            {
+                using (var t = new SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>(256, 256, new SixLabors.ImageSharp.PixelFormats.Rgba32(r, g, b, 255)))
+                using (var ms = new MemoryStream()) { SixLabors.ImageSharp.ImageExtensions.SaveAsPng(t, ms); return ms.ToArray(); }
+            }
+            byte[] sea = Solid(10, 20, 90), land = Solid(200, 30, 30), north = Solid(30, 200, 30);
+            // the middle tile is land; the tile north of it, green
+            using (var img = WorldPicture.Compose((x, y) => x == n / 2 && y == n / 2 ? land : x == n / 2 && y == n / 2 - 1 ? north : sea, zoom, 2048, 2048 * 12f))
+            {
+                Assert.Equal(2048, img.Width);
+                var corner = img[2, 2];
+                Assert.Equal(10, corner.R); Assert.Equal(90, corner.B);       // the margin: the sea
+                // the tile holding the world's middle (x, z = 0) is centred: its middle pixel at 1024 +- a tile
+                TileMath.TileBounds(zoom, n / 2, n / 2, out float x0, out float z0, out float x1, out float z1);
+                int cx = (int)((((x0 + x1) / 2) + 12288f) / 12f), cy = (int)((12288f - (z0 + z1) / 2) / 12f);
+                Assert.Equal(200, img[cx, cy].R);
+                Assert.Equal(200, img[cx, cy - 170].G);                       // north is up
+            }
+        }
     }
 }

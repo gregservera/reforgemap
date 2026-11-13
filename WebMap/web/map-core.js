@@ -89,7 +89,7 @@ async function fetchConfig(base){ return setGeom(await fetchJSON(base, "/config"
 // The rasters are megabytes; a revision in /state says when one actually moved,
 // and ?v=<rev> lets the edge keep that version for an hour. A replacement decodes
 // off screen and is swapped in, so a refresh never blanks the map.
-const BASE_TEX = cfg.base;              // the world render, versioned by hand
+const BASE_TEX = cfg.base;              // the world render, versioned by /state's rev.map
 function layers(base, onLoad){
   const imgs = {}, rev = {};
   for(const k of ["base", "forest", "struct", "fog", "chart", "trails"]){
@@ -133,13 +133,23 @@ function layers(base, onLoad){
     const wantStruct = typeof o.structures === "function" ? o.structures() : o.structures;
     if(wantStruct && r.structures !== rev.structures){ rev.structures = r.structures; load("struct", "/structures", r.structures); }
     if(r.fog !== rev.fog){ rev.fog = r.fog; load("fog", "/fog", r.fog, o.onFog); }
+    baseRev(r.map);
     if(o.chart && r.chart && r.chart !== rev.chart){ rev.chart = r.chart; load("chart", "/chart", r.chart); }
     // the trails come only when asked for, like the structures raster
     const wantTrails = typeof o.trails === "function" ? o.trails() : o.trails;
     if(wantTrails && r.trails && r.trails !== rev.trails){ rev.trails = r.trails; load("trails", "/trails", r.trails); }
   }
-  return {imgs, rev, ready, load, whenReady, sync, features,
-          loadBase: () => load("base", BASE_TEX, "4k")};
+  // The world render is made again from the map's tiles as they change (2.0): asked for once as it is
+  // now, then again each time /state's rev.map moves on.
+  let baseAsked = false;
+  function baseRev(v){
+    if(v === undefined || v === rev.map) return;
+    const had = rev.map;
+    rev.map = v;
+    if(baseAsked && had !== undefined) load("base", BASE_TEX, v);
+  }
+  return {imgs, rev, ready, load, whenReady, sync, features, baseRev,
+          loadBase: () => { baseAsked = true; load("base", BASE_TEX, rev.map); }};
 }
 
 // ---------- rasters ----------

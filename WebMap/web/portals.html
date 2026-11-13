@@ -868,6 +868,7 @@ async function load(){
     PINS = MapCore.parsePins(s.pins);
     NAMED = ((s.portals || {}).named) || [];
     if(s.rev && s.rev.fog !== FOG_REV){ FOG_REV = s.rev.fog; LAY.load("fog", "/fog", FOG_REV); }
+    if(s.rev) LAY.baseRev(s.rev.map);           // the world render, made again as the map's tiles change
     // the chart is one image per world; its revision arrives with the state like the others
     // a server that does not yet say which chart it has still has one: ask for it by the old name
     const cr = (s.rev && s.rev.chart) || "1";

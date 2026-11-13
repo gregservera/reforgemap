@@ -108,8 +108,6 @@ namespace WebMap
         }
         private readonly HttpServer httpServer;
 
-        public byte[] mapImageData;
-        private byte[] mapJpgCache;          // built once; the world render never changes
 
         // The fog changes a few pixels every couple of seconds and is asked for far
         // more often than that. Encode when it has changed, serve the bytes otherwise.
@@ -133,24 +131,6 @@ namespace WebMap
             }
         }
 
-        public void BuildMapJpg()
-        {
-            if (mapJpgCache != null) return;
-            if (mapImageData == null || mapImageData.Length == 0) return;
-            try
-            {
-                int size = WebMapConfig.RENDER_SIZE;      // LoadImage resizes anyway
-                var tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
-                if (!ImageConv.LoadImage(tex, mapImageData)) return;
-                mapJpgCache = ImageConv.EncodeToJPG(tex, 85);
-                UnityEngine.Object.Destroy(tex);
-                ZLog.Log($"WebMap: world render as jpeg: {mapJpgCache.Length} bytes (png was {mapImageData.Length})");
-            }
-            catch (Exception ex)
-            {
-                ZLog.LogWarning("WebMap: jpeg encode failed: " + ex);
-            }
-        }
         public List<string> pins = new List<string>();
         public List<MapMessage> sentMessages = new List<MapMessage>();
         public List<MapMessage> newMessages = new List<MapMessage>();
@@ -574,38 +554,21 @@ namespace WebMap
                     res.Close(textBytes, true);
                     return true;
                 case "/map.jpg":
-                    // The world render is opaque and several MB as a PNG, which is a
-                    // long transatlantic download on a cold edge. As a JPEG it is
-                    // roughly a seventh of that, and the loss is invisible on terrain.
-                    {
-                        byte[] jpg = mapJpgCache;
-                        if (jpg == null || jpg.Length == 0)
-                        {
-                            res.StatusCode = 503;
-                            res.Close();
-                            return true;
-                        }
-                        res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=604800, immutable");
-                        res.ContentType = "image/jpeg";
-                        res.StatusCode = 200;
-                        res.ContentLength64 = jpg.Length;
-                        res.Close(jpg, true);
-                        return true;
-                    }
                 case "/map":
-                    if (mapImageData == null || mapImageData.Length == 0)
+                    // the one picture of the world, from Munin's tiles (Tiles/WorldPicture): a JPEG a
+                    // seventh of the PNG, the loss invisible on terrain. Pages ask with ?v=<rev.map>.
                     {
-                        res.StatusCode = 503;          // still rendering; never cached
-                        res.Close();
+                        bool jpeg = rawRequestPath == "/map.jpg";
+                        byte[] pic = jpeg ? Tiles.WorldPicture.Jpg : Tiles.WorldPicture.Png;
+                        if (pic == null || pic.Length == 0) { res.StatusCode = 503; res.Close(); return true; }   // still being made; never cached
+                        res.Headers.Add(HttpResponseHeader.CacheControl, req.QueryString["v"] != null ? "public, max-age=604800, immutable" : "no-cache");
+                        // (/map: an octet stream, to make the full map harder to see by accident)
+                        res.ContentType = jpeg ? "image/jpeg" : "application/octet-stream";
+                        res.StatusCode = 200;
+                        res.ContentLength64 = pic.Length;
+                        res.Close(pic, true);
                         return true;
                     }
-                    // Doing things this way to make the full map harder to accidentally see.
-                    res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=604800, immutable");
-                    res.ContentType = "application/octet-stream";
-                    res.StatusCode = 200;
-                    res.ContentLength64 = mapImageData.Length;
-                    res.Close(mapImageData, true);
-                    return true;
                 case "/fog":
                     res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
                     res.ContentType = "image/png";
@@ -721,7 +684,7 @@ namespace WebMap
                     {
                         string pinsJson = PinsJson();
                         string state = "{\"now\":" + DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                            + ",\"rev\":{\"fog\":" + fogRev + ",\"pieces\":" + Pieces.Rev + ",\"forest\":" + ForestMap.Rev
+                            + ",\"rev\":{\"fog\":" + fogRev + ",\"map\":" + Tiles.WorldPicture.Rev + ",\"pieces\":" + Pieces.Rev + ",\"forest\":" + ForestMap.Rev
                             + ",\"structures\":" + StructureMap.Rev + ",\"chart\":" + Chart.Rev + ",\"trails\":" + Trails.Rev
                             + ",\"features\":" + FeaturesRev() + ",\"objects\":" + WorldObjects.Rev + ",\"height\":" + TerrainPatches.Rev
                             + ",\"models\":" + Models.ModelStore.Rev + "}"
