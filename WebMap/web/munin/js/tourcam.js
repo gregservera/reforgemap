@@ -4,6 +4,9 @@
 // made here over View3D: the orbit through setPose, a frame at a time; the stands and lines through
 // its Street View (stand, with an eye height of the shot's). Nothing the tour does is kept when it
 // stops: the light goes back to the page's, the view back to the map.
+//
+// A tour started in 3D stays in 3D (stay3d): between the shots the map's flights move the 3D camera
+// instead, looking down from as high as the map shows wide (follow), and it stops in 3D.
 
 import * as THREE from 'three';
 import { prefabs } from './data.js';
@@ -17,6 +20,7 @@ export class TourCam {
     this.mode = 'street'; this.at = null;
     this.orbit = { dist: 140, pitch: 40, lift: 0, yaw: 30, spin: 0 };
     this.anims = []; this.walking = null; this.frame = 0;
+    this.stay3d = false; this.shooting = false;
   }
   get prefabs() { return prefabs.map; }
   get waterLevel() { return this.v3 ? this.v3.waterLevel : 30; }
@@ -30,6 +34,14 @@ export class TourCam {
   async enter(x, z, heading, prep) {
     this.at = { x, z };
     this.orbit.yaw = (heading + 180) % 360;
+    this.shooting = true;
+    if (this.stay3d && this.app.mode === '3d') {     // already there: the ground in, then the shot
+      for (let t0 = performance.now(); this.heightAt(x, z) === null && performance.now() - t0 < 8000; ) await new Promise((r) => setTimeout(r, 150));
+      if (this.app.mode !== '3d') return;
+      prep(this);
+      this.tick();
+      return;
+    }
     this.app.pendingPose = { x, z, dist: this.orbit.dist, yaw: this.orbit.yaw, pitch: this.orbit.pitch };
     // the map stays on screen while the ground under the shot comes in: never a cut into black
     const v3d = document.getElementById('view3d'), map = document.getElementById('map');
@@ -46,10 +58,20 @@ export class TourCam {
   }
   leave() {
     this.still();
+    this.shooting = false;
     if (this.v3?.street) this.v3.street = null;
     if (this.v3) { this.v3.controls.enabled = true; this.v3.clockOverride = undefined; }
     document.getElementById('view3d').style.opacity = '';
+    if (this.stay3d) { this.mode = 'street'; return; }   // the 3D stays: the next flight moves it
     this.app.setMode('2d');
+  }
+  // the map's flight, in 3D: over (x, z), as high as `across` metres show on the screen
+  follow(x, z, across) {
+    if (!this.v3 || this.shooting || this.app.mode !== '3d') return;
+    const fov = this.v3.camera.fov * Math.PI / 180, aspect = this.v3.camera.aspect || 1.6;
+    const dist = Math.min(6500, Math.max(90, across / aspect / 2 / Math.tan(fov / 2)));
+    this.orbit.yaw = (this.orbit.yaw + 0.04) % 360;
+    this.v3.setPose({ x, z, dist, yaw: this.orbit.yaw, pitch: 58 });
   }
   feed() {} markMode() {} armPeg() {} letGo() {}
 

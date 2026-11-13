@@ -230,13 +230,14 @@ namespace WebMap.Tests
                 // cells centred on multiples of c; walked: those with x <= 0
                 FogMask.Walked = (x, z) => Math.Round(x / c) <= 0;
                 Assert.Equal(255, FogMask.Shown(0, 5));              // a walked cell's centre
-                Assert.Equal(0, FogMask.Shown(c / 2, 5));            // the edge between the cells
-                Assert.Equal(0, FogMask.Shown(c * 0.9f, 5));         // inside the unwalked cell
-                byte mid = FogMask.Shown(c / 4, 5);
-                Assert.InRange(mid, (byte)60, (byte)200);            // fading over the last half cell
+                Assert.Equal(255, FogMask.Shown(c / 2, 5));          // the walked edge: all of it still
+                byte under = FogMask.Shown(c, 5);
+                Assert.InRange(under, (byte)60, (byte)200);          // a cell past it: fading under the veil
+                Assert.Equal(0, FogMask.Shown(c * 1.5f, 5));         // and gone half a cell further
+                Assert.Equal(0, FogMask.Shown(c * 3, 5));
                 // a diagonal edge reads as a line, not stairs: along it the same at every step
                 FogMask.Walked = (x, z) => Math.Round(x / c) + Math.Round(z / c) <= 0;
-                Assert.Equal(FogMask.Shown(c * 0.1f, c * 0.1f), FogMask.Shown(c * 1.1f, -c * 0.9f));
+                Assert.Equal(FogMask.Shown(c * 0.6f, c * 0.6f), FogMask.Shown(c * 1.6f, -c * 0.4f));
             }
             finally { FogMask.Walked = was; }
         }

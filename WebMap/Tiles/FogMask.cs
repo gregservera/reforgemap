@@ -5,10 +5,11 @@
 // the tile is walked (its signature, also in the ETag), and the fog lifting tells open pages to
 // fetch the tiles over that spot again (TileStore.OnFogLifted).
 //
-// The edge is soft, not the fog's 12 m stairs: the fog is read between its cells' centres
-// (bilinear, Cover) and the ground fades out over the last half cell before the walked edge, the
-// line the page's blurred veil (layers/fog.js) darkens along. Along a straight edge nothing of an
-// unwalked cell shows; only in the inner corner of a walked bend does a few metres' wedge of one.
+// The edge is soft, not the fog's 12 m stairs, and runs on under the page's blurred veil
+// (layers/fog.js) so the ground goes into the dark cleanly: a cell counts 1 walked, 1/2 next to a
+// walked one (of its eight), the fog is read between the cells' centres (bilinear, Cover), and the
+// ground fades out from the walked edge to about a cell past it (Cover 3/4 to 1/4), where the veil
+// is near black.
 //
 // Height tiles are left whole: the 3D view's relief of unwalked ground stays as decided on
 // 12/11/2026 (ticket 3d-brouillard).
@@ -33,25 +34,50 @@ namespace WebMap.Tiles
         // for the tests: what counts as walked (world x, z)
         internal static Func<float, float, bool> Walked = MapFog.IsExplored;
 
-        // How walked (x, z) is, 0 to 1: the fog's cells (centred on multiples of the cell) read
-        // bilinearly
-        internal static float Cover(float x, float z)
+        // a cell (centred on (i, j) cells from the world's middle): 1 walked, 1/2 next to a walked
+        // one, else 0 (in halves: 2, 1, 0)
+        internal static byte CellValue(int i, int j)
         {
-            float c = WebMapConfig.PIXEL_SIZE, fx = x / c, fz = z / c;
-            float ix = (float)Math.Floor(fx), iz = (float)Math.Floor(fz), tx = fx - ix, tz = fz - iz;
-            float x0 = ix * c, x1 = x0 + c, z0 = iz * c, z1 = z0 + c;
-            float a = Walked(x0, z0) ? 1f : 0f, b = Walked(x1, z0) ? 1f : 0f, d = Walked(x0, z1) ? 1f : 0f, e = Walked(x1, z1) ? 1f : 0f;
-            return (a * (1 - tx) + b * tx) * (1 - tz) + (d * (1 - tx) + e * tx) * tz;
+            float c = WebMapConfig.PIXEL_SIZE;
+            if (Walked(i * c, j * c)) return 2;
+            for (int dj = -1; dj <= 1; dj++)
+                for (int di = -1; di <= 1; di++)
+                    if ((di != 0 || dj != 0) && Walked((i + di) * c, (j + dj) * c)) return 1;
+            return 0;
         }
 
-        // what of the ground at (x, z) shows, 0 to 255: none at the walked edge (Cover 1/2), all
-        // from the walked cells' centres in
-        internal static byte Shown(float x, float z)
+        // The cells over an area (world metres), read once: a tile's pixels ask each four times
+        internal static Func<int, int, byte> Cells(float minX, float minZ, float maxX, float maxZ)
         {
-            float v = Cover(x, z);
-            if (v <= 0.5f) return 0;
-            if (v >= 1f) return 255;
-            float t = (v - 0.5f) * 2f;
+            float c = WebMapConfig.PIXEL_SIZE;
+            int i0 = (int)Math.Floor(minX / c) - 1, j0 = (int)Math.Floor(minZ / c) - 1;
+            int ni = (int)Math.Ceiling(maxX / c) + 2 - i0, nj = (int)Math.Ceiling(maxZ / c) + 2 - j0;
+            if ((long)ni * nj > 4_500_000) return CellValue;         // (never at the sizes asked)
+            var v = new byte[ni * nj];
+            for (int j = 0; j < nj; j++)
+                for (int i = 0; i < ni; i++) v[j * ni + i] = CellValue(i0 + i, j0 + j);
+            return (i, j) => { i -= i0; j -= j0; return i >= 0 && j >= 0 && i < ni && j < nj ? v[j * ni + i] : CellValue(i + i0, j + j0); };
+        }
+
+        // How walked (x, z) is, 0 to 1: the cells read bilinearly
+        internal static float Cover(float x, float z, Func<int, int, byte> cell = null)
+        {
+            cell = cell ?? CellValue;
+            float c = WebMapConfig.PIXEL_SIZE, fx = x / c, fz = z / c;
+            int ix = (int)Math.Floor(fx), iz = (int)Math.Floor(fz);
+            float tx = fx - ix, tz = fz - iz;
+            float a = cell(ix, iz), b = cell(ix + 1, iz), d = cell(ix, iz + 1), e = cell(ix + 1, iz + 1);
+            return ((a * (1 - tx) + b * tx) * (1 - tz) + (d * (1 - tx) + e * tx) * tz) / 2f;
+        }
+
+        // what of the ground at (x, z) shows, 0 to 255: all up to the walked edge (Cover 3/4),
+        // none a cell past it (1/4)
+        internal static byte Shown(float x, float z, Func<int, int, byte> cell = null)
+        {
+            float v = Cover(x, z, cell);
+            if (v <= 0.25f) return 0;
+            if (v >= 0.75f) return 255;
+            float t = (v - 0.25f) * 2f;
             return (byte)Math.Round(255f * t * t * (3f - 2f * t));
         }
 
@@ -65,13 +91,14 @@ namespace WebMap.Tiles
             int whole = 0, none = 0;
             TileMath.TileBounds(zoom, x, y, out float minX, out float minZ, out float maxX, out float maxZ);
             float step = (maxX - minX) / N;
+            var cells = Cells(minX, minZ, maxX, maxZ);
             uint sig = 2166136261u;
             for (int py = 0; py < N; py++)
             {
                 float wz = maxZ - (py + 0.5f) * step;
                 for (int px = 0; px < N; px++)
                 {
-                    byte a = Shown(minX + (px + 0.5f) * step, wz);
+                    byte a = Shown(minX + (px + 0.5f) * step, wz, cells);
                     shown[py * N + px] = a;
                     if (a == 255) whole++; else if (a == 0) none++;
                     sig = (sig ^ a ^ ((uint)(py * N + px) << 8)) * 16777619u;
@@ -140,12 +167,13 @@ namespace WebMap.Tiles
         internal static void MaskPicture(Image<Rgba32> img, float metres)
         {
             float step = metres / img.Width, half = metres / 2f;
+            var cells = Cells(-half, -half, half, half);
             for (int py = 0; py < img.Height; py++)
             {
                 float wz = half - (py + 0.5f) * step;
                 for (int px = 0; px < img.Width; px++)
                 {
-                    byte a = Shown((px + 0.5f) * step - half, wz);
+                    byte a = Shown((px + 0.5f) * step - half, wz, cells);
                     if (a == 255) continue;
                     if (a == 0) { img[px, py] = new Rgba32(0, 0, 0, 255); continue; }
                     var p = img[px, py];

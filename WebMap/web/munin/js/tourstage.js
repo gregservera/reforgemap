@@ -38,6 +38,8 @@ export function setupTour(app) {
       const px = (W / 2 - this._tx) / s, py = (H / 2 - this._ty) / s, w = MC.toWorld(px, py);
       const zoom = Math.max(map.getMinZoom(), Math.min(map.getMaxZoom(), 7 + Math.log2(s / MC.geom.pixel)));
       map.setView(toLatLng(w.x, w.z), zoom, { animate: false });
+      // a tour that stays in 3D flies the 3D camera the same way (tourcam.js)
+      if (street.follow) street.follow(w.x, w.z, W / s * MC.geom.pixel);
     },
     fitWorld() { map.setView(toLatLng(0, 0), map.getMinZoom(), { animate: false }); },
   };
@@ -104,11 +106,13 @@ export function setupTour(app) {
   // the map has to take any zoom while the tour flies, and the sidebar is out of the way
   let snap = null, sideWas = null;
   const begin = () => {
+    street.stay3d = app.mode === '3d';   // begun in 3D: it all happens there, and ends there
     snap = [map.options.zoomSnap, map.options.zoomDelta]; map.options.zoomSnap = 0;
     sideWas = !document.body.classList.contains('sidebar-hidden'); app.toggleSidebar(false);
     for (const [d, l] of Object.entries(detailLayer)) keep[d] = l && l.on_;
   };
   const end = () => {
+    street.shooting = false; street.stay3d = false;
     if (snap) { map.options.zoomSnap = snap[0]; map.options.zoomDelta = snap[1]; snap = null; map.setZoom(Math.round(map.getZoom()), { animate: false }); }
     for (const [d, l] of Object.entries(detailLayer)) if (l && keep[d] !== undefined && l.on_ !== keep[d]) l.setOn(keep[d]);
   };

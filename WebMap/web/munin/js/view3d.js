@@ -783,6 +783,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
       s.scale.set(height * s.aspect, height, 1);
     };
     for (const s of this.markerSprites.children) fit(s, 26);
+    for (const s of this.pinSprites.children) fit(s, 26);   // ForgeMap: the pins too (they kept 6 m, huge up close)
     for (const p of this.players.values()) fit(p.label, 32);
   }
 
