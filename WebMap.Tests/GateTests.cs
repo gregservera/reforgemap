@@ -103,7 +103,8 @@ namespace WebMap.Tests
             Assert.Contains("\"pieces\":[]", r.Content.ReadAsStringAsync().Result);
             Assert.Equal(404, Get("/data/ruins/10_10.json"));          // no ruin there: nothing to draw
             Assert.Equal(404, Get("/data/structures/99_10.json"));     // off the grid
-            Assert.Equal(404, Get("/data/icons.json"));
+            Assert.Equal(200, Get("/data/icons.json"));                // the game icons: {"icons":{}} until cut
+            Assert.Equal(404, Get("/data/nothing.json"));
             Assert.Equal(404, Get("/data/veg/1_2_3.bin"));
             Assert.Equal(503, Get("/data/fog.png"));                    // no fog yet: never an empty 200
         }

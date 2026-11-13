@@ -458,6 +458,27 @@ namespace WebMap
                 return true;
             }
 
+            if ((rawRequestPath.StartsWith("/icons/game/", StringComparison.Ordinal) || rawRequestPath.StartsWith("/icons/item/", StringComparison.Ordinal)) && req.HttpMethod == "GET")
+            {
+                // the game's own map icons (Tiles/MapIcons) and item icons (Tiles/ItemIcons), cut from its files
+                bool item = rawRequestPath[7] == 'i';
+                string dir = item ? Tiles.ItemIcons.Dir : Tiles.MapIcons.Dir, name = rawRequestPath.Substring(12);
+                if (dir != null && name.EndsWith(".png", StringComparison.Ordinal) && name.IndexOfAny(new[] { '/', '\\' }) < 0 && !name.Contains(".."))
+                {
+                    if (item) name = Tiles.ItemIcons.Safe(name.Substring(0, name.Length - 4)) + ".png";
+                    string full = Path.Combine(dir, name);
+                    byte[] data = null;
+                    try { if (name.Length > 4 && File.Exists(full)) data = File.ReadAllBytes(full); } catch { }
+                    if (data != null)
+                    {
+                        res.Headers.Add(HttpResponseHeader.CacheControl, "public, max-age=86400");
+                        SendBytes(req, res, data, "image/png");
+                        return true;
+                    }
+                }
+                res.StatusCode = 404; res.Close();
+                return true;
+            }
             if (rawRequestPath.StartsWith("/preview-image.", StringComparison.Ordinal) && req.HttpMethod == "GET")
             {
                 // the link preview's picture (preview_image), at the extension it was announced with
@@ -1126,6 +1147,8 @@ namespace WebMap
                         json = Activity.ZoneJson(zx, zz); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
                         break;
                     }
+                case "icons.json": json = Tiles.MapIcons.ManifestJson; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;   // the game's map icons
+                case "items.json": json = Tiles.ItemIcons.NamesJson; break;   // each item's name in the game
                 case "hotspots.json": json = Tiles.Hotspots.Json; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;
                 case "building.json":
                     {

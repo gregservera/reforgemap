@@ -26,7 +26,7 @@ namespace WebMap.Tiles
             // the game's Localization, found by reflection (its assembly is not one ForgeMap builds against)
             private static bool looked;
             private static Func<string, string> localizer;
-            private static string LocalizeFn(string s)
+            internal static string LocalizeFn(string s)
             {
                 if (!looked)
                 {

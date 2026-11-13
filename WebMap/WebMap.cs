@@ -97,7 +97,9 @@ namespace WebMap
             StaticCoroutine.Start(Tiles.Runestones.PrepareRoutine(mapDataPath));   // what each runestone says, once
             StaticCoroutine.Start(Tiles.Markers.LiveLoop());                        // portals and boats between sweeps
             StaticCoroutine.Start(WorldEvents.RaidLoop());                          // raids and invasions, for the Events panel and the map
-            StaticCoroutine.Start(WorldEvents.DiscoveryLoop());                     // altars and traders found, first steps in a biome
+            StaticCoroutine.Start(WorldEvents.DiscoveryLoop());
+            Tiles.MapIcons.Start(mapDataPath);            // the game's own map icons and item icons, cut from its files once
+            Tiles.ItemIcons.Start(mapDataPath);                     // altars and traders found, first steps in a biome
             Feed.Add("server", "Server", "online");
             int stride = Math.Max(1, (int)(Tiles.TileMath.TileSpanMeters(WebMapConfig.PRERENDER_ZOOM + 1) / WebMapConfig.PIXEL_SIZE / 2));
             MapFog.ForEachExplored(Tiles.TileStore.OnExplored, stride);
