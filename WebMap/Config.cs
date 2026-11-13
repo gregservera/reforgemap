@@ -353,7 +353,7 @@ namespace WebMap
             config["enable_3d"] = true;
             config["web_pins"] = true;                // the page's form; the write itself wants a member (/pins)
             config["web_pings"] = false;
-            config["web_edit_bases"] = false;
+            config["web_edit_bases"] = true;    // renaming a base wants a signed-in member (/names)
             config["github_link"] = false;            // Munin's link to its own repository
 
             string json = DictionaryToJson(config);

@@ -479,6 +479,14 @@ namespace WebMap
                         SendBytes(req, res, bytes, "application/octet-stream");
                         return true;
                     }
+                case "/api/bases/reset":
+                    // every base back to its own name and shown again: an admin's
+                    {
+                        if (req.HttpMethod != "POST") { Answer(res, 405, "{\"error\":\"POST\"}"); return true; }
+                        if (!Caller(req, out _, out bool admin) || !admin) { Answer(res, 403, "{\"error\":\"forbidden\"}"); return true; }
+                        Answer(res, 200, "{\"cleared\":" + Tiles.Markers.ClearOverrides() + "}");
+                        return true;
+                    }
                 case "/api/status":
                     // how far the map's drawing has got
                     res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
@@ -755,8 +763,9 @@ namespace WebMap
                     {
                         if (!SiteWrite(req, res, out string body, out string who)) return true;
                         string log = null;
-                        string err = Features.ParseBody(body, out string id, out string name)
-                            ? Features.SetName(id, name, who, out log) : "expected {\"id\":..,\"name\":..}";
+                        string err = !Features.ParseBody(body, out string id, out string name) ? "expected {\"id\":..,\"name\":..}"
+                            : id.StartsWith("base@") ? Tiles.Markers.NameBase(id, Features.CleanName(name), Body.Bool(body, "hidden"), who ?? "", out log)
+                            : Features.SetName(id, name, who, out log);
                         Answer(res, err == null ? 200 : 400, err == null
                             ? "{\"ok\":true,\"rev\":" + FeaturesRev() + ",\"log\":\"" + JsonEscape(log ?? "") + "\"}"
                             : "{\"error\":\"" + JsonEscape(err) + "\"}");
@@ -1453,7 +1462,14 @@ namespace WebMap
             // the tiles drawn again since the last tick, "z/x/y" each, for open maps to fetch anew
             string tiles = TilesFrame(Tiles.TileStore.DrainNotifications(), Tiles.TileStore.OnDisk, Tiles.TileStore.QueueLength);
             if (tiles != null) webSocketHandler.Sessions.Broadcast(tiles);
+            // the markers changed (a sweep, a boat moved, a base renamed): open maps fetch them again
+            int markersRev = Tiles.Markers.Rev;
+            if (markersRev != sentMarkersRev) { sentMarkersRev = markersRev; webSocketHandler.Sessions.Broadcast(MarkersFrame(markersRev)); }
         }
+        private int sentMarkersRev = int.MinValue;
+
+        // markers\n<rev>: /data/markers.json has changed
+        internal static string MarkersFrame(int rev) => "markers\n" + rev.ToString(CultureInfo.InvariantCulture);
 
         // live\n{"ts":<unix ms>,"players":[...]}: the players as Munin's map reads them
         internal static string LiveFrame(string players, long ts) =>

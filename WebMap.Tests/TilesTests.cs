@@ -82,6 +82,10 @@ namespace WebMap.Tests
         }
 
         // Open maps fetch again exactly the tiles drawn again, and hear nothing when none were.
+        // The page fetches /data/markers.json again on this frame; a wrong head and it never does.
+        [Fact]
+        public void TheMarkersFrameIsItsRev() => Assert.Equal("markers\n-7", MapDataServer.MarkersFrame(-7));
+
         [Fact]
         public void TheTilesFrameListsTheTilesDrawnAgainAndIsNothingWithoutThem()
         {
@@ -126,6 +130,23 @@ namespace WebMap.Tests
             Assert.False(p.anyHeight);
             Assert.Equal(new byte[] { 0, 255, 0 }, new[] { p.paint[900], p.paint[901], p.paint[902] });
             Assert.Null(TerrainPatches.Decode(Blob(false)));
+        }
+            // A base is named through /names as base@x,z (decision Q7): only where a base stands, near
+        // enough; a second name says what it replaces; hiding and the auto name are the same call.
+        [Fact]
+        public void ABaseIsNamedOnlyWhereOneStands()
+        {
+            Markers.ClearOverrides();
+            Markers.BasesForTests(new List<Structures.Base> { new Structures.Base { x = 500f, z = -200f, pieces = 80 } });
+            Assert.NotNull(Markers.NameBase("base@2000,2000", "Home", false, "Withers", out _));
+            Assert.NotNull(Markers.NameBase("hub@500,-200", "Home", false, "Withers", out _));
+            Assert.Null(Markers.NameBase("base@520,-190", "Home", false, "Withers", out string log));
+            Assert.Contains("'Home'", log);
+            Assert.Null(Markers.NameBase("base@500,-200", "Hearth", false, "Grant", out log));
+            Assert.Equal("Grant named the base 'Home' 'Hearth'", log);
+            Assert.Null(Markers.NameBase("base@500,-200", "", true, "Grant", out log));
+            Assert.StartsWith("Grant hid the base", log);
+            Assert.Equal(1, Markers.ClearOverrides());
         }
     }
 }

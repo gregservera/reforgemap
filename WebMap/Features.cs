@@ -691,7 +691,7 @@ namespace WebMap
         {
             log = null;
             id = (id ?? "").Trim(); by = (by ?? "").Trim();
-            name = Regex.Replace(name ?? "", @"[\p{C}]", "").Trim();
+            name = CleanName(name);
             if (name.Length > 40) return "a name is at most 40 characters";
             if (id.StartsWith("hub@")) return SetHubName(id, name, by, out log);
             lock (gate)
@@ -711,6 +711,9 @@ namespace WebMap
             }
             return null;
         }
+
+        // a name as typed, without control characters or spaces around it
+        public static string CleanName(string name) => Regex.Replace(name ?? "", @"[\p{C}]", "").Trim();
 
         // ---------- hubs ----------
         // A hub is a spot the viewer finds by clustering portals, so its name is a

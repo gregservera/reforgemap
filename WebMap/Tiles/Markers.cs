@@ -3,6 +3,7 @@ using System.Linq;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using UnityEngine;
 using WebMap.Util;
@@ -148,6 +149,36 @@ namespace WebMap.Tiles
             SaveOverrides();
             try { json = Build(); rev++; } catch (Exception e) { ZLog.LogWarning("WebMap: markers failed: " + e.Message); }
         }
+
+        // A base named (or hidden, or given back its own name) through ForgeMap's /names, as
+        // base@x,z: only a signed-in member or the shared token reaches here. Null when it took.
+        public static string NameBase(string id, string name, bool hidden, string by, out string log)
+        {
+            log = null;
+            var m = System.Text.RegularExpressions.Regex.Match(id ?? "", @"^base@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)$");
+            if (!m.Success || !float.TryParse(m.Groups[1].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float x)
+                           || !float.TryParse(m.Groups[2].Value, NumberStyles.Float, CultureInfo.InvariantCulture, out float z)) return "no such place";
+            var known = bases;
+            Structures.Base? hit = null; float bd = MATCH_RADIUS * MATCH_RADIUS;
+            if (known != null)
+                foreach (var b in known)
+                {
+                    float d = (b.x - x) * (b.x - x) + (b.z - z) * (b.z - z);
+                    if (d < bd) { bd = d; hit = b; }
+                }
+            if (hit == null) return "no base stands there";
+            var at = hit.Value;
+            if (name.Length > 24) return "a base's name is at most 24 characters";
+            string was = FindOverride(at.x, at.z)?.label ?? "";
+            SetBase(at.x, at.z, name.Length > 0 ? name : null, hidden);
+            string who = by.Length > 0 ? by : "someone";
+            log = hidden ? $"{who} hid the base{(was.Length > 0 ? $" '{was}'" : "")}"
+                : $"{who} named the base " + (was.Length > 0 ? $"'{was}' " : "") + (name.Length == 0 ? "back to its own name" : $"'{name}'");
+            ZLog.Log("WebMap: " + log);
+            Discord.Tell(log);
+            return null;
+        }
+        internal static void BasesForTests(List<Structures.Base> list) => bases = list;
 
         public static int ClearOverrides()
         {

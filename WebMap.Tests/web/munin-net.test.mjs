@@ -10,6 +10,11 @@ test("a tiles frame becomes Munin's, keys and status", () => {
   assert.deepEqual(frame('tiles\n{"keys":["5/12/34"],"status":"40/3"}'), {t: "tiles", keys: ["5/12/34"], status: "40/3"});
 });
 
+// Markers the page never hears of stay as they were at load: a boat stuck, a base under its old name.
+test("a markers frame carries the server's markers rev", () => {
+  assert.deepEqual(frame("markers\n42"), {t: "markers", rev: 42});
+});
+
 test("reload is reload, and what the map does not use yet is nothing", () => {
   assert.deepEqual(frame("reload\n"), {t: "reload"});
   assert.equal(frame('players\n{"players":[]}'), null);

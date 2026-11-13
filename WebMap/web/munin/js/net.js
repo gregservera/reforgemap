@@ -40,7 +40,7 @@ export function connect() {
 }
 
 // one ForgeMap frame as Munin's: live (the players, {ts, players}) as players {data}, tiles {keys,
-// status}, pin, rmpin, reload; the others are not used yet
+// status}, markers {rev}, pin, rmpin, reload; the others are not used yet
 export function frame(text) {
   const nl = text.indexOf('\n'), type = nl < 0 ? text : text.slice(0, nl), body = nl < 0 ? '' : text.slice(nl + 1);
   if (type === 'reload') return { t: 'reload' };
@@ -57,6 +57,7 @@ export function frame(text) {
     return f.length >= 3 && isFinite(x) && isFinite(z) ? { t: 'ping', id: f[0], name: f[1], x, z } : null;
   }
   if (type === 'live') { try { return { t: 'players', data: JSON.parse(body) }; } catch { return null; } }
+  if (type === 'markers') return { t: 'markers', rev: +body };
   if (type === 'tiles') { try { return Object.assign({ t: 'tiles' }, JSON.parse(body)); } catch { return null; } }
   return null;
 }

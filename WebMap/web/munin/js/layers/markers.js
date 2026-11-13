@@ -236,9 +236,19 @@ export class MarkerLayers {
   }
 
   // popup for an auto-detected base: rename it, hide it, or put the name back
+  // ForgeMap: a base is renamed or hidden through /names (id base@x,z), by a signed-in member or the
+  // admin key (decision Q7); anyone else is told how to become one
   basePopup(m, set) {
     const el = document.createElement('div');
     el.className = 'base-popup';
+    const head = writeHeaders();
+    if (!head) {
+      el.innerHTML = popupHtml(m, set) + (canSignIn()
+        ? '<p class="hint">Naming a base needs a member of the server\'s Discord, signed in.</p><div class="row"><button class="btn small" type="button" data-act="in">Sign in with Discord</button></div>'
+        : '');
+      el.querySelector('[data-act=in]')?.addEventListener('click', () => signIn());
+      return el;
+    }
     el.innerHTML = popupHtml(m, set) + `<form class="pin-form base-edit"><div class="row">
       <input name="label" maxlength="24" placeholder="Name this base" value="${escape(m.renamed ? m.label : '')}" autocomplete="off">
       <button class="btn small" type="submit">Rename</button></div>
@@ -246,16 +256,17 @@ export class MarkerLayers {
       ${m.renamed ? '<button class="btn small" type="button" data-act="reset">Auto name</button>' : ''}</div>
       <small class="err" hidden></small></form>`;
     const form = el.querySelector('form'), err = el.querySelector('.err');
-    const send = async (body) => {
+    const send = async (name, hidden) => {
       try {
-        const r = await fetch('api/base', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Munin-Client': clientId() }, body: JSON.stringify(Object.assign({ x: m.x, z: m.z }, body)) });
+        const r = await fetch('names', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, head),
+          body: JSON.stringify({ id: `base@${Math.round(m.x)},${Math.round(m.z)}`, name, hidden }) });
         if (!r.ok) { const j = await r.json().catch(() => ({})); throw new Error(j.error || r.status); }
         this.map.closePopup();
-      } catch (e) { err.textContent = 'Could not change base: ' + e.message; err.hidden = false; }
+      } catch (e) { err.textContent = window.I18N.t('Could not change base: {e}', { e: e.message }); err.hidden = false; }
     };
-    form.addEventListener('submit', (ev) => { ev.preventDefault(); const v = String(new FormData(form).get('label') || '').trim(); if (v) send({ label: v }); });
-    el.querySelector('[data-act=hide]').addEventListener('click', () => send({ hidden: true }));
-    el.querySelector('[data-act=reset]')?.addEventListener('click', () => send({}));
+    form.addEventListener('submit', (ev) => { ev.preventDefault(); const v = String(new FormData(form).get('label') || '').trim(); if (v) send(v, false); });
+    el.querySelector('[data-act=hide]').addEventListener('click', () => send('', true));
+    el.querySelector('[data-act=reset]')?.addEventListener('click', () => send('', false));
     return el;
   }
 
@@ -345,7 +356,7 @@ function popupHtml(m, set) {
   let extra = '';
   if (m.cat === 'dungeon') extra = dungeonHtml(m);
   else if (m.cat === 'portal') extra = portalHtml(m);   // ForgeMap: with its hub and the atlas
-  else if (m.cat === 'base') extra = `<small>${m.pieces} pieces</small>`;
+  else if (m.cat === 'base') extra = `<small>${escape(window.I18N.tn(m.pieces, '{n} piece', '{n} pieces'))}</small>`;
   else if (m.cat === 'tablepin') extra = m.checked ? '<small>Crossed out on the map</small>' : '';
   else if (m.cat === 'sign') extra = m.author ? `<small>Written by ${escape(m.author)}</small>` : '';
   else if (m.cat === 'bed') extra = '<small>Claimed bed (a player keeps old beds too: their spawn is the one they slept in last)</small>';

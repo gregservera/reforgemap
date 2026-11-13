@@ -1,0 +1,1328 @@
+{
+  ".config/dotnet-tools.json": {
+    "mtime": 1794481539.8811014,
+    "seen": 1794532016.154809,
+    "ast_hash": "c7c67d116457780296d20195774b7c28",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/AuthTests.cs": {
+    "mtime": 1794481539.8820004,
+    "seen": 1794532016.1548145,
+    "ast_hash": "3e29db8453b6f2282e71ddc72544fc9c",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/ChatCommandsTests.cs": {
+    "mtime": 1794481539.8820596,
+    "seen": 1794532016.1548169,
+    "ast_hash": "fe45674539e591bc11d97d4ad9c1bc9d",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/ChatRelayTests.cs": {
+    "mtime": 1794481539.8820596,
+    "seen": 1794532016.1548185,
+    "ast_hash": "4ebab15a155d8f4c2a4f134b20584197",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/DeedsTests.cs": {
+    "mtime": 1794481539.8820596,
+    "seen": 1794532016.1548197,
+    "ast_hash": "24a8d01a5b6f404095b233d3350d5ec5",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/DiscordTests.cs": {
+    "mtime": 1794481539.8821933,
+    "seen": 1794532016.154821,
+    "ast_hash": "7833453df30ad8c8d55ba806ef5c340b",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/FeaturesTests.cs": {
+    "mtime": 1794514619.4151962,
+    "seen": 1794532016.1548223,
+    "ast_hash": "6722e074a64b648dd11e9e38bae3af72",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/GateTests.cs": {
+    "mtime": 1794516028.8676093,
+    "seen": 1794532016.1548238,
+    "ast_hash": "b9c7c155a4e4df555d02c82a07b40129",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/GearTests.cs": {
+    "mtime": 1794481539.882331,
+    "seen": 1794532016.1548247,
+    "ast_hash": "6580ebf8afd04a4a34af4632aebd0960",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/HdMapsTests.cs": {
+    "mtime": 1794481539.8823829,
+    "seen": 1794532016.154826,
+    "ast_hash": "ef641a76239815d69142f3e373ea1988",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/ItemsTests.cs": {
+    "mtime": 1794481539.8824296,
+    "seen": 1794532016.154827,
+    "ast_hash": "73a9b53ec95eb960e6cf028890299125",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/KitchenTests.cs": {
+    "mtime": 1794481539.8824773,
+    "seen": 1794532016.1548283,
+    "ast_hash": "72e1888652a00f749d9cbf211fb0680c",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/LightModeTests.cs": {
+    "mtime": 1794481539.8825178,
+    "seen": 1794532016.1548295,
+    "ast_hash": "05d076f5ec851c1ec02b62ef599d1e34",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/LocationsTests.cs": {
+    "mtime": 1794531124.5150752,
+    "seen": 1794532016.1548307,
+    "ast_hash": "3ec7f6dcdc6a46419abbed05eab73eab",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/MigrationTests.cs": {
+    "mtime": 1794481539.8825917,
+    "seen": 1794532016.1548316,
+    "ast_hash": "650512c4be754a6b26ab4fac96e6a5a1",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/PiecesTests.cs": {
+    "mtime": 1794481539.8826404,
+    "seen": 1794532016.1548328,
+    "ast_hash": "34a8608dc2ae290cb6105bc680d42f82",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/PingTests.cs": {
+    "mtime": 1794481539.882676,
+    "seen": 1794532016.154834,
+    "ast_hash": "43069f9ce28547b21a2f0ad10cc4a118",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/PinsTests.cs": {
+    "mtime": 1794481539.8827133,
+    "seen": 1794532016.154835,
+    "ast_hash": "027679fd98c1f62c3dfd73e449f61805",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/PortalsTests.cs": {
+    "mtime": 1794481539.8827517,
+    "seen": 1794532016.1548362,
+    "ast_hash": "1fc01c1de44c3091423ae3dedd173419",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/RigTests.cs": {
+    "mtime": 1794481539.8827944,
+    "seen": 1794532016.1548371,
+    "ast_hash": "76ee1809d070ccece3d3008e02561c89",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/SettingsTests.cs": {
+    "mtime": 1794481539.8828464,
+    "seen": 1794532016.1548383,
+    "ast_hash": "f0f79b17f5b3a115c50f5278691c5498",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/Setup.cs": {
+    "mtime": 1794481539.8828864,
+    "seen": 1794532016.1548393,
+    "ast_hash": "e46af1a97ad863db10a2c0af047a42b0",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/StaticFilesTests.cs": {
+    "mtime": 1794481539.8829193,
+    "seen": 1794532016.1548405,
+    "ast_hash": "ac0e8b8c2709537560057d5c24d88a5c",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/StatsTests.cs": {
+    "mtime": 1794481539.8829672,
+    "seen": 1794532016.1548417,
+    "ast_hash": "e857b988c7b04bde8061db94953c101b",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/ThreeDTests.cs": {
+    "mtime": 1794481539.8830218,
+    "seen": 1794532016.1548429,
+    "ast_hash": "daca0bc95b75bc867c6946188117bb16",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/TilesTests.cs": {
+    "mtime": 1794531844.3640113,
+    "seen": 1794532016.154844,
+    "ast_hash": "dc0093e48c433fd2611c13efba7f6f7e",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/VersionTests.cs": {
+    "mtime": 1794481539.8830569,
+    "seen": 1794532016.1548455,
+    "ast_hash": "fbeed13ab30fb69fbe65992d158f2f2e",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/WebMap.Tests.csproj": {
+    "mtime": 1794481539.88309,
+    "seen": 1794532016.1548464,
+    "ast_hash": "46e7993818cf75a29eac27cf31628bfb",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/web/map-core.test.mjs": {
+    "mtime": 1794481539.8831255,
+    "seen": 1794532016.1548474,
+    "ast_hash": "03e693ab02261393fc7f53512e76cfc6",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/web/munin-net.test.mjs": {
+    "mtime": 1794531844.3638752,
+    "seen": 1794532016.1548486,
+    "ast_hash": "c3ada0c48591968f465fe781b7f4e917",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/web/rig.test.mjs": {
+    "mtime": 1794481539.8831906,
+    "seen": 1794532016.1548495,
+    "ast_hash": "fb024036a2dff2bae0d14d04448f65a6",
+    "semantic_hash": ""
+  },
+  "WebMap.Tests/web/spot.test.mjs": {
+    "mtime": 1794481539.8832633,
+    "seen": 1794532016.1548505,
+    "ast_hash": "d657b4df3ffed6b774b485c474d4f2a1",
+    "semantic_hash": ""
+  },
+  "WebMap/Announce.cs": {
+    "mtime": 1794481539.883295,
+    "seen": 1794532016.1548517,
+    "ast_hash": "91bafe8324f4df8de7cb80a1d96cd712",
+    "semantic_hash": ""
+  },
+  "WebMap/Auth.cs": {
+    "mtime": 1794481539.883345,
+    "seen": 1794532016.1548526,
+    "ast_hash": "62e4391ec9d266b2ed18d3a9a22d8a4b",
+    "semantic_hash": ""
+  },
+  "WebMap/Body.cs": {
+    "mtime": 1794481539.883439,
+    "seen": 1794532016.1548536,
+    "ast_hash": "9869d664c8f8aad2b3fe97f24aa11c39",
+    "semantic_hash": ""
+  },
+  "WebMap/Chart.cs": {
+    "mtime": 1794481539.8834896,
+    "seen": 1794532016.1548548,
+    "ast_hash": "4aa2f9bf79caa3c920f5a2a1f40faa9b",
+    "semantic_hash": ""
+  },
+  "WebMap/ChatCommands.cs": {
+    "mtime": 1794481539.8835382,
+    "seen": 1794532016.1548557,
+    "ast_hash": "adbcdc3576c0c5d04dfac7a022df863d",
+    "semantic_hash": ""
+  },
+  "WebMap/ChatRelay.cs": {
+    "mtime": 1794481539.8835797,
+    "seen": 1794532016.1548567,
+    "ast_hash": "ef9604bd0f6ddec7fce70a1201fbaf91",
+    "semantic_hash": ""
+  },
+  "WebMap/Config.cs": {
+    "mtime": 1794531622.0278416,
+    "seen": 1794532016.1548576,
+    "ast_hash": "f8a29b96b76416ada393a43a32f890aa",
+    "semantic_hash": ""
+  },
+  "WebMap/DeathWatch.cs": {
+    "mtime": 1794481539.8837185,
+    "seen": 1794532016.154859,
+    "ast_hash": "918423fe5c8ea1b6bb987eb14834a492",
+    "semantic_hash": ""
+  },
+  "WebMap/Deeds.cs": {
+    "mtime": 1794481539.883779,
+    "seen": 1794532016.1548603,
+    "ast_hash": "4d5cbef5685d0995c9c5d44ea44f1623",
+    "semantic_hash": ""
+  },
+  "WebMap/Discord.cs": {
+    "mtime": 1794481539.8838496,
+    "seen": 1794532016.1548612,
+    "ast_hash": "ca6f49f0a54d7b0f72a81bb0bc072f96",
+    "semantic_hash": ""
+  },
+  "WebMap/DiscordWebHook.cs": {
+    "mtime": 1794481539.8838894,
+    "seen": 1794532016.1548624,
+    "ast_hash": "b1b24144af69b34eb4d8614e87dc1502",
+    "semantic_hash": ""
+  },
+  "WebMap/Features.cs": {
+    "mtime": 1794531617.6809382,
+    "seen": 1794532016.1548643,
+    "ast_hash": "3daafb5b1156bce5ed15ef88a85c4fa2",
+    "semantic_hash": ""
+  },
+  "WebMap/ForestMap.cs": {
+    "mtime": 1794481539.8840709,
+    "seen": 1794532016.1548655,
+    "ast_hash": "0ee918e51b17ca9e192384f598e4a4f5",
+    "semantic_hash": ""
+  },
+  "WebMap/Gear.cs": {
+    "mtime": 1794481539.8841271,
+    "seen": 1794532016.1548665,
+    "ast_hash": "fc29b868bba83c024178b551193fe2c6",
+    "semantic_hash": ""
+  },
+  "WebMap/Graves.cs": {
+    "mtime": 1794481539.884189,
+    "seen": 1794532016.1548674,
+    "ast_hash": "af33fd41d6ae16b5e64495e186e0827b",
+    "semantic_hash": ""
+  },
+  "WebMap/Heights.cs": {
+    "mtime": 1794481539.8842416,
+    "seen": 1794532016.1548684,
+    "ast_hash": "aacf1bdac9c47574faaf3b03b0a88f76",
+    "semantic_hash": ""
+  },
+  "WebMap/ImageConv.cs": {
+    "mtime": 1794481539.8842847,
+    "seen": 1794532016.1548696,
+    "ast_hash": "991de31b690bfa6f3b82203879b8a2ec",
+    "semantic_hash": ""
+  },
+  "WebMap/Items.cs": {
+    "mtime": 1794481539.884337,
+    "seen": 1794532016.1548705,
+    "ast_hash": "554138a895757a8f0942bdd0332293ae",
+    "semantic_hash": ""
+  },
+  "WebMap/Kitchen.cs": {
+    "mtime": 1794481539.88441,
+    "seen": 1794532016.1548715,
+    "ast_hash": "724864191b39bb63e13a917896a193f6",
+    "semantic_hash": ""
+  },
+  "WebMap/Locations.cs": {
+    "mtime": 1794531086.751191,
+    "seen": 1794532016.1548727,
+    "ast_hash": "ca92c68312c040641ec637bbe22e4b72",
+    "semantic_hash": ""
+  },
+  "WebMap/MapDataServer.cs": {
+    "mtime": 1794531834.0306535,
+    "seen": 1794532016.1548738,
+    "ast_hash": "b3f684a360645c3a21b097de51641622",
+    "semantic_hash": ""
+  },
+  "WebMap/MapFog.cs": {
+    "mtime": 1794517448.0107024,
+    "seen": 1794532016.1548748,
+    "ast_hash": "b6cd50e9f52e35bdeca9521afc06e4df",
+    "semantic_hash": ""
+  },
+  "WebMap/Migration.cs": {
+    "mtime": 1794481539.8849103,
+    "seen": 1794532016.154876,
+    "ast_hash": "51d6439df4c5f6c428fb406471373c87",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/GlbWriter.cs": {
+    "mtime": 1794481539.8849664,
+    "seen": 1794532016.154877,
+    "ast_hash": "f6ccced2b85a6729298d02b927c5687f",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/HdMaps.cs": {
+    "mtime": 1794481539.8850398,
+    "seen": 1794532016.1548781,
+    "ast_hash": "60d57bc672493d17d1124f414abfea58",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/MeshCache.cs": {
+    "mtime": 1794481539.8851137,
+    "seen": 1794532016.1548793,
+    "ast_hash": "3ac20c99073489460aab039b528f2bc4",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/MeshExtractor.cs": {
+    "mtime": 1794481539.8851624,
+    "seen": 1794532016.1548803,
+    "ast_hash": "d3b50df44e6e209c315f93c676f06d69",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/ModelStore.cs": {
+    "mtime": 1794481539.885246,
+    "seen": 1794532016.1548812,
+    "ast_hash": "084cdd2f046431d55c112f98fe589637",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/PrefabExporter.cs": {
+    "mtime": 1794481539.8853586,
+    "seen": 1794532016.1548822,
+    "ast_hash": "8a2f676ca7acded30e4fde9cec0c273a",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Rig.cs": {
+    "mtime": 1794481539.8854265,
+    "seen": 1794532016.1548834,
+    "ast_hash": "ee09fb1ad4812d8c958ae489a5dae93b",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/RigExporter.cs": {
+    "mtime": 1794481539.8854978,
+    "seen": 1794532016.1548843,
+    "ast_hash": "dd63c0727c9e580c4d136f00db774e6f",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/TextureExtractor.cs": {
+    "mtime": 1794481539.885576,
+    "seen": 1794532016.1548853,
+    "ast_hash": "533d88db47fa94a7c476c04903205c2b",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Unity/BundleFile.cs": {
+    "mtime": 1794481539.8856149,
+    "seen": 1794532016.1548865,
+    "ast_hash": "33463ba97847c80b75d21f6aee8ba978",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Unity/Lz4.cs": {
+    "mtime": 1794481539.8856676,
+    "seen": 1794532016.1548874,
+    "ast_hash": "ef32d64a87dc0c18f1746e086b816681",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Unity/MeshDecoder.cs": {
+    "mtime": 1794481539.885731,
+    "seen": 1794532016.1548884,
+    "ast_hash": "a955782af9ef71f08915af1ab863e8fb",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Unity/SerializedFile.cs": {
+    "mtime": 1794481539.8857906,
+    "seen": 1794532016.1548898,
+    "ast_hash": "c9a6bcde4ab2dd6cbf04c3c1687a08e6",
+    "semantic_hash": ""
+  },
+  "WebMap/Models/Unity/TextureDecoder.cs": {
+    "mtime": 1794481539.8858466,
+    "seen": 1794532016.1548908,
+    "ast_hash": "9afcb2fd070e77af9743d0efd48fe003",
+    "semantic_hash": ""
+  },
+  "WebMap/Pieces.cs": {
+    "mtime": 1794481539.8858993,
+    "seen": 1794532016.1548917,
+    "ast_hash": "3885119f3b595c12c2e08c9b8491b9d2",
+    "semantic_hash": ""
+  },
+  "WebMap/Ping.cs": {
+    "mtime": 1794481539.8859463,
+    "seen": 1794532016.1548924,
+    "ast_hash": "a0a74d1e95abc7d3828fc4d25c1f1a07",
+    "semantic_hash": ""
+  },
+  "WebMap/Portals.cs": {
+    "mtime": 1794481539.885989,
+    "seen": 1794532016.1548939,
+    "ast_hash": "a8fc76e15a51586572516936fe793d58",
+    "semantic_hash": ""
+  },
+  "WebMap/Settings.cs": {
+    "mtime": 1794481539.8860874,
+    "seen": 1794532016.154895,
+    "ast_hash": "6c59bb12889e68522588cd2956241573",
+    "semantic_hash": ""
+  },
+  "WebMap/Stats.cs": {
+    "mtime": 1794531034.533799,
+    "seen": 1794532016.154896,
+    "ast_hash": "737f16fce5ea34907cc4176e49283db0",
+    "semantic_hash": ""
+  },
+  "WebMap/StructureMap.cs": {
+    "mtime": 1794531110.540507,
+    "seen": 1794532016.1548972,
+    "ast_hash": "2b823cd1b221d4c4dd2d84fcc960596d",
+    "semantic_hash": ""
+  },
+  "WebMap/TerrainPatches.cs": {
+    "mtime": 1794492705.2174814,
+    "seen": 1794532016.1548982,
+    "ast_hash": "110b4500e19343a52a09375923f970ba",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/BiomeMap.cs": {
+    "mtime": 1794500379.3040717,
+    "seen": 1794532016.1548994,
+    "ast_hash": "001ff44473bc48d3354d42fd8269db94",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/ChunkCache.cs": {
+    "mtime": 1794500379.3040717,
+    "seen": 1794532016.1549006,
+    "ast_hash": "aeb1da45a0a697f1595213efce50f831",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Demisters.cs": {
+    "mtime": 1794530979.8728461,
+    "seen": 1794532016.1549015,
+    "ast_hash": "f95233a7bbc2c0ebcd490def2de9b317",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Dungeons.cs": {
+    "mtime": 1794530979.8707569,
+    "seen": 1794532016.1549025,
+    "ast_hash": "f54094e36dcb1069826da5a73fc2cfad",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/LocationTerrain.cs": {
+    "mtime": 1794492657.6220076,
+    "seen": 1794532016.1549037,
+    "ast_hash": "494363258cfd4094e93dfd46e1753b0f",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Markers.cs": {
+    "mtime": 1794531617.6797535,
+    "seen": 1794532016.1549046,
+    "ast_hash": "a0de833076261528d795e74f915a7791",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/MuninShims.cs": {
+    "mtime": 1794531045.1005232,
+    "seen": 1794532016.1549056,
+    "ast_hash": "fbd8c755ae6eefcc7d2d8fd838bc817a",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Palette.cs": {
+    "mtime": 1794492657.619596,
+    "seen": 1794532016.1549065,
+    "ast_hash": "55d0485222984e0c55d865ce43b53f62",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Peaks.cs": {
+    "mtime": 1794530979.8708463,
+    "seen": 1794532016.154908,
+    "ast_hash": "b97ccf0831819f40dc7e4ac1816b7e2e",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Regions.cs": {
+    "mtime": 1794492657.6197727,
+    "seen": 1794532016.154909,
+    "ast_hash": "cddd01fbc85e6262ac26d10a5de149cb",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Ruins.cs": {
+    "mtime": 1794500379.3040717,
+    "seen": 1794532016.1549106,
+    "ast_hash": "21fc2846dbe53f9636e4cb0f695d2173",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Runestones.cs": {
+    "mtime": 1794530979.8693988,
+    "seen": 1794532016.1549118,
+    "ast_hash": "cc68713bf5bd65ceb45c17973ee204e4",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Structures.cs": {
+    "mtime": 1794500379.3048337,
+    "seen": 1794532016.1549127,
+    "ast_hash": "aa1e429a6a2dad38ea6107054b835102",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/TileMath.cs": {
+    "mtime": 1794492657.6198997,
+    "seen": 1794532016.154914,
+    "ast_hash": "76a99f2ad2ef4c2a3ba5d5f652804094",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/TileRenderer.cs": {
+    "mtime": 1794492657.6200912,
+    "seen": 1794532016.154915,
+    "ast_hash": "ca40ff1f1380a8bccc651db715573213",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/TileStore.cs": {
+    "mtime": 1794492657.6204436,
+    "seen": 1794532016.154916,
+    "ast_hash": "6a16bd4199a4afb01b507e0e7b4ee113",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/Vegetation.cs": {
+    "mtime": 1794517448.0103838,
+    "seen": 1794532016.154917,
+    "ast_hash": "f49e9f2a3fdd1261de21160288a9ca61",
+    "semantic_hash": ""
+  },
+  "WebMap/Tiles/WorldSweep.cs": {
+    "mtime": 1794531034.5341632,
+    "seen": 1794532016.1549182,
+    "ast_hash": "b7867cf26c76bd467ee87c9d294942d0",
+    "semantic_hash": ""
+  },
+  "WebMap/Traders.cs": {
+    "mtime": 1794481539.8864336,
+    "seen": 1794532016.1549191,
+    "ast_hash": "b16028aeb42f2136f11c1b40c2c6d931",
+    "semantic_hash": ""
+  },
+  "WebMap/Trails.cs": {
+    "mtime": 1794481539.8864808,
+    "seen": 1794532016.15492,
+    "ast_hash": "16029cbbed7e2ee25802ba37aec6633b",
+    "semantic_hash": ""
+  },
+  "WebMap/Util/Json.cs": {
+    "mtime": 1794531034.5342731,
+    "seen": 1794532016.1549213,
+    "ast_hash": "51796e0f45c0fe0e23a624c4e1a1f882",
+    "semantic_hash": ""
+  },
+  "WebMap/Util/Png.cs": {
+    "mtime": 1794492259.7657657,
+    "seen": 1794532016.1549222,
+    "ast_hash": "3ee9b57d573cb83bc6b5d02892189397",
+    "semantic_hash": ""
+  },
+  "WebMap/Util/WebP.cs": {
+    "mtime": 1794492259.7606888,
+    "seen": 1794532016.1549232,
+    "ast_hash": "d35aca7ab568ccdca775f90f0127563d",
+    "semantic_hash": ""
+  },
+  "WebMap/Vehicles.cs": {
+    "mtime": 1794531034.5346603,
+    "seen": 1794532016.1549244,
+    "ast_hash": "6d3a2e04373572a0e708b089d8c8afbc",
+    "semantic_hash": ""
+  },
+  "WebMap/WebMap.cs": {
+    "mtime": 1794531110.541081,
+    "seen": 1794532016.1549253,
+    "ast_hash": "49bbcd19914cb0c43f3cc4c115ca80f0",
+    "semantic_hash": ""
+  },
+  "WebMap/WebMap.csproj": {
+    "mtime": 1794492610.5217435,
+    "seen": 1794532016.1549265,
+    "ast_hash": "c8dac3322eba837b3243b090bd76f2c5",
+    "semantic_hash": ""
+  },
+  "WebMap/WorldObjects.cs": {
+    "mtime": 1794517448.0099788,
+    "seen": 1794532016.1549277,
+    "ast_hash": "abba93776a1e438e8500c364228270ad",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/card.js": {
+    "mtime": 1794481539.8875623,
+    "seen": 1794532016.1549287,
+    "ast_hash": "e3d6d493114874d2028c40a8054cc8d5",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/fiche.js": {
+    "mtime": 1794481539.8877373,
+    "seen": 1794532016.1549296,
+    "ast_hash": "15ea5043d8bf6ac8e3f8645685fba3b3",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/gear.js": {
+    "mtime": 1794481539.8878531,
+    "seen": 1794532016.1549306,
+    "ast_hash": "e9d7141c86e8f7c16fceddf66b146b1b",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/i18n.js": {
+    "mtime": 1794481539.887933,
+    "seen": 1794532016.1549318,
+    "ast_hash": "a7cbf3931d733362e84f2e187d35b431",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/lang/fr.js": {
+    "mtime": 1794531645.4209027,
+    "seen": 1794532016.1549327,
+    "ast_hash": "20afdd208ac750c35a866a7d365e680c",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/lang/noms.js": {
+    "mtime": 1794481539.8884282,
+    "seen": 1794532016.1549337,
+    "ast_hash": "790ac0ea618750ce6f0166bb2deb60bf",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/layers.js": {
+    "mtime": 1794481539.8884957,
+    "seen": 1794532016.154935,
+    "ast_hash": "fd2d29c707c74e19fdae59a1ce056b96",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/rig.js": {
+    "mtime": 1794481539.8885875,
+    "seen": 1794532016.1549356,
+    "ast_hash": "2653457a40f3e42c7ef5858ce8504e23",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/sky.js": {
+    "mtime": 1794481539.8886688,
+    "seen": 1794532016.1549368,
+    "ast_hash": "7daaa7e1fb3400b260ace0eb2335352a",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/spot.js": {
+    "mtime": 1794481539.88874,
+    "seen": 1794532016.1549377,
+    "ast_hash": "cce8233ea5887da991fd48a53449eee8",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/street.js": {
+    "mtime": 1794481539.8888116,
+    "seen": 1794532016.154939,
+    "ast_hash": "c784a3be92c2fafe2789b77eb56a1548",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/tour.js": {
+    "mtime": 1794481539.8890035,
+    "seen": 1794532016.15494,
+    "ast_hash": "cc7239fde850145e7d00f01040e2230d",
+    "semantic_hash": ""
+  },
+  "WebMap/web/js/view3d.js": {
+    "mtime": 1794481539.8892086,
+    "seen": 1794532016.1549408,
+    "ast_hash": "732b8a413707678fa380e66af87cc232",
+    "semantic_hash": ""
+  },
+  "WebMap/web/map-core.js": {
+    "mtime": 1794517761.4459448,
+    "seen": 1794532016.154942,
+    "ast_hash": "4123395283db8dfd6f3570a4b365c4bf",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/app.js": {
+    "mtime": 1794530707.8111372,
+    "seen": 1794532016.154943,
+    "ast_hash": "21a3a49b932e122849edce42d5edf6eb",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/biomehover.js": {
+    "mtime": 1794500379.3068628,
+    "seen": 1794532016.154944,
+    "ast_hash": "7e47f482f0840bd71690d1d371c47fb0",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/contourworker.js": {
+    "mtime": 1794500379.3070176,
+    "seen": 1794532016.1549451,
+    "ast_hash": "711460f0f26473dbb424c2389caf0752",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/crs.js": {
+    "mtime": 1794500379.307108,
+    "seen": 1794532016.154946,
+    "ast_hash": "871d5c7455d761b5d95050f1140f2edd",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/data.js": {
+    "mtime": 1794531834.03133,
+    "seen": 1794532016.1549473,
+    "ast_hash": "ed54fdc4b71405043e21d89ac10f82ea",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/fmcard.js": {
+    "mtime": 1794530707.8125293,
+    "seen": 1794532016.1549482,
+    "ast_hash": "15db1652e9105665f70d2716c19035bf",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/fogworker.js": {
+    "mtime": 1794500379.3073144,
+    "seen": 1794532016.1549494,
+    "ast_hash": "f492aca8337569b9197d7f009bc2f7ab",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/forgeauth.js": {
+    "mtime": 1794500463.1903343,
+    "seen": 1794532016.1549504,
+    "ast_hash": "33b381bedf178b87d4cdd8e8093a81df",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/grid.js": {
+    "mtime": 1794500379.3074002,
+    "seen": 1794532016.1549513,
+    "ast_hash": "bc7d7d5bb10c1cec7a983a05ccf42ab0",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/icons.js": {
+    "mtime": 1794516045.0326924,
+    "seen": 1794532016.1549525,
+    "ast_hash": "fd00af3b62c40e6d7fae43308b2f6eda",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/activity.js": {
+    "mtime": 1794500379.307728,
+    "seen": 1794532016.1549535,
+    "ast_hash": "5c43d1e8f06af6d9b222081bcb1803d1",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/contours.js": {
+    "mtime": 1794500379.3078454,
+    "seen": 1794532016.1549544,
+    "ast_hash": "a58b62930d9e0657a82300f6d4c472c2",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/deaths.js": {
+    "mtime": 1794530706.8690498,
+    "seen": 1794532016.1549559,
+    "ast_hash": "9ca4418097bce6f14d77a38a6239828b",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/fog.js": {
+    "mtime": 1794500379.3079646,
+    "seen": 1794532016.1549568,
+    "ast_hash": "ba487153b513fcefea10674ffd4e2c80",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/forgecanvas.js": {
+    "mtime": 1794530829.2120285,
+    "seen": 1794532016.1549578,
+    "ast_hash": "91f8c1fee987b53c5d7882d51ef2b16a",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/ground.js": {
+    "mtime": 1794500379.3082564,
+    "seen": 1794532016.1549592,
+    "ast_hash": "7872cb65dfab1342440b464d91b3c5f0",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/markercanvas.js": {
+    "mtime": 1794500379.3084855,
+    "seen": 1794532016.1549602,
+    "ast_hash": "fe4af3650f4b31d9aab6660f2aef4613",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/markers.js": {
+    "mtime": 1794531864.8250544,
+    "seen": 1794532016.154961,
+    "ast_hash": "8e2cc6f9e80b78781758aa2b1b96fb1b",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/names.js": {
+    "mtime": 1794515168.1416965,
+    "seen": 1794532016.154962,
+    "ast_hash": "18827a185c657a98170a222c762f7e91",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/paths.js": {
+    "mtime": 1794516314.5805297,
+    "seen": 1794532016.1549633,
+    "ast_hash": "924b5239ab7d785fb4c20c27f0fa5e55",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/plan.js": {
+    "mtime": 1794515207.596596,
+    "seen": 1794532016.1549642,
+    "ast_hash": "ff35afdde295868c0788fb625cea8993",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/players.js": {
+    "mtime": 1794530531.0596132,
+    "seen": 1794532016.1549654,
+    "ast_hash": "e6e23822422ba713c9727501f4edd4e3",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/raid.js": {
+    "mtime": 1794500379.3088987,
+    "seen": 1794532016.1549664,
+    "ast_hash": "3e3514876f10fe0eb9c3bb6c79611cad",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/ruins.js": {
+    "mtime": 1794500379.3090036,
+    "seen": 1794532016.1549675,
+    "ast_hash": "19c7e1e0348bbafe7ade483b773ef851",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/shapes.js": {
+    "mtime": 1794500379.3094554,
+    "seen": 1794532016.1549685,
+    "ast_hash": "09407da2699887a2b49e3d40a4b3ba8f",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/structures.js": {
+    "mtime": 1794500379.3094554,
+    "seen": 1794532016.1549697,
+    "ast_hash": "1257d14134b8b30cd6cd5682726bb7fc",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/tiles.js": {
+    "mtime": 1794500379.3097737,
+    "seen": 1794532016.154971,
+    "ast_hash": "6261d28378e07541ffecb931c399c099",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layers/veg.js": {
+    "mtime": 1794500379.3098865,
+    "seen": 1794532016.1549718,
+    "ast_hash": "1ccee723bc3bdbcc3528aae62c42f9a6",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/layerstate.js": {
+    "mtime": 1794500379.3099968,
+    "seen": 1794532016.154973,
+    "ast_hash": "0487230854bac99d83025378efa6e4bd",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/mapexport.js": {
+    "mtime": 1794500379.3101442,
+    "seen": 1794532016.154974,
+    "ast_hash": "a9eef8e864c7c1cab1a0e05a0cbe7ede",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/measure.js": {
+    "mtime": 1794500379.31029,
+    "seen": 1794532016.1549752,
+    "ast_hash": "2e749fbd16c7706af95fd43d9b5cfbdf",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/mist.js": {
+    "mtime": 1794500379.31029,
+    "seen": 1794532016.1549764,
+    "ast_hash": "24b1e457e3ca936935ca12f43d63b8a0",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/net.js": {
+    "mtime": 1794531834.0311737,
+    "seen": 1794532016.1549773,
+    "ast_hash": "bf4b7732702b81a541c2b85a149ca71b",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/particles.js": {
+    "mtime": 1794500379.3107243,
+    "seen": 1794532016.1549783,
+    "ast_hash": "2c0b6f4f2272edfeade8dd3ac5123480",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/pegman.js": {
+    "mtime": 1794517018.0978084,
+    "seen": 1794532016.1549792,
+    "ast_hash": "22d09e46c02e15b34f9565ad24721312",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/playercard.js": {
+    "mtime": 1794500379.3109748,
+    "seen": 1794532016.1549804,
+    "ast_hash": "9b8e04b33515b0004f18ef9cd30b0a4e",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/png.js": {
+    "mtime": 1794500379.3110788,
+    "seen": 1794532016.1549814,
+    "ast_hash": "4f0ef292c36370b18e37c74eb107987e",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/portrait.js": {
+    "mtime": 1794500379.3112147,
+    "seen": 1794532016.1549823,
+    "ast_hash": "3b1316547cf982e1a7fc02b0c65239a5",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/reachworker.js": {
+    "mtime": 1794500379.3113663,
+    "seen": 1794532016.1549835,
+    "ast_hash": "c56270c0358ccfa6f078c1b55decf8bb",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/rectworker.js": {
+    "mtime": 1794500379.3114882,
+    "seen": 1794532016.1549845,
+    "ast_hash": "608900c28e349e5425703157ab177d40",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/sky.js": {
+    "mtime": 1794500379.3116033,
+    "seen": 1794532016.1549854,
+    "ast_hash": "8229d3c9009121ba43708e03f8f67f81",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/smoothzoom.js": {
+    "mtime": 1794500379.3117192,
+    "seen": 1794532016.1549864,
+    "ast_hash": "1d930e67df034d9cd3e28ff1ae2ebd07",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/ui.js": {
+    "mtime": 1794530707.8119342,
+    "seen": 1794532016.1549876,
+    "ast_hash": "2764d839bccdc41d08bc540df031bf65",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/vegpack.js": {
+    "mtime": 1794500379.3122914,
+    "seen": 1794532016.1549885,
+    "ast_hash": "2399e98c5cac4387c741614fce343276",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/vegworker.js": {
+    "mtime": 1794500379.3124173,
+    "seen": 1794532016.1549895,
+    "ast_hash": "e15f1800a2a7f17b8f90fed2087fb9e8",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/js/view3d.js": {
+    "mtime": 1794516990.5508113,
+    "seen": 1794532016.154991,
+    "ast_hash": "5e8f6dc8033a2e9a6ed76b35ba1dca28",
+    "semantic_hash": ""
+  },
+  "WebMap/web/site-config.js": {
+    "mtime": 1794481539.890055,
+    "seen": 1794532016.1549919,
+    "ast_hash": "0b80d1dcc55bdfe3406f5de2123f4297",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/leaflet.js": {
+    "mtime": 1794500379.3140874,
+    "seen": 1794532016.1549928,
+    "ast_hash": "9d31fa206366e2d166b29c2eb19358c5",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/addons/controls/MapControls.js": {
+    "mtime": 1794481539.890206,
+    "seen": 1794532016.154994,
+    "ast_hash": "c9b056bfe5e2dd5206b0f08f548f89d6",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/addons/controls/OrbitControls.js": {
+    "mtime": 1794481539.890265,
+    "seen": 1794532016.154995,
+    "ast_hash": "c9adb791476ceba9aa02f33205031df7",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/addons/loaders/GLTFLoader.js": {
+    "mtime": 1794481539.890265,
+    "seen": 1794532016.154996,
+    "ast_hash": "9c41dca00d210e08398df7e3f33997b5",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/addons/utils/BufferGeometryUtils.js": {
+    "mtime": 1794481539.890265,
+    "seen": 1794532016.154997,
+    "ast_hash": "8b5e5e7acf0abc6581f83594f5a6db03",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/three.core.js": {
+    "mtime": 1794481539.8915083,
+    "seen": 1794532016.154998,
+    "ast_hash": "22184b6508211a30dd3ec752297fa999",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/three/three.module.js": {
+    "mtime": 1794481539.8925083,
+    "seen": 1794532016.154999,
+    "ast_hash": "e3a10386281e96895ecedc84238261eb",
+    "semantic_hash": ""
+  },
+  "eslint.config.js": {
+    "mtime": 1794515536.8025336,
+    "seen": 1794532016.1550016,
+    "ast_hash": "be7459063112332b3fc5ea67f6dee2dc",
+    "semantic_hash": ""
+  },
+  "i18n-work/A-map.json": {
+    "mtime": 1794481539.89402,
+    "seen": 1794532016.1550026,
+    "ast_hash": "8f253e31cf38872d657f35cf6227d46c",
+    "semantic_hash": ""
+  },
+  "i18n-work/B-players.json": {
+    "mtime": 1794481539.8940914,
+    "seen": 1794532016.1550035,
+    "ast_hash": "d926c7dd1ab86578e7301602665ac52c",
+    "semantic_hash": ""
+  },
+  "i18n-work/C-world-portals.json": {
+    "mtime": 1794481539.8942068,
+    "seen": 1794532016.1550047,
+    "ast_hash": "f29807277b29043941fce9b110ade986",
+    "semantic_hash": ""
+  },
+  "i18n-work/D-plan-settings.json": {
+    "mtime": 1794481539.894307,
+    "seen": 1794532016.1550057,
+    "ast_hash": "39d5ca4d4c9e67dd6c369f4908ff714b",
+    "semantic_hash": ""
+  },
+  "i18n-work/E-3d-tour.json": {
+    "mtime": 1794481539.8943686,
+    "seen": 1794532016.1550066,
+    "ast_hash": "b818649611ed6eb77866cc60af83a828",
+    "semantic_hash": ""
+  },
+  "i18n-work/F-forgemap.json": {
+    "mtime": 1794517793.762743,
+    "seen": 1794532016.1550078,
+    "ast_hash": "a9debbadb5ee9abbdf0e69987a0cbb94",
+    "semantic_hash": ""
+  },
+  "i18n-work/G-munin.json": {
+    "mtime": 1794531645.3917742,
+    "seen": 1794532016.1550088,
+    "ast_hash": "630b1767e1e3e6b2c12091e9a3a64c30",
+    "semantic_hash": ""
+  },
+  "i18n-work/_choix.json": {
+    "mtime": 1794481539.8944907,
+    "seen": 1794532016.1550097,
+    "ast_hash": "35f9bbbaf0647a6e4a0166bf309d7323",
+    "semantic_hash": ""
+  },
+  "i18n-work/_noms-jeu.json": {
+    "mtime": 1794481539.8947382,
+    "seen": 1794532016.1550107,
+    "ast_hash": "2a9a2d97b8477121c852fae26637b87e",
+    "semantic_hash": ""
+  },
+  "manifest.json": {
+    "mtime": 1794481539.895485,
+    "seen": 1794532016.155012,
+    "ast_hash": "33fbce2d139ef10ac562145cceae242c",
+    "semantic_hash": ""
+  },
+  "package.json": {
+    "mtime": 1794481539.8956442,
+    "seen": 1794532016.1550128,
+    "ast_hash": "a70770b705f05a7fb5a806f182fef7e8",
+    "semantic_hash": ""
+  },
+  "package.sh": {
+    "mtime": 1794500379.314445,
+    "seen": 1794532016.1550138,
+    "ast_hash": "44c90ae04fb4c96a88c05784d6de37ac",
+    "semantic_hash": ""
+  },
+  "testserver.sh": {
+    "mtime": 1794481539.8957996,
+    "seen": 1794532016.155015,
+    "ast_hash": "930812069319c8e5ceb993ed786004b1",
+    "semantic_hash": ""
+  },
+  "tools/bench.mjs": {
+    "mtime": 1794481539.8958642,
+    "seen": 1794532016.155016,
+    "ast_hash": "7b1cbc4948d115cd3b764da63ba909cf",
+    "semantic_hash": ""
+  },
+  "tools/check.mjs": {
+    "mtime": 1794481539.8959334,
+    "seen": 1794532016.155017,
+    "ast_hash": "17badbd2dd79f6cdfce0e7379969485a",
+    "semantic_hash": ""
+  },
+  "tools/i18n-merge.py": {
+    "mtime": 1794481539.8960671,
+    "seen": 1794532016.155018,
+    "ast_hash": "07e931eaa12c4a1d6f9f5c7a526c1a4f",
+    "semantic_hash": ""
+  },
+  "tools/noms-jeu.py": {
+    "mtime": 1794481539.8961194,
+    "seen": 1794532016.155019,
+    "ast_hash": "1687e9dba214bfaac85cab370c79b214",
+    "semantic_hash": ""
+  },
+  "tools/package.py": {
+    "mtime": 1794481539.8961587,
+    "seen": 1794532016.15502,
+    "ast_hash": "27b5b0128f8047b20d6aa86654286bc2",
+    "semantic_hash": ""
+  },
+  "tools/sameorigin.py": {
+    "mtime": 1794481539.8961933,
+    "seen": 1794532016.155021,
+    "ast_hash": "e2eb2deddf6d81d59fa72423388653f1",
+    "semantic_hash": ""
+  },
+  "tools/stamp-version.py": {
+    "mtime": 1794481539.8962314,
+    "seen": 1794532016.1550221,
+    "ast_hash": "9b57c3befde25ce5f7418e9535f7d3c3",
+    "semantic_hash": ""
+  },
+  "tools/textures-hd.py": {
+    "mtime": 1794481539.8962955,
+    "seen": 1794532016.155023,
+    "ast_hash": "d4f9aaed522e34c0ea3103cc0e3cbfef",
+    "semantic_hash": ""
+  },
+  ".github/actions/game-assemblies/action.yml": {
+    "mtime": 1794481539.881176,
+    "seen": 1794532016.1550243,
+    "ast_hash": "9d8ce3022bed9f1918b56af6b81bc36b",
+    "semantic_hash": ""
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1794481539.8812666,
+    "seen": 1794532016.1550255,
+    "ast_hash": "9adb96d19a953d872540e26653bd8afa",
+    "semantic_hash": ""
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1794481539.881305,
+    "seen": 1794532016.1550262,
+    "ast_hash": "bc35057c99a5014af66dd01fbea4f9fb",
+    "semantic_hash": ""
+  },
+  "CHANGELOG.md": {
+    "mtime": 1794481539.881612,
+    "seen": 1794532016.1550272,
+    "ast_hash": "9f558eed0ed7fe79ca4188ed133737ab",
+    "semantic_hash": ""
+  },
+  "README-WebMap.md": {
+    "mtime": 1794481539.8818126,
+    "seen": 1794532016.1550283,
+    "ast_hash": "76772554f393d776190f55ceead1c9e4",
+    "semantic_hash": ""
+  },
+  "README.md": {
+    "mtime": 1794500379.3020718,
+    "seen": 1794532016.1550293,
+    "ast_hash": "fd66a711e1c53a54b793c1a7e0ef1db1",
+    "semantic_hash": ""
+  },
+  "TESTING.md": {
+    "mtime": 1794481539.8819637,
+    "seen": 1794532016.1550303,
+    "ast_hash": "98feb3889ac8239aedb0e7fbaa403161",
+    "semantic_hash": ""
+  },
+  "THIRD-PARTY-NOTICES.md": {
+    "mtime": 1794500379.3026204,
+    "seen": 1794532016.1550312,
+    "ast_hash": "6405f3264e8507f54f1cd0b8c8211111",
+    "semantic_hash": ""
+  },
+  "WebMap/web/fiche.html": {
+    "mtime": 1794481539.8869476,
+    "seen": 1794532016.1550324,
+    "ast_hash": "2b0591e001a85e20ffec988a1dc8d441",
+    "semantic_hash": ""
+  },
+  "WebMap/web/fonts/OFL.txt": {
+    "mtime": 1794481539.8871028,
+    "seen": 1794532016.1550333,
+    "ast_hash": "2025a2ee80175b15561a8232e67d74d5",
+    "semantic_hash": ""
+  },
+  "WebMap/web/index.html": {
+    "mtime": 1794515536.801297,
+    "seen": 1794532016.1550343,
+    "ast_hash": "d69a52471272c96a9d522818fe01ce28",
+    "semantic_hash": ""
+  },
+  "WebMap/web/plan.html": {
+    "mtime": 1794481539.8895774,
+    "seen": 1794532016.1550355,
+    "ast_hash": "4224ff5bad5a84441806ced4c66150ac",
+    "semantic_hash": ""
+  },
+  "WebMap/web/players.html": {
+    "mtime": 1794481539.8897119,
+    "seen": 1794532016.1550364,
+    "ast_hash": "8c0475ab9698244db39a06a785646d6a",
+    "semantic_hash": ""
+  },
+  "WebMap/web/portals.html": {
+    "mtime": 1794481539.8899262,
+    "seen": 1794532016.1550374,
+    "ast_hash": "c7a9a235da1f5b33812a9291e96e6185",
+    "semantic_hash": ""
+  },
+  "WebMap/web/settings.html": {
+    "mtime": 1794481539.8900175,
+    "seen": 1794532016.1550384,
+    "ast_hash": "c510235c8ffa52e4f8339b058d13ba12",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/LICENSE.txt": {
+    "mtime": 1794500379.3129232,
+    "seen": 1794532016.1550395,
+    "ast_hash": "24dae3136001ef7bbc671453a33458a2",
+    "semantic_hash": ""
+  },
+  "WebMap/web/world.html": {
+    "mtime": 1794481539.8939235,
+    "seen": 1794532016.1550405,
+    "ast_hash": "ca262921c64f232589dad940ee68b30d",
+    "semantic_hash": ""
+  },
+  "i18n-work/CONSIGNES.md": {
+    "mtime": 1794481539.8942585,
+    "seen": 1794532016.1550415,
+    "ast_hash": "c540f4a4a3f1b226baa7560eaa2bf5c5",
+    "semantic_hash": ""
+  },
+  "i18n-work/_noms-jeu-rapport.txt": {
+    "mtime": 1794481539.894536,
+    "seen": 1794532016.1550426,
+    "ast_hash": "faffabbbdc67f8b0829f2afe8f7a080a",
+    "semantic_hash": ""
+  },
+  "libs/README.md": {
+    "mtime": 1794481539.8948336,
+    "seen": 1794532016.1550436,
+    "ast_hash": "ae2957afc91b0c0013baa2d4f6df081b",
+    "semantic_hash": ""
+  },
+  "WebMap/web/munin/icons/favicon.svg": {
+    "mtime": 1794500379.30636,
+    "seen": 1794532016.1550448,
+    "ast_hash": "5db3e3562ce9bd2ee196178b9d7cdcfd",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/images/layers-2x.png": {
+    "mtime": 1794500379.313056,
+    "seen": 1794532016.155046,
+    "ast_hash": "4f0283c6ce28e888000e978e537a6a56",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/images/layers.png": {
+    "mtime": 1794500379.3131204,
+    "seen": 1794532016.155047,
+    "ast_hash": "a6137456ed160d7606981aa57c559898",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/images/marker-icon-2x.png": {
+    "mtime": 1794500379.3131828,
+    "seen": 1794532016.155048,
+    "ast_hash": "401d815dc206b8dc1b17cd0e37695975",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/images/marker-icon.png": {
+    "mtime": 1794500379.3132443,
+    "seen": 1794532016.1550486,
+    "ast_hash": "2273e3d8ad9264b7daa5bdbf8e6b47f8",
+    "semantic_hash": ""
+  },
+  "WebMap/web/vendor/leaflet/images/marker-shadow.png": {
+    "mtime": 1794500379.3133056,
+    "seen": 1794532016.1550498,
+    "ast_hash": "44a526eed258222515aa21eaffd14a96",
+    "semantic_hash": ""
+  },
+  "icon.png": {
+    "mtime": 1794481539.8947978,
+    "seen": 1794532016.1550508,
+    "ast_hash": "9dc0972f124dc2948da27788b8ebf3cd",
+    "semantic_hash": ""
+  },
+  "screenshot.webp": {
+    "mtime": 1794481539.8957515,
+    "seen": 1794532016.1550517,
+    "ast_hash": "dfe2ad8a6c2d90a0f7f769a341ad3a92",
+    "semantic_hash": ""
+  }
+}

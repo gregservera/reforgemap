@@ -279,6 +279,8 @@ export const markers = {
   },
 };
 on('world', () => markers.refresh());
+// ForgeMap: the server says when its markers change (a sweep, a boat moved, a base renamed)
+on('markers', (f) => { if (f.rev !== markers.rev) markers.refresh(); });
 // back after a gap (a server restart, a dropped connection): what the server shows may have changed
 // (fog settings, a new world), so fetch markers and stats again rather than keep the old ones
 on('reconnected', () => { markers.refresh(); stats.refresh(); });
