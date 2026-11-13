@@ -859,9 +859,10 @@ function brand(){ return cfg.brand || worldName || "ForgeMap"; }   // ForgeMap: 
 // The tab is the world's name -- the map plain, the rest "<world> · <page>" -- and the
 // deployment's brand only until the world has named itself.
 function setTitle(page){
-  // ForgeMap: "<page> \u00b7 <world> \u00b7 ForgeMap" (the map page: "<world> \u00b7 ForgeMap"), and ForgeServer's flame as the tab icon
+  // ForgeMap: "<page> \u00b7 <world> - ForgeMap x Munin" (the map page: "<world> - ForgeMap x Munin"), and ForgeMap's flame as the tab icon
   const row = NAV_PAGES.find(p => p[0] === page), world = worldName || cfg.brand;
-  document.title = [row && page !== "index" ? I18N.t(row[1]) : "", world, "ForgeMap"].filter(Boolean).join(" \u00b7 ");
+  const head = [row && page !== "index" ? I18N.t(row[1]) : "", world].filter(Boolean).join(" \u00b7 ");
+  document.title = head ? head + " - ForgeMap x Munin" : "ForgeMap x Munin";
   if(!document.querySelector('link[rel="icon"][data-forgemap]')){
     for(const l of document.querySelectorAll('link[rel="icon"]')) l.remove();
     const l = document.createElement("link"); l.rel = "icon"; l.type = "image/svg+xml"; l.setAttribute("data-forgemap", "");
