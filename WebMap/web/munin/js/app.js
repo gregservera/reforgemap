@@ -27,6 +27,7 @@ import { ForgeCard } from './fmcard.js';
 import { PathsLayer } from './layers/paths.js';
 import { DeathsLayer } from './layers/deaths.js';
 import { Pegman } from './pegman.js';
+import { setupTour } from './tourstage.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -272,6 +273,7 @@ class App {
     $('#btn-home').addEventListener('click', () => this.goToSpawn(true));
     for (const b of $('#btn-mode').querySelectorAll('button')) b.addEventListener('click', () => this.setMode(b.dataset.mode));
     this.playerCard = new ForgeCard(this);   // ForgeMap's card, Munin's place for it (fmcard.js)
+    setupTour(this);                         // ForgeMap's cinematic tour, on this map (tourstage.js)
     this.layers.players.onClick = (p, x, y) => this.playerCard.show(p, x, y);
     this.layers.players.onChange((list) => this.playerCard.update(list));
     $('#btn-export').addEventListener('click', () => this.openExport());
