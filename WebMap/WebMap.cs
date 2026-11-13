@@ -158,7 +158,9 @@ namespace WebMap
             Chart.Load(worldDataPath);
             Features.Load(worldDataPath);
             Feed.Load(worldDataPath);
-            Activity.Load(worldDataPath);                 // the Activity layers' zone totals                     // the map's Events panel: the end of its log
+            Activity.Load(worldDataPath);                 // the Activity layers' zone totals
+            Tiles.BuildHistory.Load(worldDataPath);       // and New building, Lag hotspots
+            Tiles.Hotspots.Load(worldDataPath);                     // the map's Events panel: the end of its log
             ServerLog.Open(worldDataPath);                // the game's console lines, for admins
             Portals.Load(worldDataPath);
             Locations.Load(worldDataPath);

@@ -162,6 +162,7 @@ namespace WebMap
             Markers.Begin();                                  // Munin's marker sets: wards, beds, signs, runestones...
             Dungeons.Begin(Markers.IsDungeon);
             Demisters.Begin();
+            Hotspots.Begin();                                 // what weighs on players' frame rates, per 64 m zone
             var mapTables = new List<ZDO>();
             LocationTerrain.Begin();                          // and the ground the game shapes round its locations
             Stats.BeginSweep();
@@ -200,7 +201,7 @@ namespace WebMap
                         // what each dungeon still holds, the lanterns that clear the mist
                         if (pref == MapTableHash) mapTables.Add(zdo);
                         if (Runestones.IsProxy(pref)) { try { Markers.ObserveProxy(zdo, p); } catch { } }
-                        try { Dungeons.Observe(zdo, pref, p, creator); Demisters.Observe(pref, p); } catch { }
+                        try { Dungeons.Observe(zdo, pref, p, creator); Demisters.Observe(pref, p); Hotspots.Observe(pref, creator, p); } catch { }
                         if (Graves.IsGrave(pref))
                         {
                             Graves.Observe(zdo, p);   // spawned by the game, so no creator
@@ -260,6 +261,7 @@ namespace WebMap
             // stepped by hand, so a throw ends that step and not the sweep.
             var changedZones = new HashSet<long>();
             Dungeons.Finish(); Demisters.Finish();
+            try { Hotspots.Finish(); } catch (Exception e) { ZLog.LogWarning("WebMap: hotspots failed: " + e.Message); }   // and the build history
             foreach (var step in new[] { LocationTerrain.Finish(changedZones, WebMap.worldDataPath), Vegetation.Finish(changedZones), Structures.Finish(), Ruins.Finish(),
                                          MapTables(mapTables), Markers.Finish() })
                 while (true)

@@ -1126,6 +1126,13 @@ namespace WebMap
                         json = Activity.ZoneJson(zx, zz); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
                         break;
                     }
+                case "hotspots.json": json = Tiles.Hotspots.Json; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;
+                case "building.json":
+                    {
+                        int.TryParse(req.QueryString["days"] ?? "1", NumberStyles.Integer, CultureInfo.InvariantCulture, out int days);
+                        json = Tiles.BuildHistory.Json(days); res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache");
+                        break;
+                    }
                 case "stats.json": json = Weather.StatsJson; res.Headers.Add(HttpResponseHeader.CacheControl, "no-cache"); break;   // the world's clock and forecast
                 case "pins.json": json = PinsMuninJson(); break;
                 case "markers.json": json = Tiles.Markers.Json; break;   // Munin's marker sets (Tiles/Markers)
