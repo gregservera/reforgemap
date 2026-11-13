@@ -371,30 +371,65 @@ namespace WebMap
         [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Start))]
         private class ZoneSystemPatch
         {
-            private static void Postfix() => WebMap.instance.NewWorld();
+            private static void Postfix()
+            {
+                WebMap.instance.NewWorld();
+                StaticCoroutine.Start(StartWhenGenerated());   // a world just made never runs ZoneSystem.Load
+            }
         }
 
         [HarmonyPatch(typeof(ZoneSystem), nameof(ZoneSystem.Load))]
         private class ZoneSystemLoadPatch
         {
-            private static void Postfix()
+            private static void Postfix() => StartMap("loaded");
+        }
+
+        // The map starts once its world's locations are there: a world loaded from its save has them
+        // when ZoneSystem.Load is done; a world just made generates them after ZoneSystem.Start, over
+        // some seconds, and never runs Load (before 2.0 the map stayed down until a restart). Both
+        // ways come here; the first one starts the map.
+        private static bool mapStarted;
+        private static void StartMap(string how)
+        {
+            if (mapStarted || ZoneSystem.instance == null) return;
+            mapStarted = true;
+            ZLog.Log("WebMap: the world is " + how + ": starting the map");
+            ZoneSystem.LocationInstance startLocation;
+            if (ZoneSystem.instance.FindClosestLocation("StartTemple", Vector3.zero, out startLocation))
             {
-                ZoneSystem.LocationInstance startLocation;
-                if (ZoneSystem.instance.FindClosestLocation("StartTemple", Vector3.zero, out startLocation))
-                {
-                    var p = startLocation.m_position;
-                    WebMapConfig.WORLD_START_POS = p;
-                    ZLog.Log("WebMap: starting point " + WebMapConfig.WORLD_START_POS.ToString());
-                }
-                else
-                {
-                    ZLog.LogError("WebMap: failed to find starting point");
-                }
-                mapDataServer.RefreshConfig();               // the start position is part of /config
+                var p = startLocation.m_position;
+                WebMapConfig.WORLD_START_POS = p;
+                ZLog.Log("WebMap: starting point " + WebMapConfig.WORLD_START_POS.ToString());
+            }
+            else
+            {
+                ZLog.LogError("WebMap: failed to find starting point");
+            }
+            mapDataServer.RefreshConfig();               // the start position is part of /config
 
-                WebMap.instance.Online();
+            WebMap.instance.Online();
 
-                mapDataServer.ListenAsync();
+            mapDataServer.ListenAsync();
+        }
+
+        // a world just made: its locations come over the first seconds (ZoneSystem.GenerateLocationsTimeSliced)
+        private static IEnumerator StartWhenGenerated()
+        {
+            float since = -1f;
+            while (!mapStarted)
+            {
+                var zs = ZoneSystem.instance;
+                if (zs != null && zs.m_locationsGenerated)
+                {
+                    // and the start temple placed (the map's home), or two minutes without it
+                    if (since < 0f) since = Time.realtimeSinceStartup;
+                    if (zs.FindClosestLocation("StartTemple", Vector3.zero, out _) || Time.realtimeSinceStartup - since > 120f)
+                    {
+                        StartMap("new");
+                        yield break;
+                    }
+                }
+                yield return new WaitForSeconds(1f);
             }
         }
 
