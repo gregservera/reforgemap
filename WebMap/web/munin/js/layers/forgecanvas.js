@@ -75,8 +75,11 @@ export class ForgeCanvas extends L.Layer {
   // the view as MapCore takes it
   view() {
     const map = this.map, size = map.getSize(), pix = window.devicePixelRatio || 1;
-    const geom = MC.geom, mid = map.latLngToContainerPoint(toLatLng(0, 0));
-    const metre = map.latLngToContainerPoint(toLatLng(1, 0)).x - mid.x;   // screen px per metre
+    // (Leaflet's latLngToContainerPoint rounds to whole pixels: at zoom 6 a metre is half a pixel, and
+    // the rounding put everything out of place. Projected here without it.)
+    const zoom = map.getZoom(), geom = MC.geom;
+    const mid = map.project(toLatLng(0, 0), zoom).subtract(map.getPixelOrigin()).add(map._getMapPanePos());
+    const metre = map.options.crs.scale(zoom);   // screen px per metre
     const scale = metre * geom.pixel, half = geom.size / 2;
     return { scale, tx: mid.x - half * scale, ty: mid.y - half * scale, w: size.x, h: size.y, pix };
   }
