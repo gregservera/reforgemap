@@ -1004,6 +1004,7 @@ namespace WebMap
         private static void ServeModel(HttpListenerRequest req, HttpListenerResponse res, string name)
         {
             string root = Models.ModelStore.Root;
+            if (!name.StartsWith(Models.HdMaps.Dir + "/", StringComparison.Ordinal)) root = Models.Libraries.RootFor(name);
             if (name.StartsWith(Models.HdMaps.Dir + "/", StringComparison.Ordinal)) { ServeHd(req, res, Models.HdMaps.PathOf(root, name.Substring(Models.HdMaps.Dir.Length + 1))); return; }
             string path = root != null && ModelFile.IsMatch(name) ? Path.Combine(root, name) : null;
             byte[] body = null;
@@ -1094,7 +1095,7 @@ namespace WebMap
                 case "mist.png": bin = Tiles.BiomeMap.MistPngFor(); type = "image/png"; break;
                 // the 3D view: ForgeMap's objects and model library, at Munin's paths and in its numbering
                 case "objects/index.json": json = WorldObjects.MuninIndexJson(MuninChunkShift); break;
-                case "prefabs.json": json = Models.ModelStore.PrefabsJson; break;
+                case "prefabs.json": json = Models.Libraries.PrefabsJson; break;   // both model libraries, as one
                 case "environments.json": json = Weather.EnvironmentsJson(); break;   // each weather's light, for the 3D sky
                 // the Activity layers: trails of the last hours, time spent and deaths per 64 m zone
                 case "activity.json":
@@ -1539,6 +1540,8 @@ namespace WebMap
             // the markers changed (a sweep, a boat moved, a base renamed): open maps fetch them again
             int markersRev = Tiles.Markers.Rev;
             if (markersRev != sentMarkersRev) { sentMarkersRev = markersRev; webSocketHandler.Sessions.Broadcast(MarkersFrame(markersRev)); }
+            int wr = worldRev;
+            if (wr != sentWorldRev) { sentWorldRev = wr; webSocketHandler.Sessions.Broadcast(WorldFrame(wr)); }
             // the Events panel's new lines, and the raid and invasions on now when they change
             string events = Feed.DrainPendingJson();
             if (events != null) webSocketHandler.Sessions.Broadcast("events\n" + events);
@@ -1548,6 +1551,12 @@ namespace WebMap
             if (invKey != sentInvasions) { sentInvasions = invKey; webSocketHandler.Sessions.Broadcast("invasions\n" + inv); }
         }
         private string sentRaid = "null", sentInvasions = "[]";
+
+        // world\n<rev>: a sweep is done or a model library changed; open pages fetch their indexes
+        // again (objects, trees, buildings, prefabs: Munin's own "world" frame)
+        private int worldRev, sentWorldRev;
+        public void BroadcastWorldRevision() => System.Threading.Interlocked.Increment(ref worldRev);
+        internal static string WorldFrame(int rev) => "world\n" + rev.ToString(CultureInfo.InvariantCulture);
         internal static string InvasionKey(string json) => System.Text.RegularExpressions.Regex.Replace(json, ",\"(left|age)\":[0-9.]+", "");
         private int sentMarkersRev = int.MinValue;
 

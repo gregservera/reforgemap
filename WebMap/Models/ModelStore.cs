@@ -265,6 +265,7 @@ namespace WebMap.Models
                     {
                         sw.Restart();
                         SaveIndex(); WriteTexturesJson(); Rebuild(); indexDirty = false;
+                        MapDataServer.getInstance()?.BroadcastWorldRevision();   // the page asks for prefabs.json again
                         runFrameMs = Math.Max(runFrameMs, sw.Elapsed.TotalMilliseconds);
                     }
                     // a sweep queues prefabs as it meets them, so a run ends after a quiet spell, not at the first empty queue
@@ -503,6 +504,18 @@ namespace WebMap.Models
             }
             catch (Exception e) { ZLog.LogWarning("WebMap: could not save models/index.json: " + e.Message); }
         }
+
+        // ForgeMap 2.0 keeps two libraries (Models/ for buildings, MuninModels/ for the rest): each says
+        // what it has, and writes one entry of the merged /data/prefabs.json (Models/Libraries)
+        internal static bool Has(int hash, out string cat, out bool ok)
+        {
+            cat = null; ok = false;
+            if (!index.TryGetValue(hash, out var i)) return false;
+            cat = i.cat; ok = i.ok;
+            return true;
+        }
+        internal static System.Collections.Generic.ICollection<int> Hashes => index.Keys;
+        internal static void WriteEntry(JsonWriter j, int hash) { if (index.TryGetValue(hash, out var i)) WriteInfo(j, i, full: false); }
 
         private static void WriteInfo(JsonWriter j, Info i, bool full)
         {

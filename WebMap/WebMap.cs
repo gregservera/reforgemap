@@ -87,6 +87,7 @@ namespace WebMap
             // the 3D view: models exported a few a frame as the sweep meets new prefabs,
             // and the fallback for height sampling should the engine want it on this thread
             if (WebMapConfig.EXPORT_MODELS) StaticCoroutine.Start(Models.ModelStore.Pump());
+            if (WebMapConfig.EXPORT_MODELS) StaticCoroutine.Start(MuninModels.ModelStore.Pump());
             StaticCoroutine.Start(Heights.Pump());
             ChatRelay.Start();          // Discord -> game, its own pool-thread timer
             // the map tiles: the workers, the game-thread fallback for terrain sampling, and the
@@ -178,6 +179,7 @@ namespace WebMap
             Tiles.WorldPicture.Load(worldDataPath);       // the one picture of the world (/map), as last made
             // prefabs are the same in every world, so the model library sits beside the worlds
             if (Models.ModelStore.Root == null) Models.ModelStore.Init(mapDataPath);
+            if (MuninModels.ModelStore.Root == null) MuninModels.ModelStore.Init(mapDataPath);   // Munin's models: all but the buildings
 
             if (mapDataServer == null)
             {

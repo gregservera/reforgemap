@@ -80,6 +80,7 @@ export function frame(text) {
   if (type === 'live') { try { return { t: 'players', data: JSON.parse(body) }; } catch { return null; } }
   // events: the Events panel's new lines; raid: the raid on now (null: none); invasions: those on now
   if (type === 'events' || type === 'raid' || type === 'invasions') { try { return { t: type, data: JSON.parse(body) }; } catch { return null; } }
+  if (type === 'world') return { t: 'world', rev: +body };
   if (type === 'markers') return { t: 'markers', rev: +body };
   if (type === 'tiles') { try { return Object.assign({ t: 'tiles' }, JSON.parse(body)); } catch { return null; } }
   return null;

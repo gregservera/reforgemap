@@ -23,6 +23,11 @@ test("events, raid and invasions frames carry their JSON", () => {
   assert.equal(frame("events\nnot json"), null);
 });
 
+// The 3D, tree and building indexes are fetched again only when this comes.
+test("a world frame carries its rev", () => {
+  assert.deepEqual(frame("world\n12"), {t: "world", rev: 12});
+});
+
 test("reload is reload, and what the map does not use yet is nothing", () => {
   assert.deepEqual(frame("reload\n"), {t: "reload"});
   assert.equal(frame('players\n{"players":[]}'), null);

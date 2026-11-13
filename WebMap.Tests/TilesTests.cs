@@ -83,6 +83,17 @@ namespace WebMap.Tests
 
         // Open maps fetch again exactly the tiles drawn again, and hear nothing when none were.
         // The page fetches /data/markers.json again on this frame; a wrong head and it never does.
+        // Buildings and the character stay ForgeMap's models; the rest is Munin's (decision D2a).
+        [Fact]
+        public void BuildingsKeepForgeMapsModelsAndTheRestGoesToMunins()
+        {
+            Assert.True(Models.Libraries.IsForgeMaps("piece"));
+            Assert.True(Models.Libraries.IsForgeMaps(Models.Rig.Cat));
+            Assert.False(Models.Libraries.IsForgeMaps("tree"));
+            Assert.False(Models.Libraries.IsForgeMaps("other"));
+            Assert.Equal("world\n3", MapDataServer.WorldFrame(3));
+        }
+
         [Fact]
         public void TheMarkersFrameIsItsRev() => Assert.Equal("markers\n-7", MapDataServer.MarkersFrame(-7));
 

@@ -319,6 +319,7 @@ namespace WebMap
             {
                 sweeps++;
                 sweeping = false;
+                MapDataServer.getInstance()?.BroadcastWorldRevision();   // open pages fetch the 3D, tree and building indexes again
             }
         }
 
