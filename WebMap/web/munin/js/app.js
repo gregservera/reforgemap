@@ -28,6 +28,7 @@ import { PathsLayer } from './layers/paths.js';
 import { DeathsLayer } from './layers/deaths.js';
 import { Pegman } from './pegman.js';
 import { setupTour } from './tourstage.js';
+import { keyOf } from './keys.js';
 
 const $ = (s) => document.querySelector(s);
 
@@ -337,9 +338,10 @@ class App {
       if (k === 'l') { this.toggleSidebar(); return; }
       if (k === 'p') { if (this.layers.players.following) this.layers.players.follow(null); else this.cyclePlayer(); return; }
       if (this.mode === '3d') return;   // the 3D view polls its own keys
-      // 2D: WASD pans (arrows and +/- are Leaflet's own), Shift is fast
+      // 2D: WASD pans (arrows and +/- are Leaflet's own), Shift is fast; ForgeMap: by where the keys
+      // sit, as in the 3D (keys.js): Z Q S D on an AZERTY keyboard
       const step = e.shiftKey ? 300 : 100;
-      const pan = { w: [0, -step], s: [0, step], a: [-step, 0], d: [step, 0] }[k];
+      const pan = { w: [0, -step], s: [0, step], a: [-step, 0], d: [step, 0] }[keyOf(e)];
       if (pan) { e.preventDefault(); this.layers.players.follow(null); this.map.panBy(pan, { animate: true, duration: 0.15 }); }
     });
     window.addEventListener('hashchange', () => this.applyHash());

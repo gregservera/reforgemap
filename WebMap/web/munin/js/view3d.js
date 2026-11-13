@@ -19,6 +19,7 @@ import { materialColors, colors as iconColors } from './icons.js';
 import { layerState } from './layerstate.js';
 import { WORLD_HALF, MAX_ZOOM, TILE, metersPerPixel, chunkOf, worldTile, WORLD_SIZE, CHUNKS } from './crs.js';
 import { fetchTerrarium } from './png.js';
+import { keyOf } from './keys.js';
 import { on } from './net.js';
 import { loadHd, dressMaterial } from '../../js/rig.js';
 import { fetchMist, mistIn } from './mist.js';
@@ -1402,10 +1403,7 @@ uniform sampler2D uFog; uniform float uFogOn; uniform float uFogOpacity; uniform
   }
 }
 
-// ForgeMap: letters by where they sit on the keyboard (e.code), not what they type, so the moves are
-// the same keys on AZERTY (Z Q S D) as on QWERTY (W A S D); the rest by what they type
 const STREET_EYE = 1.8;   // ForgeMap: a Viking's eyes above the ground
-const keyOf = (e) => { const m = /^Key([A-Z])$/.exec(e.code || ''); return m ? m[1].toLowerCase() : e.key.length === 1 ? e.key.toLowerCase() : e.key; };
 const KEYS = new Set(['w', 'a', 's', 'd', 'q', 'e', 'r', 'f', 'z', 'x', '+', '=', '-', '_', 'Shift', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home']);
 const AXIS_Y = new THREE.Vector3(0, 1, 0);
 const IDENTITY = new THREE.Matrix4();
