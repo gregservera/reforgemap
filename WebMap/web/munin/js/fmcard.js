@@ -63,9 +63,11 @@ export class ForgeCard {
     const body = st ? `<div class="fm-card-body">${PC.figures(st)}${PC.radar(st, 150, true)}</div>` : '';
     const acts = `<div class="pin-actions">`
       + (p && p.x !== undefined ? `<button class="btn small" type="button" data-act="follow">${following ? T('Unfollow') : T('Follow')}</button>` : '')
+      + (st && +st.deaths > 0 && this.app.layers.deaths ? `<button class="btn small" type="button" data-act="deaths">${T('Their deaths')}</button>` : '')
       + `<a class="btn small" href="players.html#p=${encodeURIComponent(name)}">${T('Their page')}</a></div>`;
     this.el.innerHTML = `<button class="fm-card-x" type="button" title="${T('Close')}">×</button>` + head + hp + body + acts;
     this.el.querySelector('.fm-card-x').addEventListener('click', () => this.hide());
+    this.el.querySelector('[data-act=deaths]')?.addEventListener('click', () => setTimeout(() => this.app.layers.deaths.setWho(name), 0));
     this.el.querySelector('[data-act=follow]')?.addEventListener('click', () => setTimeout(() => { PL.follow(following ? null : p.id); this.render(); }, 0));
   }
 }

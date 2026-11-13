@@ -220,7 +220,14 @@ export class Sidebar {
     if (L.paths) act.append(row(TRAIL_SVG, 'Frequented paths', 'Everywhere players walk, all told: the busiest show deepest', false, (v) => L.paths.setOn(v)));
     act.append(trailRow, trailOpts);
     act.append(row(HEAT_SVG, 'Time spent', 'Click a square for who and how long', false, (v) => A.set('heat', v)));
-    act.append(row(ico('tombstone', '#e0485a'), 'Deaths', 'Where players have died', false, (v) => A.set('deaths', v)));
+    // ForgeMap: each death where it happened (layers/deaths.js); Munin's own count them per zone
+    if (L.deaths) {
+      const dr = row(ico('tombstone', '#ff7a7a'), 'Deaths, where they happened', 'The last 500, a glow each, fading over a month', false, (v) => { if (!v) L.deaths.who = null; L.deaths.setOn(v); });
+      act.append(dr);
+      // a player's card asks for theirs alone: the switch shows it on, and says whose
+      L.deaths.onWho = (who) => { dr.querySelector('input').checked = true; dr.querySelector('small').textContent = who ? window.I18N.t('Only {name}\'s', { name: who }) : window.I18N.t('The last 500, a glow each, fading over a month'); };
+    }
+    act.append(row(ico('tombstone', '#e0485a'), 'Dangerous zones', 'Deaths per 64 m zone, all time', false, (v) => A.set('deaths', v)));
     act.append(row(BUILD_SVG, 'New building', 'Where bases grew or came down', false, (v) => { buildOpts.hidden = !v; A.set('building', v); }), buildOpts);
     act.append(row(ico('fire', '#ff6a3d'), 'Lag hotspots', 'Busy areas: click one for why', false, (v) => { hotOpts.hidden = !v; A.set('hotspots', v); }), hotOpts);
     for (const b of trailOpts.querySelectorAll('[data-h]')) b.addEventListener('click', () => { if (A.hours !== +b.dataset.h) A.setHours(+b.dataset.h); });

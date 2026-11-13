@@ -25,6 +25,7 @@ import { NamesLayer } from './layers/names.js';
 import { PlanLayer } from './layers/plan.js';
 import { ForgeCard } from './fmcard.js';
 import { PathsLayer } from './layers/paths.js';
+import { DeathsLayer } from './layers/deaths.js';
 import { Pegman } from './pegman.js';
 
 const $ = (s) => document.querySelector(s);
@@ -184,7 +185,8 @@ class App {
     this.layers.names = new NamesLayer().addTo(this.map);   // ForgeMap: the land named (layers/names.js)
     // ForgeMap: the floor plan up close and the lights (layers/plan.js)
     this.pegman = new Pegman(this);   // ForgeMap: Street View, the figure dropped on the map (pegman.js)
-    this.layers.paths = new PathsLayer().addTo(this.map);   // ForgeMap: the frequented paths (layers/paths.js)
+    this.layers.paths = new PathsLayer().addTo(this.map);
+    this.layers.deaths = new DeathsLayer().addTo(this.map);   // ForgeMap: each death where it happened (layers/deaths.js)   // ForgeMap: the frequented paths (layers/paths.js)
     this.layers.plan = new PlanLayer({ structures: this.layers.structures, names: this.layers.names }).addTo(this.map);
     this.layers.activity = new ActivityLayers(this.map, this.gl);
     // right click (long press on a phone) places a pin, unless the server turned web pins off
