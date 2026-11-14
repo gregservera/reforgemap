@@ -658,8 +658,7 @@ async function picture(p, roster, o){
   x.textAlign = "left"; spaced("0px"); x.strokeStyle = C.line; x.beginPath(); x.moveTo(16, 488.5 + off); x.lineTo(W - 16, 488.5 + off); x.stroke();
   x.font = `400 9.5px ${MONO}`; x.fillStyle = C.faint; x.fillText(I18N.date(Date.now(), {day: "numeric", month: "short", year: "numeric"}), 16, 507 + off);
   x.textAlign = "right"; x.font = `700 9.5px ${MONO}`; x.fillStyle = C.ink2;
-  const tail = "ForgeServer.fr", tw = x.measureText(tail).width; x.fillText(tail, W - 16, 507 + off);
-  x.fillStyle = C.gold; x.fillText("ForgeMap · ", W - 16 - tw, 507 + off);
+  x.fillStyle = C.gold; x.fillText("ReforgeMap", W - 16, 507 + off);
   return new Promise((ok, no) => cv.toBlob(b => b ? ok(b) : no(new Error("toBlob")), "image/png"));
 }
 // hand a Blob to the browser as a file, by a link with download

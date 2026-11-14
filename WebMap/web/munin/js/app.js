@@ -237,7 +237,7 @@ class App {
   applyConfig(c) {
     if (!c) return;
     // ForgeMap: the brand stays in the bar, the world's name beside it
-    document.title = `${c.world_name || 'Valheim'} - ForgeMap x Munin`;
+    document.title = `${c.world_name || 'Valheim'} - ReforgeMap`;
     if (c.world_name) $('#subtitle').textContent = c.world_name;
     // with 3D off, hide what only works with it (inline style: CSS display would override `hidden`)
     $('#btn-mode').style.display = c.enable_3d === false ? 'none' : '';

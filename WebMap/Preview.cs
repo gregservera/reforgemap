@@ -75,7 +75,7 @@ namespace WebMap
                 : WebMapConfig.PREVIEW_DESCRIPTION;
             var sb = new StringBuilder();
             Meta(sb, "property", "og:type", "website");
-            Meta(sb, "property", "og:site_name", "ForgeMap");
+            Meta(sb, "property", "og:site_name", "ReforgeMap");
             Meta(sb, "property", "og:title", title);
             Meta(sb, "property", "og:description", desc);
             Meta(sb, "name", "description", desc);
@@ -98,7 +98,7 @@ namespace WebMap
         // the request came in on (X-Forwarded-* first, for a reverse proxy)
         internal static string Page(HttpListenerRequest req, string html)
         {
-            string title = WebMap.serverInfo != null && WebMap.serverInfo.TryGetValue("serverName", out var n) && n is string s && s.Length > 0 ? s : "ForgeMap";
+            string title = WebMap.serverInfo != null && WebMap.serverInfo.TryGetValue("serverName", out var n) && n is string s && s.Length > 0 ? s : "ReforgeMap";
             string page = BaseUrl(req), img = null;
             string v = (WebMapConfig.PREVIEW_IMAGE ?? "").Trim().Trim('"');
             if (IsUrl(v)) img = v;

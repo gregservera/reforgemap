@@ -283,6 +283,11 @@ export class Sidebar {
     materialNames.forEach((n, i) => legend.querySelector('.lb').append(el(`<span><i style="background:${materialColors[i]}"></i>${n}</span>`)));
     for (const [kind, name] of VEG_KEY) if (VEG[kind]) legend.querySelector('.lv').append(el(`<span><i class="${VEG[kind][2] ? 'rock' : 'round'}" style="background:${VEG[kind][1]}"></i>${name}</span>`));
     p.append(...only('2d', legend));
+    // ReforgeMap: who made this map, a link to each (the other pages' footer says the same, map-core.js)
+    const ln = (href, t) => `<a href="${href}" target="_blank" rel="noopener">${t}</a>`;
+    p.append(el(`<p class="fm-credit">${window.I18N.t('{reforgemap}, based on {forgemap}, {munin} and {webmap}', {
+      reforgemap: ln('https://github.com/gregservera/reforgemap', '<b>ReforgeMap</b>'), forgemap: ln('https://github.com/Rivenche/forgemap', 'ForgeMap'),
+      munin: ln('https://github.com/cocopuff2u-gaming/munin-map', 'Munin Map'), webmap: ln('https://github.com/hunter-jsb/valheim-webmap', 'WebMap') })}</p>`));
 
     this.setAt = {};   // marker set id -> the marker its name's clicks last went to
     const setIcon = { spawn: 'spawn', bosses: 'boss', minibosses: 'miniboss', dungeons: 'dungeon', landmarks: 'forge', peaks: 'peak', camps: 'fulingcamp', signs: 'sign', traders: 'trader', portals: 'portal', tablepins: 'maptable', tombstones: 'tombstone', wards: 'ward', runestones: 'runestone', vegvisirs: 'vegvisir', beds: 'bed', bases: 'house', vehicles: 'boat', invasions: 'invasion', locations: 'poi' };

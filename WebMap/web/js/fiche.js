@@ -53,7 +53,7 @@ function render(){
   card.classList.toggle("ok", on);
   if(html !== LAST){ body.innerHTML = html; LAST = html; if(!VK.big) document.getElementById("fig").appendChild(VK.el); }   // untouched DOM, so no flicker on the minute
   btn.hidden = false;
-  document.title = `${p.name} - ForgeMap x Munin`;
+  document.title = `${p.name} - ReforgeMap`;
   VK.show(p.name, lookOf(p, here), on, MODELS);
   // the gear's pictures, and its figures once for the frames' titles (a server without /items: the names alone)
   Gear.fill(body, VK, MODELS);

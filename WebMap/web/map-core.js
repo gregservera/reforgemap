@@ -32,7 +32,7 @@ const cfg = {
   base:   XNV.base || "/map.jpg",
   brand:  XNV.brand || null,
   links:  Array.isArray(XNV.links) ? XNV.links
-          : [{label: "Map mod", href: "https://github.com/Rivenche/forgemap"}],   // ForgeMap: our repo
+          : [{label: "Map mod", href: "https://github.com/gregservera/reforgemap"}],   // ReforgeMap: our repo
   status: XNV.status || null,
   repo:   XNV.repo || null,
 };
@@ -855,14 +855,14 @@ function esc(t){ return String(t).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&l
 const NAV_PAGES = [["index", "Map"], ["world", "World"], ["portals", "Portals"], ["players", "Players"], ["plan", "Plan"]];
 let navEl = null, navPage = "";
 // Nameless until the world names itself, and "Valheim" until even that arrives.
-function brand(){ return cfg.brand || worldName || "ForgeMap"; }   // ForgeMap: our name until the world names itself
+function brand(){ return cfg.brand || worldName || "ReforgeMap"; }   // ForgeMap: our name until the world names itself
 // The tab is the world's name -- the map plain, the rest "<world> · <page>" -- and the
 // deployment's brand only until the world has named itself.
 function setTitle(page){
-  // ForgeMap: "<page> \u00b7 <world> - ForgeMap x Munin" (the map page: "<world> - ForgeMap x Munin"), and ForgeMap's flame as the tab icon
+  // ForgeMap: "<page> \u00b7 <world> - ReforgeMap" (the map page: "<world> - ReforgeMap"), and ForgeMap's flame as the tab icon
   const row = NAV_PAGES.find(p => p[0] === page), world = worldName || cfg.brand;
   const head = [row && page !== "index" ? I18N.t(row[1]) : "", world].filter(Boolean).join(" \u00b7 ");
-  document.title = head ? head + " - ForgeMap x Munin" : "ForgeMap x Munin";
+  document.title = head ? head + " - ReforgeMap" : "ReforgeMap";
   if(!document.querySelector('link[rel="icon"][data-forgemap]')){
     for(const l of document.querySelectorAll('link[rel="icon"]')) l.remove();
     const l = document.createElement("link"); l.rel = "icon"; l.type = "image/svg+xml"; l.setAttribute("data-forgemap", "");
@@ -871,6 +871,12 @@ function setTitle(page){
   }
 }
 // The footer credits whoever runs this one; a deployment that names no repo has none.
+// ReforgeMap: who made this viewer, with a link to each: the map page's panel says it too (munin/js/ui.js)
+const CREDIT = (link) => I18N.t("{reforgemap}, based on {forgemap}, {munin} and {webmap}", {
+  reforgemap: link("https://github.com/gregservera/reforgemap", "<b>ReforgeMap</b>"),
+  forgemap: link("https://github.com/Rivenche/forgemap", "ForgeMap"),
+  munin: link("https://github.com/cocopuff2u-gaming/munin-map", "Munin Map"),
+  webmap: link("https://github.com/hunter-jsb/valheim-webmap", "WebMap")});
 function credits(){
   for(const el of document.querySelectorAll(".credits")){
     if(!cfg.repo){ el.style.display = "none"; continue; }
@@ -880,8 +886,7 @@ function credits(){
   const link = (href, text) => `<a href="${href}" target="_blank" rel="noopener">${text}</a>`;
   for(const f of document.querySelectorAll(".foot")){
     if(f.querySelector(".fm-credit")) continue;
-    f.insertAdjacentHTML("beforeend", `<span class="fm-credit"> · ${I18N.t("{forgemap} by {forgeserver}, based on {webmap}", {
-      forgemap: "<b>ForgeMap</b>", forgeserver: link("https://forgeserver.fr", "ForgeServer.fr"), webmap: link("https://github.com/hunter-jsb/valheim-webmap", "WebMap")})}</span>`);
+    f.insertAdjacentHTML("beforeend", `<span class="fm-credit"> · ${CREDIT(link)}</span>`);
   }
 }
 // ForgeMap: ForgeServer's flame before the world's name in the bar

@@ -165,3 +165,9 @@ label.lrow { cursor: pointer; }
 .switch i::after { top: 2px; left: 2px; width: 14px; height: 14px; background: var(--sw-knob); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
 .switch input:checked + i { background: var(--accent); box-shadow: none; }
 .switch input:checked + i::after { transform: translateX(12px); background: var(--sw-knob-on); }
+
+/* ReforgeMap: the credit at the foot of the layers panel */
+#panel-layers .fm-credit { margin: 14px 4px 6px; font-size: 11.5px; line-height: 1.5; color: var(--muted); text-align: center; text-wrap: balance; }
+#panel-layers .fm-credit a { color: inherit; text-decoration: underline; text-decoration-color: color-mix(in srgb, currentColor 40%, transparent); }
+#panel-layers .fm-credit a:hover { color: var(--accent); }
+#panel-layers .fm-credit b { color: var(--text); font-weight: 600; }
