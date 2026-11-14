@@ -1,5 +1,25 @@
 # Changelog
 
+## ReforgeMap 2.0.0-rc1
+
+ReforgeMap, based on ForgeMap, Munin Map and WebMap: ForgeMap's pages, French and 3D characters
+on Munin Map's 2D and 3D map. A release candidate, to try on a test server first.
+
+* **Munin Map's map.** The map page is Munin Map's: WebGL tiles drawn by the server (terrain,
+  water, trees and rocks), soft fog of war, place names, contour lines, biome styles, the mist of
+  the Mistlands, markers by family, activity layers (trails, time spent, deaths, new building,
+  lag hotspots). The Portails and Plan pages draw on the same ground.
+* **Munin Map's 3D**, with ForgeMap's models, HD textures on buildings, Street View, the cinematic
+  tour, each player as their character, colours and light close to the game's.
+* **Trees and bushes drawn by species** on the 2D map, each with the shadow its shape casts.
+* **Layers panel**: only the settings of the view on screen, switches in the site's colours, a
+  click anywhere on a row toggles it.
+* **AZERTY**: Z Q S D move the 2D map as the 3D.
+* **Name and credits**: the site is ReforgeMap; every page credits ForgeMap, Munin Map and
+  WebMap. Munin Map 3.3.1 is kept as published, history included, under `vendor/munin-map`.
+* The plugin keeps ForgeMap's id (`fr.forgeserver.forgemap`), DLL and configuration: an
+  update from ForgeMap 1.4 keeps its settings and map data.
+
 ## ForgeMap 1.4.0
 
 * **Boss altars and the Forge of Potential on the map.** The map marks each boss's altar

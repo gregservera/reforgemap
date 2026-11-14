@@ -1,8 +1,8 @@
 {
     "name": "ForgeMap",
-    "version_number": "1.4.0",
-    "website_url": "https://forgeserver.fr",
-    "description": "ForgeMap, its own mod based on WebMap: a live web map for Valheim dedicated servers, in French and English, by ForgeServer.fr. Players and their ping, fog of war, builds, portals, 3D view, light mode for small servers. Server-side only.",
+    "version_number": "2.0.0",
+    "website_url": "https://github.com/gregservera/reforgemap",
+    "description": "ReforgeMap, based on ForgeMap, Munin Map and WebMap: a live web map for Valheim dedicated servers, in French and English. 2D and 3D map, players and their characters, fog of war, builds, portals, activity. Server-side only.",
     "dependencies": [
         "denikson-BepInExPack_Valheim-5.4.2350"
     ]
