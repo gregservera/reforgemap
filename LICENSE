@@ -1,6 +1,11 @@
+ReforgeMap, based on ForgeMap, Munin Map and WebMap.
+
+Copyright 2026 gregservera (ReforgeMap)
 Copyright 2026 ForgeServer.fr (ForgeMap: translation and theme)
-Copyright 2021 Jeffrey Clark
-Copyright 2021 Kyle Paulsen
+Copyright 2026 Cody Keats (Munin Map)
+Copyright 2026 Adrian Chrysanthou and the Valheim WebMap contributors
+Copyright 2021 Jeffrey Clark (WebMap)
+Copyright 2021 Kyle Paulsen (WebMap)
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
@@ -25,5 +30,7 @@ WebMap/Util, WebMap/web/js/view3d.js, WebMap/web/js/sky.js) are from
 f00d4tehg0dz/valheim-webmap (https://github.com/f00d4tehg0dz/valheim-webmap), under this
 same MIT licence. three.js, vendored under WebMap/web/vendor/three, is Copyright
 2010-2025 three.js authors, MIT.
+Munin Map 3.3.1, the starting point of the map page, its tiles and its 3D view, is kept as
+published under vendor/munin-map, with its own licence (vendor/munin-map/LICENSE, MIT).
 websocket-sharp.dll, shipped beside WebMap.dll, is Copyright (c) sta.blockhead
 (https://github.com/sta/websocket-sharp), MIT.

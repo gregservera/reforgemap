@@ -1,15 +1,16 @@
-# ForgeMap
+# ReforgeMap
 
-**FR** · La carte web en direct de ton monde Valheim, **en français et en anglais**, par
-[ForgeServer.fr](https://forgeserver.fr). Mod **côté serveur uniquement** : les joueurs
-n'installent rien, ils ouvrent un lien dans leur navigateur.
+**ReforgeMap, d'après [ForgeMap](https://github.com/Rivenche/forgemap), [Munin Map](https://github.com/cocopuff2u-gaming/munin-map) et [WebMap](https://github.com/hunter-jsb/valheim-webmap).**
+*ReforgeMap, based on ForgeMap, Munin Map and WebMap.*
 
-**EN** · A live web map of your Valheim world, **in French and English**, by
-[ForgeServer.fr](https://forgeserver.fr). **Server-side only**: players install nothing,
-they open a link in their browser.
+**FR** · La carte web en direct de ton monde Valheim, **en français et en anglais**. Mod **côté
+serveur uniquement** : les joueurs n'installent rien, ils ouvrent un lien dans leur navigateur.
 
-ForgeMap is a fork of [WebMap](https://github.com/hunter-jsb/valheim-webmap) (MIT), with
-ForgeServer's look and a full French translation. Free, for the whole community.
+**EN** · A live web map of your Valheim world, **in French and English**. **Server-side only**:
+players install nothing, they open a link in their browser.
+
+ReforgeMap brings together ForgeMap (its pages, its French, its 3D characters) and Munin Map (its
+2D and 3D map), both from WebMap. Free, for the whole community.
 
 ---
 
@@ -57,9 +58,6 @@ ForgeServer's look and a full French translation. Free, for the whole community.
 
 La configuration est dans `BepInEx/config/fr.forgeserver.forgemap.cfg` (arrête le serveur
 avant de la modifier : BepInEx la réécrit à l'arrêt).
-
-Tu es chez [ForgeServer.fr](https://forgeserver.fr) ? Rien à faire : la carte s'installe en
-un clic depuis L'Atelier (onglet Mods, « Carte en direct »).
 
 > **Tu viens de WebMap (ou de ForgeMap 1.0) ? Rien à faire, c'est automatique.** Depuis la
 > 1.1.0, ForgeMap est un mod à part entière (son propre identifiant et `ForgeMap.dll`). Au
@@ -180,9 +178,10 @@ The full documentation of every feature, route and setting (English) is in
 
 ## Credits / Crédits
 
-* **ForgeMap** — French translation, ForgeServer look, player cards, gear, ping, light mode:
-  [ForgeServer.fr](https://forgeserver.fr). Developed with the help of an AI (Claude, by
-  Anthropic) / développé avec l'aide d'une IA.
+* **ReforgeMap** — [github.com/gregservera/reforgemap](https://github.com/gregservera/reforgemap): ForgeMap and Munin Map brought together.
+  Developed with the help of an AI (Claude, by Anthropic) / développé avec l'aide d'une IA.
+* Based on **ForgeMap** — [github.com/Rivenche/forgemap](https://github.com/Rivenche/forgemap): French translation, its look, player
+  cards, gear, ping, light mode.
 * Based on **WebMap** — 1.0 update, structures, forest, portals, 3D and much more by
   [Hunter Boyd](https://github.com/hunterjsb); maintained upstream by
   [Jeff Clark](https://github.com/h0tw1r3); original work by
@@ -192,7 +191,8 @@ The full documentation of every feature, route and setting (English) is in
 * The map page and its tiles (terrain, water, trees and rocks drawn in the background, at a metre
   a pixel; the WebGL map, its menus and layers, under `web/munin`) are ported from
   [Munin Map](https://github.com/cocopuff2u-gaming/munin-map) by
-  [Cody Keats](https://github.com/cocopuff2u) (MIT)
+  [Cody Keats](https://github.com/cocopuff2u) (MIT); its 3.3.1 release is kept as published,
+  history included, under `vendor/munin-map`
 * [Leaflet](https://leafletjs.com) (BSD-2-Clause), vendored under `web/vendor/leaflet`
 * [SixLabors.ImageSharp](https://github.com/SixLabors/ImageSharp) 2.1 (Apache-2.0), merged into
   `ForgeMap.dll` for the WebP map tiles, with System.Buffers, System.Numerics.Vectors and

@@ -49,7 +49,7 @@ const rules = {
 };
 
 export default [
-  {ignores: ["WebMap/web/vendor/**"]},
+  {ignores: ["WebMap/web/vendor/**", "vendor/**"]},
   {
     files: ["WebMap/web/**/*.{js,html}"],
     plugins: {html},

@@ -1,5 +1,9 @@
 # Third-party notices
 
+ReforgeMap is based on [ForgeMap](https://github.com/Rivenche/forgemap), [Munin Map](https://github.com/cocopuff2u-gaming/munin-map) and [WebMap](https://github.com/hunter-jsb/valheim-webmap), all MIT: their
+authors are in `LICENSE`. Munin Map 3.3.1 is kept as published, history included, under
+`vendor/munin-map`, with its own licence (`vendor/munin-map/LICENSE`).
+
 ForgeMap ships these libraries, each under its own licence (texts below, as Munin Map, MIT,
 gives them): Leaflet in `web/vendor/leaflet`; SixLabors.ImageSharp and three Microsoft System
 libraries merged into `ForgeMap.dll` for the WebP map tiles. three.js (MIT, `web/vendor/three`),
