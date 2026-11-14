@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Munin Map</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0e1116">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<script>
+// the menus' theme before anything is drawn (no flash of the other one): the browser's own setting
+// until the sun / moon button picks one, which is then kept
+window.muninTheme = () => {
+  let t = null;
+  try { t = localStorage.getItem('munin-theme'); } catch (e) { /* none kept */ }
+  if (t !== 'light' && t !== 'dark') t = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+};
+window.muninTheme();
+matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { window.muninTheme(); window.muninThemeShown?.(); });
+</script>
+<script>
+// the data every visit starts with, asked for now rather than once the scripts have loaded and
+// asked themselves (js/net.js fetchEarly hands each to its first caller)
+window.__early = {};
+for (const u of ['config', 'data/markers.json', 'data/icons.json', 'data/pins.json', 'data/stats.json', 'data/fog.png', 'data/veg/index.json',
+  'data/ruins/index.json', 'data/structures/index.json', 'data/objects/index.json', 'data/prefabs.json'])
+  window.__early[u] = fetch(u, { cache: 'no-cache' }).catch(() => null);
+</script>
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js", "three/addons/": "./vendor/three/addons/" } }
+</script>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="M12 3 2 8.5 12 14l10-5.5L12 3Zm-8 9.2L2 13.3 12 19l10-5.7-2-1.1-8 4.5-8-4.5Z"/></symbol>
+    <symbol id="i-github" viewBox="0 0 24 24"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.5 9.5 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.74c0 .27.18.58.69.48A10 10 0 0 0 12 2z"/></symbol>
+    <symbol id="i-players" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4 0-8 2-8 5v1h16v-1c0-3-4-5-8-5Z"/></symbol>
+    <symbol id="i-markers" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7Zm0 9.5A2.5 2.5 0 1 1 12 6a2.5 2.5 0 0 1 0 5.5Z"/></symbol>
+    <symbol id="i-stats" viewBox="0 0 24 24"><path d="M4 20V10h3v10H4Zm6.5 0V4h3v16h-3ZM17 20v-7h3v7h-3Z"/></symbol>
+    <symbol id="i-events" viewBox="0 0 24 24"><path d="M4 4h16v12H7l-3 3V4Zm3 4v2h10V8H7Zm0 4v2h7v-2H7Z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM11 1h2v3h-2V1Zm0 19h2v3h-2v-3ZM1 11h3v2H1v-2Zm19 0h3v2h-3v-2ZM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1Zm12.1 12.1 1.4-1.4 2.1 2.1-1.4 1.4-2.1-2.1ZM18.4 4.2l1.4 1.4-2.1 2.1-1.4-1.4 2.1-2.1ZM6.3 16.3l1.4 1.4-2.1 2.1-1.4-1.4 2.1-2.1Z"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M10 2.3A8 8 0 0 0 21.7 14 10 10 0 1 1 10 2.3Zm-2.6 3.4a8 8 0 1 0 10.9 10.9A10 10 0 0 1 7.4 5.7Z"/></symbol>
+    <symbol id="i-3d" viewBox="0 0 24 24"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Zm0 2.3 6.5 3.6L12 11.5 5.5 7.9 12 4.3ZM5 9.6l6 3.4v6.7l-6-3.4V9.6Zm8 10.1v-6.7l6-3.4v6.7l-6 3.4Z"/></symbol>
+    <symbol id="i-2d" viewBox="0 0 24 24"><path d="M3 5h18v14H3V5Zm2 2v10h14V7H5Zm2 2h4v2H7V9Zm0 4h10v2H7v-2Z"/></symbol>
+    <symbol id="i-follow" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 3h-2.06A7 7 0 0 0 13 5.06V3h-2v2.06A7 7 0 0 0 5.06 11H3v2h2.06A7 7 0 0 0 11 18.94V21h2v-2.06A7 7 0 0 0 18.94 13H21v-2Zm-9 7a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></symbol>
+    <symbol id="i-link" viewBox="0 0 24 24"><path d="M10.6 13.4a1 1 0 0 1 0-1.4l3.5-3.5a1 1 0 0 1 1.4 1.4L12 13.4a1 1 0 0 1-1.4 0Zm-2.1 4.9a3 3 0 0 1-4.2-4.2l2.8-2.8-1.4-1.4-2.8 2.8a5 5 0 1 0 7 7l2.8-2.8-1.4-1.4-2.8 2.8Zm7-14.2-2.8 2.8 1.4 1.4 2.8-2.8a3 3 0 1 1 4.2 4.2l-2.8 2.8 1.4 1.4 2.8-2.8a5 5 0 0 0-7-7Z"/></symbol>
+    <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3.3 16.2 16.2 3.3a1 1 0 0 1 1.4 0l3.1 3.1a1 1 0 0 1 0 1.4L7.8 20.7a1 1 0 0 1-1.4 0l-3.1-3.1a1 1 0 0 1 0-1.4Zm2.1.7 1.7 1.7L18.6 7.1l-1.7-1.7-1.5 1.5 1.2 1.2-1 1-1.2-1.2-1.2 1.2 1.9 1.9-1 1-1.9-1.9-1.2 1.2 1.2 1.2-1 1-1.2-1.2-1.2 1.2 1.9 1.9-1 1-1.9-1.9-1.4 1.4Z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6Zm0 5h18v2H3v-2Zm0 5h18v2H3v-2Z"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm12.6 1.4L6.4 19 5 17.6 17.6 5 19 6.4Z"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 0 3.7 10.7l5 5 1.4-1.4-5-5A6 6 0 0 0 10 4Zm0 2a4 4 0 1 1 0 8 4 4 0 0 1 0-8Z"/></symbol>
+    <symbol id="i-fullscreen" viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4V4Zm10 0h6v6h-2V6h-4V4ZM4 14h2v4h4v2H4v-6Zm14 0h2v6h-6v-2h4v-4Z"/></symbol>
+    <symbol id="i-export" viewBox="0 0 24 24"><path d="M12 3v10.2l3.6-3.6 1.4 1.4-6 6-6-6 1.4-1.4 3.6 3.6V3h2ZM4 19h16v2H4v-2Z"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="m12 3 9 8h-3v9h-4v-6h-4v6H6v-9H3l9-8Z"/></symbol>
+  </defs>
+</svg>
+
+<div id="app" class="app" data-mode="2d">
+  <div id="map" class="map"></div>
+  <div id="view3d" class="view3d" hidden><canvas id="gl"></canvas>
+    <div class="v3d-help">Drag to pan · right-drag / two fingers to orbit · wheel to zoom · double-click to centre · WASD move · Q E turn · R F tilt · Z X zoom · Shift fast</div>
+  </div>
+
+  <header class="topbar">
+    <button class="icon-btn" id="btn-menu" title="Menu"><svg><use href="#i-menu"/></svg></button>
+    <div class="title"><span id="title">Valheim</span><span class="sub" id="subtitle">Munin Map</span></div>
+    <div class="search">
+      <svg><use href="#i-search"/></svg>
+      <input id="search" type="search" placeholder="Player, marker, or x,z…" autocomplete="off" spellcheck="false">
+      <div id="search-results" class="search-results" hidden></div>
+    </div>
+    <div class="topbar-right">
+      <span id="online-pill" class="pill" title="Players online"><svg><use href="#i-players"/></svg><b>0</b><span>online</span></span>
+      <button class="icon-btn" id="btn-home" title="Go to spawn"><svg><use href="#i-home"/></svg></button>
+      <button class="icon-btn" id="btn-measure" title="Measure distances and travel times" hidden><svg><use href="#i-ruler"/></svg></button>
+      <button class="icon-btn" id="btn-link" title="Copy link to this view"><svg><use href="#i-link"/></svg></button>
+      <button class="icon-btn" id="btn-export" title="Export"><svg><use href="#i-export"/></svg></button>
+      <button class="icon-btn" id="btn-theme" title="Light menus"><svg><use href="#i-sun"/></svg></button>
+      <button class="icon-btn" id="btn-fullscreen" title="Fullscreen"><svg><use href="#i-fullscreen"/></svg></button>
+      <div class="mode-switch" id="btn-mode" role="group" aria-label="Map view"><button type="button" data-mode="2d" class="on" aria-pressed="true" title="Flat map"><svg><use href="#i-2d"/></svg><span>2D</span></button><button type="button" data-mode="3d" aria-pressed="false" title="3D view"><svg><use href="#i-3d"/></svg><span>3D</span></button></div>
+      <a class="icon-btn gh-btn" id="btn-github" href="https://github.com/cocopuff2u-gaming/munin-map" target="_blank" rel="noopener" title="Munin Map on GitHub" hidden><svg><use href="#i-github"/></svg></a>
+    </div>
+  </header>
+
+  <aside class="sidebar" id="sidebar">
+    <nav class="tabs">
+      <button data-tab="layers" class="active" title="Layers"><svg><use href="#i-layers"/></svg><span>Layers</span></button>
+      <button data-tab="players" title="Players"><svg><use href="#i-players"/></svg><span>Players</span></button>
+      <button data-tab="markers" title="Markers"><svg><use href="#i-markers"/></svg><span>Markers</span></button>
+      <button data-tab="stats" title="Stats"><svg><use href="#i-stats"/></svg><span>Stats</span></button>
+      <button data-tab="events" title="Events"><svg><use href="#i-events"/></svg><span>Events</span><em id="events-badge" hidden></em></button>
+      <button class="close" id="btn-close-sidebar" title="Close"><svg><use href="#i-close"/></svg></button>
+    </nav>
+    <section class="panel active" data-panel="layers" id="panel-layers"></section>
+    <section class="panel" data-panel="players" id="panel-players"></section>
+    <section class="panel" data-panel="markers" id="panel-markers"></section>
+    <section class="panel" data-panel="stats" id="panel-stats"></section>
+    <section class="panel" data-panel="events" id="panel-events"></section>
+  </aside>
+
+  <div class="hud">
+    <div id="coords" class="coords">0, 0</div>
+    <div id="biome" class="biome"></div>
+    <div id="wind" class="wind" title="Wind direction, the same everywhere (its strength depends on the weather)"></div>
+    <div id="render-status" class="render-status" title="Tiles on disk / waiting to render"></div>
+  </div>
+  <div id="update-note" class="update-note" hidden><svg><use href="#i-github"/></svg><span></span><a target="_blank" rel="noopener">What's new</a><button type="button" title="Close">×</button></div>
+  <div id="measure-panel" class="measure-panel" hidden></div>
+  <div id="toast" class="toast" hidden></div>
+  <div id="export-dialog" class="dialog side" hidden>
+    <div class="dialog-box">
+      <div class="dialog-head"><strong>Export</strong><button class="icon-btn" id="export-close" title="Close"><svg><use href="#i-close"/></svg></button></div>
+      <form id="export-form">
+        <div class="ex-kinds">
+          <label><input type="radio" name="kind" value="image" checked><b>Map image</b><small>PNG, JPEG, WebP or PDF</small></label>
+          <label><input type="radio" name="kind" value="markers"><b>Markers</b><small>CSV, text, JSON, GeoJSON</small></label>
+          <label id="export-kind-scene"><input type="radio" name="kind" value="scene"><b>3D scene</b><small>glTF, Unreal, heightmap, STL</small></label>
+        </div>
+        <label class="field"><span>Area</span>
+          <select name="area">
+            <option value="view">What the map shows now</option>
+            <option value="256">256 m around the centre</option>
+            <option value="512" selected>512 m around the centre</option>
+            <option value="1024">1 km around the centre</option>
+            <option value="1536">1.5 km around the centre</option>
+            <option value="world">The whole world</option>
+          </select></label>
+        <div class="ex-panes">
+        <div data-kind="image">
+          <label class="field"><span>Detail</span>
+            <select name="mpp"><option value="1" selected>1 m per pixel (sharpest)</option><option value="2">2 m per pixel</option><option value="4">4 m per pixel</option></select></label>
+          <div class="field"><span>Include</span>
+            <div class="checks">
+              <label><input type="checkbox" name="imgVeg" checked> Trees &amp; rocks</label>
+              <label><input type="checkbox" name="imgMarkers" checked> Markers</label>
+              <label><input type="checkbox" name="imgLabels" checked> Names</label>
+              <label><input type="checkbox" name="imgPortals"> Portal links</label>
+              <label><input type="checkbox" name="imgPlayers"> Players online</label>
+              <label><input type="checkbox" name="imgGrid"> Zone grid</label>
+            </div></div>
+          <label class="field"><span>File</span>
+            <select name="imgFormat"><option value="png" selected>PNG (exact)</option><option value="jpeg">JPEG (smaller)</option><option value="webp">WebP (smallest)</option><option value="pdf">PDF (to print, A4)</option></select></label>
+          <p class="hint">The area outlined on the map, with the markers it shows. Unexplored ground stays dark.</p>
+        </div>
+        <div data-kind="markers">
+          <label class="field"><span>Format</span>
+            <select name="mkFormat"><option value="csv" selected>CSV (spreadsheets)</option><option value="txt">Text (to read or paste in chat)</option><option value="json">JSON</option><option value="geojson">GeoJSON (map tools)</option></select></label>
+          <div class="field"><span>Include</span>
+            <div class="checks"><label><input type="checkbox" name="mkShown" checked> Only the kinds the map shows</label></div></div>
+          <p class="hint">Each marker's set, name, kind, position (x, z in metres), biome and distance from the spawn, pins included.</p>
+        </div>
+        <div data-kind="scene">
+          <label class="field"><span>Terrain detail</span>
+            <select name="step"><option value="1">1 m (heavy)</option><option value="2" selected>2 m</option><option value="4">4 m</option></select></label>
+          <div class="field"><span>Include</span>
+            <div class="checks">
+              <label><input type="checkbox" name="cat" value="piece" checked> Buildings</label>
+              <label><input type="checkbox" name="cat" value="other" checked> Ruins &amp; objects</label>
+              <label><input type="checkbox" name="cat" value="rock" checked> Rocks</label>
+              <label><input type="checkbox" name="cat" value="bush" checked> Bushes</label>
+              <label><input type="checkbox" name="cat" value="tree" checked> Trees</label>
+              <label><input type="checkbox" name="water" checked> Water</label>
+              <label><input type="checkbox" name="markers" checked> Markers</label>
+            </div></div>
+          <label class="field"><span>Format</span>
+            <select name="mode">
+              <option value="instanced">glTF scene (.glb), instanced: Blender, Godot, three.js</option>
+              <option value="flat">glTF scene (.glb), one node per object: Unreal, Unity</option>
+              <option value="unreal">Unreal pack (.zip): scene, 16-bit heightmap, CSV, script</option>
+              <option value="heightmap">Heightmap only (16-bit .png): World Machine, Gaea, Unity terrain</option>
+              <option value="stl">3D print (.stl): the ground as a solid</option>
+            </select></label>
+          <p class="hint">Only explored ground and published objects are exported. Meshes and textures are the game's own assets from this server; keep the file for your own use.</p>
+        </div>
+        </div>
+        <div class="dialog-actions"><span id="export-status" class="meta"></span><button type="submit" class="mode-btn" id="export-go">Export</button></div>
+      </form>
+    </div>
+  </div>
+  <div id="conn" class="conn" hidden>Reconnecting…</div>
+</div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
