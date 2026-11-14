@@ -238,7 +238,8 @@ class App {
     if (!c) return;
     // ForgeMap: the brand stays in the bar, the world's name beside it
     document.title = `${c.world_name || 'Valheim'} - ReforgeMap`;
-    if (c.world_name) $('#subtitle').textContent = c.world_name;
+    // ReforgeMap: the flame and the world's name, as on the other pages (map-core.js brand)
+    if (c.world_name) $('#title').lastChild.textContent = c.world_name;
     // with 3D off, hide what only works with it (inline style: CSS display would override `hidden`)
     $('#btn-mode').style.display = c.enable_3d === false ? 'none' : '';
     if (c.world_start_pos && typeof c.world_start_pos === 'string') {
